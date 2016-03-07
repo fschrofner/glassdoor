@@ -1,6 +1,14 @@
+apply plugin: 'idea'
+apply plugin: 'application'
+
 allprojects {
   repositories {
     mavenCentral()
   }
 }
 
+mainClassName = "Main"
+
+dependencies {
+  compile project(':glassdoor')
+}
