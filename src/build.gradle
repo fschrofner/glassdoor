@@ -1,0 +1,18 @@
+apply plugin: "scala"
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.7'
+}
+
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['main/scala']
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['test/scala']
+        }
+    }
+}
