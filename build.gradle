@@ -7,7 +7,7 @@ allprojects {
   }
 }
 
-mainClassName = "Main"
+mainClassName = "io.glassdoor.Main"
 
 dependencies {
   compile project(':glassdoor')
