@@ -2,6 +2,13 @@
 Glassdoor is a modern, autonomous security framework for Android APKs written in [Scala](http://scala-lang.org/).  
 Its purpose is to automatically find backdoors, security flaws and other data leakages in applications running on the Android system, without having any actual access to the code itself.
 
+##Dependencies
+###Build Dependencies
+Scala
+
+###Optional Dependencies
+Git 
+
 ##Build Instructions
 Glassdoor uses the wonderful [Gradle](https://gradle.org/) build system to realise its builds.  
 In order to build glassdoor yourself, it should be sufficient to open a terminal window in the root directory and call `gradle build` there. You will find a ready-to-use version of glassdoor, compressed as tar and zip file, inside `build/distributions` after the build process. Just take either one, extract it and call `bin/glassdoor`.  
