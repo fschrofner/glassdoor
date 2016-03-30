@@ -7,6 +7,7 @@ Its purpose is to automatically find backdoors, security flaws and other data le
 Scala
 
 ###Optional Dependencies
+Grep
 Git 
 
 ##Build Instructions
@@ -26,7 +27,8 @@ Then select your newly created configuration from the dropdown menu next to the 
 ##Libraries
 Credit, where credit is due. Glassdoor makes extensive use of libraries, see the following list to find out which libraries where used.
 
-[Lanterna](https://github.com/mabe02/lanterna) - [LGPLv3](https://www.gnu.org/copyleft/lesser.html)
+[Lanterna](https://github.com/mabe02/lanterna) - [LGPLv3](https://www.gnu.org/copyleft/lesser.html)  
+[Smali](https://github.com/JesusFreke/smali) - [Custom Licence](https://github.com/JesusFreke/smali/blob/master/NOTICE)
 
 ##Licence
 //TODO

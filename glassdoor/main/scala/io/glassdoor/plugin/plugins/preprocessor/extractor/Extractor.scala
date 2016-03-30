@@ -23,7 +23,8 @@ class Extractor extends Plugin{
 
     //determine destination
     val keymapDescription = parameters(1)
-    val keymapSplitString = keymapDescription.split("""\.""")
+    val keymapSplitString = mContext.splitDescriptor(keymapDescription)
+
     val keymapName = keymapSplitString(0)
     val keyValue = keymapSplitString(1)
 
@@ -38,9 +39,7 @@ class Extractor extends Plugin{
     //TODO: get keymap from parameters + destination dir
     extract(apkPath, regex, destination)
 
-    //mContext.get += ((Constant.INTERMEDIATE_ASSEMBLY_DEX, destination))
-    val keymap = mContext.getKeymapMatchingString(keymapName) + ((keyValue, destination))
-    mContext.setKeymapMatchingString(keymapName, keymap)
+    mContext.setResolvedValue(keymapDescription,destination)
   }
 
   def extract(source: String, regex: String, targetFolder: String) = {

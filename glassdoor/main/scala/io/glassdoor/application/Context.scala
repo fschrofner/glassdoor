@@ -42,6 +42,32 @@ class Context {
     }
   }
 
+  def splitDescriptor(descriptor:String):Array[String] = {
+    descriptor.split(Constant.DESCRIPTOR_SPLIT)
+  }
+
+  def getResolvedValue(descriptor:String): Option[String] ={
+    val descriptorSplitString = splitDescriptor(descriptor)
+
+    val keymapDescriptor = descriptorSplitString(0)
+    val keyDescriptor = descriptorSplitString(1)
+
+    val keymap = getKeymapMatchingString(keymapDescriptor)
+    val result = keymap.get(keyDescriptor)
+    result
+  }
+
+  def setResolvedValue(descriptor:String, value:String):Context = {
+    val descriptorSplitString = splitDescriptor(descriptor)
+    val keymapDescriptor = descriptorSplitString(0)
+    val keyDescriptor = descriptorSplitString(1)
+
+    var keymap:Map[String,String] = getKeymapMatchingString(keymapDescriptor)
+    keymap = keymap + ((keyDescriptor,value))
+
+    setKeymapMatchingString(keymapDescriptor,keymap)
+    this
+  }
+
   //TODO: abstract keymaps behind more, provide context interface
-  //TODO: provide method to load a flat file list of a certain keydescriptor
 }

@@ -6,6 +6,7 @@ package io.glassdoor.plugin
 trait PluginManager {
   def loadPlugin(pluginName:String):Unit
   def unloadPlugin(pluginName:String):Unit
-  def findPlugin():Array[String]
+  def findPlugin(pluginName:String):Array[String]
+  def buildPluginIndex():Unit
   def applyPlugin(pluginName:String):Unit
 }

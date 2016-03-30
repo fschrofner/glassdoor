@@ -3,6 +3,7 @@ package io.glassdoor
 import io.glassdoor.application.{Constant, Context}
 import io.glassdoor.interface.CommandLineInterface
 import io.glassdoor.plugin.Plugin
+import io.glassdoor.plugin.plugins.analyser.grep.GrepAnalyser
 import io.glassdoor.plugin.plugins.loader.apk.ApkLoader
 import io.glassdoor.plugin.plugins.preprocessor.extractor.Extractor
 import io.glassdoor.plugin.plugins.preprocessor.smali.SmaliDisassembler
@@ -29,8 +30,8 @@ object Main {
     //extracting the dex files from the apk
     val extractor:Plugin = new Extractor
     extractor.apply(context, Array(Constant.REGEX_PATTERN_DEX,"intermediate-assembly.dex"))
-    //extractor.apply(context,Array("""^.*\.[Ss][Oo]$""","intermediate-assembly.so"))
     context = extractor.result
+
     println("extracted dex: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
 
     println("trying to disassemble dex files..")
@@ -40,5 +41,12 @@ object Main {
     context = smali.result
 
     println("disassembled smali: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_SMALI))
+
+    val grep:Plugin = new GrepAnalyser
+
+    //TODO: the regex is still too broad
+    grep.apply(context,Array(Constant.REGEX_PATTERN_EMAIL,"intermediate-assembly.smali","result-log.grep-login"))
+    context = grep.result
+
   }
 }
