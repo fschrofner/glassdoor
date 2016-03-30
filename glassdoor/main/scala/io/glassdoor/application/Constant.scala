@@ -14,6 +14,10 @@ object Constant {
   //these are the context keys for the included plugins
   val ORIGINAL_BINARY_APK = "apk"
   val INTERMEDIATE_ASSEMBLY_DEX = "dex"
+  val INTERMEDIATE_ASSEMBLY_SMALI = "smali"
+
+  //predefined regexes for the extractor
+  val REGEX_PATTERN_DEX = """^.*\.[Dd][Ee][Xx]$"""
 
   //TODO: these values should be retrieved by the config somehow
   val ROOT_DIRECTORY = "/home/flosch/glassdoor-testset/"

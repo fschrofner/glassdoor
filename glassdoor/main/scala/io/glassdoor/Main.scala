@@ -28,14 +28,17 @@ object Main {
 
     //extracting the dex files from the apk
     val extractor:Plugin = new Extractor
-    extractor.apply(context, Array("""^.*\.[Dd][Ee][Xx]$""","intermediate-assembly.dex"))
+    extractor.apply(context, Array(Constant.REGEX_PATTERN_DEX,"intermediate-assembly.dex"))
     //extractor.apply(context,Array("""^.*\.[Ss][Oo]$""","intermediate-assembly.so"))
     context = extractor.result
-
-//    val smali:Plugin = new SmaliDisassembler
-//    smali.apply(context,Array())
-//    context = smali.result
-
     println("extracted dex: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
+
+    println("trying to disassemble dex files..")
+
+    val smali:Plugin = new SmaliDisassembler
+    smali.apply(context,Array())
+    context = smali.result
+
+    println("disassembled smali: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_SMALI))
   }
 }
