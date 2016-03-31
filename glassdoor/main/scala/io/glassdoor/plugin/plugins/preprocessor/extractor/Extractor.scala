@@ -31,7 +31,7 @@ class Extractor extends Plugin{
     val apkPath = context.originalBinary(Constant.ORIGINAL_BINARY_APK)
 
     //TODO: load targetfolder from config
-    val destination = Constant.ROOT_DIRECTORY + keyValue
+    val destination = Constant.ROOT_WORKING_DIRECTORY + keyValue
 
     val regex = parameters(0)
     //TODO: check regex for null

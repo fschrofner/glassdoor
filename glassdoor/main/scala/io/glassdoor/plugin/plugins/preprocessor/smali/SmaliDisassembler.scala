@@ -19,7 +19,7 @@ class SmaliDisassembler extends Plugin{
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     mContext = context
 
-    val outputDirectory = Constant.ROOT_DIRECTORY + Constant.INTERMEDIATE_ASSEMBLY_SMALI
+    val outputDirectory = Constant.ROOT_WORKING_DIRECTORY + Constant.INTERMEDIATE_ASSEMBLY_SMALI
 
     val options = new baksmaliOptions
     options.jobs = 1

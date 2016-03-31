@@ -23,5 +23,11 @@ object Constant {
   val REGEX_PATTERN_EMAIL = """.+@.+\..{2,}"""
 
   //TODO: these values should be retrieved by the config somehow
-  val ROOT_DIRECTORY = "/home/flosch/glassdoor-testset/"
+  val ROOT_WORKING_DIRECTORY = "/home/flosch/glassdoor-testset/"
+  val ROOT_DICTIONARY_DIRECTORY = "/home/flosch/glassdoor/dictionaries"
+
+  val CONFIG_FILE_PATH = "/home/flosch/Projects/glassdoor/glassdoor.conf"
+
+  //val URL_DICTIONARY_REPO = ""
+  //val URL_PLUGIN_REPO = ""
 }

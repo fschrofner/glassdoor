@@ -12,3 +12,7 @@ mainClassName = "io.glassdoor.Main"
 dependencies {
   compile project(':glassdoor')
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.10'
+}

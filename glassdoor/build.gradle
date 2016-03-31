@@ -4,6 +4,7 @@ dependencies {
     compile 'org.scala-lang:scala-library:2.11.7'
     compile 'com.googlecode.lanterna:lanterna:3.0.0-beta2'
     compile 'org.smali:baksmali:2.1.1'
+    compile 'com.typesafe:config:1.3.0'
 }
 
 sourceSets {

@@ -1,6 +1,6 @@
 package io.glassdoor
 
-import io.glassdoor.application.{Constant, Context}
+import io.glassdoor.application.{Configuration, Constant, Context}
 import io.glassdoor.interface.CommandLineInterface
 import io.glassdoor.plugin.Plugin
 import io.glassdoor.plugin.plugins.analyser.grep.GrepAnalyser
@@ -10,7 +10,19 @@ import io.glassdoor.plugin.plugins.preprocessor.smali.SmaliDisassembler
 
 object Main {
   def main(args:Array[String]):Unit={
+
+    Configuration.loadConfig()
+
     println("the first line of glassdoor!")
+
+    val foobar = Configuration.getString("foo.bar")
+
+    if(foobar.isDefined){
+      println(foobar.get)
+    } else {
+      println("ERROR: foobar not defined")
+    }
+
     var context = new Context
 
     //val ui = new CommandLineInterface()

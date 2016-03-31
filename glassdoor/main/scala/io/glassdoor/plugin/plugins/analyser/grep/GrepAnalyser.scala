@@ -30,7 +30,7 @@ class GrepAnalyser extends Plugin{
     val srcPath = mContext.getResolvedValue(src)
 
     if(srcPath.isDefined){
-      val destPath = Constant.ROOT_DIRECTORY + mContext.splitDescriptor(dest)(1) + "/result.log"
+      val destPath = Constant.ROOT_WORKING_DIRECTORY + mContext.splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 
