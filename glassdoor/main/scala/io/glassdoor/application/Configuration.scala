@@ -1,8 +1,10 @@
 package io.glassdoor.application
 
 import java.io.File
+import java.util.Map.Entry
+import scala.collection.JavaConverters._
 
-import com.typesafe.config.{ConfigException, Config, ConfigFactory}
+import com.typesafe.config.{ConfigValue, ConfigException, Config, ConfigFactory}
 
 /**
   * Created by Florian Schrofner on 3/31/16.
@@ -15,6 +17,33 @@ object Configuration {
     mConfig = Some(ConfigFactory.parseFile(file));
   }
 
+  def loadConfigIntoContext(context:Context): Context ={
+    var map = context.getKeymapMatchingString(Constant.CONTEXT_CONFIG)
+
+    val conf = getConfigObject(Constant.CONFIG_DEFAULT_KEY)
+    val configSet = conf.get.entrySet().asScala
+
+    for(entry:Entry[String,ConfigValue] <- configSet){
+      map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
+    }
+
+    context.setKeymapMatchingString(Constant.CONTEXT_CONFIG, map)
+    context
+  }
+
+  def getConfigObject(key:String):Option[Config] = {
+    if(mConfig.isDefined){
+      try {
+        val result = mConfig.get.getConfig(key)
+        return Some(result)
+      } catch {
+        case e:ConfigException =>
+          return None
+      }
+    } else {
+      return None
+    }
+  }
   def getString(key:String):Option[String] = {
     if(mConfig.isDefined){
       try {

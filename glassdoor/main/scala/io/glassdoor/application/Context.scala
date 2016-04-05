@@ -11,6 +11,7 @@ class Context {
   var intermediateAssembly:Map[String, String] = new HashMap[String, String]
   var intermediateResource:Map[String, String] = new HashMap[String, String]
   var resultLog:Map[String, String] = new HashMap[String, String]
+  var configuration:Map[String,String] = new HashMap[String,String]
 
   def getKeymapMatchingString(keymapDescription:String):Map[String,String] = {
     keymapDescription match {
@@ -24,6 +25,8 @@ class Context {
         return intermediateResource
       case Constant.RESULT_LOG =>
         return resultLog
+      case Constant.CONTEXT_CONFIG =>
+        return configuration
     }
   }
 
@@ -39,6 +42,8 @@ class Context {
         intermediateResource = keymap
       case Constant.RESULT_LOG =>
         resultLog = keymap
+      case Constant.CONTEXT_CONFIG =>
+        configuration = keymap
     }
   }
 
