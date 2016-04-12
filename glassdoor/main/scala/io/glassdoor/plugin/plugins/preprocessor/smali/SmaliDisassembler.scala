@@ -19,23 +19,40 @@ class SmaliDisassembler extends Plugin{
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     mContext = context
 
-    val outputDirectory = Constant.ROOT_WORKING_DIRECTORY + Constant.INTERMEDIATE_ASSEMBLY_SMALI
+    val workingDir = mContext.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
 
-    val options = new baksmaliOptions
-    options.jobs = 1
-    options.outputDirectory = outputDirectory
+    if(workingDir.isDefined){
+      val outputDirectory = workingDir.get + "/" + Constant.Context.Key.SMALI
 
-    val dexFileFile = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX)+"/classes.dex")
-    val dexFile = DexFileFactory.loadDexFile(dexFileFile, options.dexEntry, options.apiLevel, options.experimental);
+      val options = new baksmaliOptions
+      options.jobs = 1
+      options.outputDirectory = outputDirectory
 
-    try {
-      baksmali.disassembleDexFile(dexFile, options)
-      mContext.intermediateAssembly += ((Constant.INTERMEDIATE_ASSEMBLY_SMALI,outputDirectory))
-    } catch {
-      case e:IllegalArgumentException =>
-        println("illegal argument exception")
-        e.printStackTrace()
+      val destination = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+
+      //TODO: use destination
+
+      val dexFilePath = context.getResolvedValue(Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
+
+      if(dexFilePath.isDefined){
+        val dexFileFile = new File(dexFilePath.get + "/classes.dex")
+        val dexFile = DexFileFactory.loadDexFile(dexFileFile, options.dexEntry, options.apiLevel, options.experimental);
+
+        try {
+          baksmali.disassembleDexFile(dexFile, options)
+          println("disassembling dex to: " + outputDirectory)
+          mContext.intermediateAssembly += ((Constant.Context.Key.SMALI, outputDirectory))
+        } catch {
+          case e:IllegalArgumentException =>
+            println("illegal argument exception")
+            e.printStackTrace()
+        }
+      } else {
+        println("dex not defined!")
+      }
     }
+
+
   }
 
   override def result: Context = {

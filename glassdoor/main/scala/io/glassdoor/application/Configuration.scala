@@ -13,21 +13,21 @@ object Configuration {
   var mConfig:Option[Config] = None
 
   def loadConfig():Unit = {
-    val file = new File(Constant.CONFIG_FILE_PATH)
+    val file = new File(Constant.Config.Path.CONFIG_FILE)
     mConfig = Some(ConfigFactory.parseFile(file));
   }
 
   def loadConfigIntoContext(context:Context): Context ={
-    var map = context.getKeymapMatchingString(Constant.CONTEXT_CONFIG)
+    var map = context.getKeymapMatchingString(Constant.Context.Keymap.CONFIG)
 
-    val conf = getConfigObject(Constant.CONFIG_DEFAULT_KEY)
+    val conf = getConfigObject(Constant.Config.ConfigKey.DEFAULT_KEY)
     val configSet = conf.get.entrySet().asScala
 
     for(entry:Entry[String,ConfigValue] <- configSet){
       map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
     }
 
-    context.setKeymapMatchingString(Constant.CONTEXT_CONFIG, map)
+    context.setKeymapMatchingString(Constant.Context.Keymap.CONFIG, map)
     context
   }
 

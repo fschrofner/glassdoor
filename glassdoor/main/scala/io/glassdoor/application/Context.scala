@@ -15,51 +15,57 @@ class Context {
 
   def getKeymapMatchingString(keymapDescription:String):Map[String,String] = {
     keymapDescription match {
-      case Constant.ORIGINAL_BINARY =>
+      case Constant.Context.Keymap.ORIGINAL_BINARY =>
         return originalBinary
-      case Constant.INTERMEDIATE_ASSEMBLY =>
+      case Constant.Context.Keymap.INTERMEDIATE_ASSEMBLY =>
         return intermediateAssembly
-      case Constant.INTERMEDIATE_SOURCE =>
+      case Constant.Context.Keymap.INTERMEDIATE_SOURCE =>
         return intermediateSource
-      case Constant.INTERMEDIATE_RESOURCES =>
+      case Constant.Context.Keymap.INTERMEDIATE_RESOURCES =>
         return intermediateResource
-      case Constant.RESULT_LOG =>
+      case Constant.Context.Keymap.RESULT_LOG =>
         return resultLog
-      case Constant.CONTEXT_CONFIG =>
+      case Constant.Context.Keymap.CONFIG =>
         return configuration
     }
   }
 
   def setKeymapMatchingString(keymapDescription:String, keymap:Map[String,String]): Unit = {
     keymapDescription match {
-      case Constant.ORIGINAL_BINARY =>
+      case Constant.Context.Keymap.ORIGINAL_BINARY =>
         originalBinary = keymap
-      case Constant.INTERMEDIATE_ASSEMBLY =>
+      case Constant.Context.Keymap.INTERMEDIATE_ASSEMBLY =>
         intermediateAssembly = keymap
-      case Constant.INTERMEDIATE_SOURCE =>
+      case Constant.Context.Keymap.INTERMEDIATE_SOURCE =>
         intermediateSource = keymap
-      case Constant.INTERMEDIATE_RESOURCES =>
+      case Constant.Context.Keymap.INTERMEDIATE_RESOURCES =>
         intermediateResource = keymap
-      case Constant.RESULT_LOG =>
+      case Constant.Context.Keymap.RESULT_LOG =>
         resultLog = keymap
-      case Constant.CONTEXT_CONFIG =>
+      case Constant.Context.Keymap.CONFIG =>
         configuration = keymap
     }
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    descriptor.split(Constant.DESCRIPTOR_SPLIT)
+    descriptor.split(Constant.Regex.DESCRIPTOR_SPLIT_REGEX)
   }
 
   def getResolvedValue(descriptor:String): Option[String] ={
     val descriptorSplitString = splitDescriptor(descriptor)
 
-    val keymapDescriptor = descriptorSplitString(0)
-    val keyDescriptor = descriptorSplitString(1)
+    try {
+      val keymapDescriptor = descriptorSplitString(0)
+      val keyDescriptor = descriptorSplitString(1)
 
-    val keymap = getKeymapMatchingString(keymapDescriptor)
-    val result = keymap.get(keyDescriptor)
-    result
+      val keymap = getKeymapMatchingString(keymapDescriptor)
+      val result = keymap.get(keyDescriptor)
+      result
+    } catch {
+      case e:ArrayIndexOutOfBoundsException =>
+        None
+    }
+
   }
 
   def setResolvedValue(descriptor:String, value:String):Context = {

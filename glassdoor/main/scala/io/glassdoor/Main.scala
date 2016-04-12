@@ -32,6 +32,26 @@ object Main {
     //TODO: load default commands from config & command sequences
     pluginManager.applyPlugin("apk", Array("/home/flosch/glassdoor-testset/dvel.apk"), context)
 
+    var result = pluginManager.getPluginResult("apk")
+
+    if(result.isDefined){
+      context = result.get
+    }
+
+    pluginManager.applyPlugin("extractor",Array(Constant.Regex.REGEX_PATTERN_DEX, Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_DEX),context)
+    result = pluginManager.getPluginResult("extractor")
+
+    if(result.isDefined){
+      context = result.get
+    }
+
+    pluginManager.applyPlugin("smali", Array(),context)
+    result = pluginManager.getPluginResult("smali")
+
+    if(result.isDefined){
+      context = result.get
+    }
+
     //val ui = new CommandLineInterface()
     //ui.test()
 

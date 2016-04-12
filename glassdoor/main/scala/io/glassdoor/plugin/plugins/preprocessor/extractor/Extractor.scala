@@ -28,18 +28,26 @@ class Extractor extends Plugin{
     val keymapName = keymapSplitString(0)
     val keyValue = keymapSplitString(1)
 
-    val apkPath = context.originalBinary(Constant.ORIGINAL_BINARY_APK)
+    val apkPath = context.getResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK)
 
     //TODO: load targetfolder from config
-    val destination = Constant.ROOT_WORKING_DIRECTORY + keyValue
 
-    val regex = parameters(0)
-    //TODO: check regex for null
+    val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
 
-    //TODO: get keymap from parameters + destination dir
-    extract(apkPath, regex, destination)
+    if(apkPath.isDefined && workingDir.isDefined){
+      val destination = workingDir.get + "/" + keyValue
 
-    mContext.setResolvedValue(keymapDescription,destination)
+      val regex = parameters(0)
+      //TODO: check regex for null
+
+      //TODO: get keymap from parameters + destination dir
+      extract(apkPath.get, regex, destination)
+
+      mContext.setResolvedValue(keymapDescription,destination)
+    } else {
+      //TODO: error handling when working dir is not defined
+    }
+
   }
 
   def extract(source: String, regex: String, targetFolder: String) = {
@@ -48,6 +56,7 @@ class Extractor extends Plugin{
     val entryList = sourceFile.entries().toList
     val regexObject = regex.r
 
+    println("extracting files to: " + targetFolder)
 
     for (entry <- entryList) {
       entry.getName match {

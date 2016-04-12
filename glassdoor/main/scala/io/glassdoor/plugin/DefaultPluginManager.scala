@@ -31,7 +31,7 @@ class DefaultPluginManager extends PluginManager{
     if(mLoadedPlugins.contains(pluginName)){
        pluginInstance = mLoadedPlugins.get(pluginName)
     } else {
-      //TODO: load plugin from external resource
+      //TODO: load plugin from external resource or show error
     }
 
     if(pluginInstance.isDefined){
@@ -47,18 +47,18 @@ class DefaultPluginManager extends PluginManager{
 
   def loadDefaultPlugins():Unit = {
     //TODO: load default plugins into hashmap
-    val file = new File(Constant.CONFIG_PLUGIN_FILE_PATH)
+    val file = new File(Constant.Config.Path.PLUGIN_CONFIG_FILE)
     val config = ConfigFactory.parseFile(file);
 
-    val defaultPluginList = config.getConfigList(Constant.CONFIG_DEFAULT_KEY + "." + Constant.CONFIG_DEFAULT_PLUGIN_KEY).asScala
+    val defaultPluginList = config.getConfigList(Constant.Config.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
 
     for(pluginConfig:Config <- defaultPluginList){
       try {
-        val name = pluginConfig.getString(Constant.CONFIG_PLUGIN_NAME_KEY)
-        val typ = pluginConfig.getString(Constant.CONFIG_PLUGIN_TYPE_KEY)
-        val dependencies = pluginConfig.getStringList(Constant.CONFIG_PLUGIN_DEPENDENCIES_KEY).asScala
-        val commands = pluginConfig.getStringList(Constant.CONFIG_PLUGIN_COMMANDS_KEY).asScala
-        val className = pluginConfig.getString(Constant.CONFIG_PLUGIN_CLASSFILE_KEY)
+        val name = pluginConfig.getString(Constant.Config.PluginKey.NAME)
+        val typ = pluginConfig.getString(Constant.Config.PluginKey.TYPE)
+        val dependencies = pluginConfig.getStringList(Constant.Config.PluginKey.DEPENDENCIES).asScala
+        val commands = pluginConfig.getStringList(Constant.Config.PluginKey.COMMANDS).asScala
+        val className = pluginConfig.getString(Constant.Config.PluginKey.CLASSFILE)
 
         //instantiate the class
         val plugin = instantiateDefaultPlugin(className)
@@ -77,5 +77,22 @@ class DefaultPluginManager extends PluginManager{
 
   def instantiateDefaultPlugin(className:String):Plugin = {
     Class.forName(className).newInstance().asInstanceOf[Plugin]
+  }
+
+  override def getPluginResult(pluginName: String): Option[Context] = {
+    var pluginInstance:Option[PluginInstance] = None
+
+    if(mLoadedPlugins.contains(pluginName)){
+      pluginInstance = mLoadedPlugins.get(pluginName)
+    } else {
+      //TODO: load plugin from external resource or show error
+      return None
+    }
+
+    if(pluginInstance.isDefined){
+      return Some(pluginInstance.get.plugin.result)
+    } else {
+      return None
+    }
   }
 }

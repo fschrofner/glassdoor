@@ -11,4 +11,5 @@ trait PluginManager {
   def findPlugin(pluginName:String):Array[String]
   def buildPluginIndex():Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
+  def getPluginResult(pluginName:String):Option[Context]
 }
