@@ -37,6 +37,7 @@ object Constant {
       val INTERMEDIATE_ASSEMBLY_SMALI = Keymap.INTERMEDIATE_ASSEMBLY + DESCRIPTOR_SPLIT + Key.SMALI
       val RESULT_LOG_GREP_LOGIN = Keymap.RESULT_LOG + DESCRIPTOR_SPLIT + Key.GREP_LOGIN
       val CONFIG_WORKING_DIRECTORY = Keymap.CONFIG + DESCRIPTOR_SPLIT + Config.ConfigKey.Key.WORKING_DIRECTORY
+      val CONFIG_PLUGIN_CONFIG_PATH = Keymap.CONFIG + DESCRIPTOR_SPLIT + Config.ConfigKey.Key.PLUGIN_CONFIG_PATH
     }
   }
 
@@ -51,8 +52,8 @@ object Constant {
   object Config {
 
     object Path {
+      //TODO: this needs to be adapted dynamically
       val CONFIG_FILE = "/home/flosch/Projects/glassdoor/conf/glassdoor.conf"
-      val PLUGIN_CONFIG_FILE = "/home/flosch/Projects/glassdoor/conf/plugins.conf"
     }
 
     object ConfigKey {
@@ -61,11 +62,13 @@ object Constant {
       object Key {
         val DEFAULT_PLUGINS = "defaultPlugins"
         val WORKING_DIRECTORY = "workingDirectory"
+        val PLUGIN_CONFIG_PATH = "pluginConfigPath"
       }
 
       object FullKey {
         val DEFAULT_PLUGINS = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.DEFAULT_PLUGINS
         val WORKING_DIRECTORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.WORKING_DIRECTORY
+        val PLUGIN_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_CONFIG_PATH
       }
 
     }

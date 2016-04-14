@@ -13,10 +13,9 @@ import java.nio.file.Files.copy
   * Created by Florian Schrofner on 3/17/16.
   */
 class ApkLoader extends Plugin{
-  var mContext:Context = _
+  var mContext:Option[Context] = None
 
   override def apply(context: Context, parameters: Array[String]): Unit = {
-    mContext = context
     val srcPath = parameters(0)
 
     //TODO: match against regex to check if url or local path
@@ -25,13 +24,15 @@ class ApkLoader extends Plugin{
 
     val path = copyApkToWorkingDirectory(context, srcPath)
     if(path.isDefined){
-      mContext.originalBinary += ((Constant.Context.Key.APK,path.get))
+      context.setResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK, path.get)
+      mContext = Some(context)
     } else {
       //TODO: error handling
+      mContext = None
     }
   }
 
-  override def result: Context = {
+  override def result: Option[Context] = {
     mContext
   }
 
@@ -40,6 +41,7 @@ class ApkLoader extends Plugin{
     if(workingDir.isDefined){
       try {
         val destPath = workingDir.get + "/" + Constant.Context.Key.APK + "/" + getFileName(srcPath)
+        createFolderStructure(destPath)
         println("copying apk to: " + destPath + "...")
         copy(get(srcPath),get(destPath), REPLACE_EXISTING)
         return Some(destPath)
@@ -51,6 +53,11 @@ class ApkLoader extends Plugin{
       println("working directory not defined!")
     }
     return None
+  }
+
+  def createFolderStructure(path:String):Unit = {
+    val file = new File(path)
+    file.getParentFile.mkdirs()
   }
 
   def getFileName(path:String):String = {

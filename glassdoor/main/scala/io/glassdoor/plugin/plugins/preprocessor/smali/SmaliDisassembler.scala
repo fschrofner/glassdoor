@@ -12,14 +12,13 @@ import org.jf.dexlib2.iface.{ClassDef, DexFile}
   * Created by Florian Schrofner on 3/16/16.
   */
 class SmaliDisassembler extends Plugin{
-  var mContext:Context = _
+  var mContext:Option[Context] = None
 
   override def apply(context: Context, parameters: Array[String]): Unit = {
     //baksmali.disassembleDexFile(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
-    mContext = context
 
-    val workingDir = mContext.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
 
     if(workingDir.isDefined){
       val outputDirectory = workingDir.get + "/" + Constant.Context.Key.SMALI
@@ -41,11 +40,11 @@ class SmaliDisassembler extends Plugin{
         try {
           baksmali.disassembleDexFile(dexFile, options)
           println("disassembling dex to: " + outputDirectory)
-          mContext.intermediateAssembly += ((Constant.Context.Key.SMALI, outputDirectory))
+          context.setResolvedValue(Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, outputDirectory)
+          mContext = Some(context)
         } catch {
           case e:IllegalArgumentException =>
-            println("illegal argument exception")
-            e.printStackTrace()
+            mContext = None
         }
       } else {
         println("dex not defined!")
@@ -55,7 +54,7 @@ class SmaliDisassembler extends Plugin{
 
   }
 
-  override def result: Context = {
+  override def result:Option[Context] = {
     mContext
   }
 

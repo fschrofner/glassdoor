@@ -15,25 +15,20 @@ object Main {
 
     println("the first line of glassdoor!")
 
-    //val foobar = Configuration.getString("foo.bar")
-
-//    if(foobar.isDefined){
-//      println(foobar.get)
-//    } else {
-//      println("ERROR: foobar not defined")
-//    }
-
     var context = new Context
     context = Configuration.loadConfigIntoContext(context)
 
     val pluginManager = new DefaultPluginManager
-    pluginManager.loadDefaultPlugins()
+    pluginManager.loadDefaultPlugins(context)
 
     //TODO: load default commands from config & command sequences
+
     pluginManager.applyPlugin("apk", Array("/home/flosch/glassdoor-testset/dvel.apk"), context)
 
     var result = pluginManager.getPluginResult("apk")
 
+    //TODO: allow async callbacks here
+    //only assign result if call was successful
     if(result.isDefined){
       context = result.get
     }
@@ -52,36 +47,10 @@ object Main {
       context = result.get
     }
 
-    //val ui = new CommandLineInterface()
-    //ui.test()
-
-
+    //pluginManager.applyPlugin("grep", Array(), context)
 
     //TODO: these plugins should be found dynamically
     //TODO: info about the plugins should be loaded via a manifest file (as main class)
-    //val apkLoader:Plugin = new ApkLoader
-    //TODO: these calls should be done by the pluginmanager
-    //apkLoader.apply(context, Array("/home/flosch/glassdoor-testset/dvel.apk"))
-    //TODO: allow async callbacks here
-//    context = apkLoader.result
-//    println("loaded apk: " + context.originalBinary(Constant.ORIGINAL_BINARY_APK))
-//
-//    println("trying to extract apk..")
-//
-//    //extracting the dex files from the apk
-//    val extractor:Plugin = new Extractor
-//    extractor.apply(context, Array(Constant.REGEX_PATTERN_DEX,"intermediate-assembly.dex"))
-//    context = extractor.result
-//
-//    println("extracted dex: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
-//
-//    println("trying to disassemble dex files..")
-//
-//    val smali:Plugin = new SmaliDisassembler
-//    smali.apply(context,Array())
-//    context = smali.result
-//
-//    println("disassembled smali: " + context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_SMALI))
 //
 //    val grep:Plugin = new GrepAnalyser
 //

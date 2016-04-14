@@ -14,16 +14,14 @@ import scala.util.matching.Regex
   * Created by Florian Schrofner on 3/17/16.
   */
 class Extractor extends Plugin{
-  var mContext:Context = _
+  var mContext:Option[Context] = None
   val BUFSIZE = 4096
   val buffer = new Array[Byte](BUFSIZE)
 
   override def apply(context: Context, parameters: Array[String]): Unit = {
-    mContext = context
-
     //determine destination
     val keymapDescription = parameters(1)
-    val keymapSplitString = mContext.splitDescriptor(keymapDescription)
+    val keymapSplitString = context.splitDescriptor(keymapDescription)
 
     val keymapName = keymapSplitString(0)
     val keyValue = keymapSplitString(1)
@@ -43,9 +41,11 @@ class Extractor extends Plugin{
       //TODO: get keymap from parameters + destination dir
       extract(apkPath.get, regex, destination)
 
-      mContext.setResolvedValue(keymapDescription,destination)
+      context.setResolvedValue(keymapDescription,destination)
+      mContext = Some(context)
     } else {
       //TODO: error handling when working dir is not defined
+      mContext = None
     }
 
   }
@@ -86,7 +86,7 @@ class Extractor extends Plugin{
     }
   }
 
-  override def result: Context = {
+  override def result:Option[Context] = {
     mContext
   }
 

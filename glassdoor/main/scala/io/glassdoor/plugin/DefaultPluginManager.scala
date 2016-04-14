@@ -41,38 +41,43 @@ class DefaultPluginManager extends PluginManager{
     }
   }
 
-  override def buildPluginIndex(): Unit = {
-    loadDefaultPlugins()
+  override def buildPluginIndex(context:Context): Unit = {
+    loadDefaultPlugins(context)
   }
 
-  def loadDefaultPlugins():Unit = {
-    //TODO: load default plugins into hashmap
-    val file = new File(Constant.Config.Path.PLUGIN_CONFIG_FILE)
-    val config = ConfigFactory.parseFile(file);
+  def loadDefaultPlugins(context:Context):Unit = {
+    val pluginConfigPath = context.getResolvedValue(Constant.Context.FullKey.CONFIG_PLUGIN_CONFIG_PATH)
 
-    val defaultPluginList = config.getConfigList(Constant.Config.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
+    if(pluginConfigPath.isDefined){
+      val file = new File(pluginConfigPath.get)
+      val config = ConfigFactory.parseFile(file);
 
-    for(pluginConfig:Config <- defaultPluginList){
-      try {
-        val name = pluginConfig.getString(Constant.Config.PluginKey.NAME)
-        val typ = pluginConfig.getString(Constant.Config.PluginKey.TYPE)
-        val dependencies = pluginConfig.getStringList(Constant.Config.PluginKey.DEPENDENCIES).asScala
-        val commands = pluginConfig.getStringList(Constant.Config.PluginKey.COMMANDS).asScala
-        val className = pluginConfig.getString(Constant.Config.PluginKey.CLASSFILE)
+      val defaultPluginList = config.getConfigList(Constant.Config.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
 
-        //instantiate the class
-        val plugin = instantiateDefaultPlugin(className)
+      for(pluginConfig:Config <- defaultPluginList){
+        try {
+          val name = pluginConfig.getString(Constant.Config.PluginKey.NAME)
+          val typ = pluginConfig.getString(Constant.Config.PluginKey.TYPE)
+          val dependencies = pluginConfig.getStringList(Constant.Config.PluginKey.DEPENDENCIES).asScala
+          val commands = pluginConfig.getStringList(Constant.Config.PluginKey.COMMANDS).asScala
+          val className = pluginConfig.getString(Constant.Config.PluginKey.CLASSFILE)
 
-        val pluginInstance = new PluginInstance(name,typ,dependencies.toArray,commands.toArray,plugin)
-        mLoadedPlugins += ((pluginInstance.name,pluginInstance))
+          //instantiate the class
+          val plugin = instantiateDefaultPlugin(className)
 
-        println("plugin detected: " + name)
-      } catch {
-        case e:ConfigException =>
-          println("plugin information missing!")
+          val pluginInstance = new PluginInstance(name,typ,dependencies.toArray,commands.toArray,plugin)
+          mLoadedPlugins += ((pluginInstance.name,pluginInstance))
+
+          println("plugin detected: " + name)
+        } catch {
+          case e:ConfigException =>
+            println("plugin information missing!")
+        }
+
       }
-
     }
+
+
   }
 
   def instantiateDefaultPlugin(className:String):Plugin = {
@@ -90,7 +95,7 @@ class DefaultPluginManager extends PluginManager{
     }
 
     if(pluginInstance.isDefined){
-      return Some(pluginInstance.get.plugin.result)
+      return pluginInstance.get.plugin.result
     } else {
       return None
     }

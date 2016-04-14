@@ -7,6 +7,6 @@ import io.glassdoor.application.Context
   */
 trait Plugin {
   def apply(context: Context, parameters:Array[String])
-  def result:Context
+  def result:Option[Context]
   def help(parameters:Array[String])
 }

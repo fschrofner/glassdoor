@@ -9,7 +9,7 @@ trait PluginManager {
   def loadPlugin(pluginName:String):Unit
   def unloadPlugin(pluginName:String):Unit
   def findPlugin(pluginName:String):Array[String]
-  def buildPluginIndex():Unit
+  def buildPluginIndex(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
   def getPluginResult(pluginName:String):Option[Context]
 }

@@ -6,12 +6,12 @@ import scala.collection.immutable.HashMap
   * Created by Florian Schrofner on 3/16/16.
   */
 class Context {
-  var originalBinary:Map[String, String] = new HashMap[String, String]
-  var intermediateSource:Map[String, String] = new HashMap[String, String]
-  var intermediateAssembly:Map[String, String] = new HashMap[String, String]
-  var intermediateResource:Map[String, String] = new HashMap[String, String]
-  var resultLog:Map[String, String] = new HashMap[String, String]
-  var configuration:Map[String,String] = new HashMap[String,String]
+  private var originalBinary:Map[String, String] = new HashMap[String, String]
+  private var intermediateSource:Map[String, String] = new HashMap[String, String]
+  private var intermediateAssembly:Map[String, String] = new HashMap[String, String]
+  private var intermediateResource:Map[String, String] = new HashMap[String, String]
+  private var resultLog:Map[String, String] = new HashMap[String, String]
+  private var configuration:Map[String,String] = new HashMap[String,String]
 
   def getKeymapMatchingString(keymapDescription:String):Map[String,String] = {
     keymapDescription match {
