@@ -19,34 +19,41 @@ class Extractor extends Plugin{
   val buffer = new Array[Byte](BUFSIZE)
 
   override def apply(context: Context, parameters: Array[String]): Unit = {
-    //determine destination
-    val keymapDescription = parameters(1)
-    val keymapSplitString = context.splitDescriptor(keymapDescription)
 
-    val keymapName = keymapSplitString(0)
-    val keyValue = keymapSplitString(1)
+    try {
+      //determine destination
+      val keymapDescription = parameters(1)
+      val keymapSplitString = context.splitDescriptor(keymapDescription)
 
-    val apkPath = context.getResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK)
+      val keymapName = keymapSplitString(0)
+      val keyValue = keymapSplitString(1)
 
-    //TODO: load targetfolder from config
+      val apkPath = context.getResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK)
 
-    val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+      //TODO: load targetfolder from config
 
-    if(apkPath.isDefined && workingDir.isDefined){
-      val destination = workingDir.get + "/" + keyValue
+      val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
 
-      val regex = parameters(0)
-      //TODO: check regex for null
+      if(apkPath.isDefined && workingDir.isDefined){
+        val destination = workingDir.get + "/" + keyValue
 
-      //TODO: get keymap from parameters + destination dir
-      extract(apkPath.get, regex, destination)
+        val regex = parameters(0)
+        //TODO: check regex for null
 
-      context.setResolvedValue(keymapDescription,destination)
-      mContext = Some(context)
-    } else {
-      //TODO: error handling when working dir is not defined
-      mContext = None
+        //TODO: get keymap from parameters + destination dir
+        extract(apkPath.get, regex, destination)
+
+        context.setResolvedValue(keymapDescription,destination)
+        mContext = Some(context)
+      } else {
+        //TODO: error handling when working dir is not defined
+        mContext = None
+      }
+    } catch {
+      case e:ArrayIndexOutOfBoundsException =>
+        mContext = None
     }
+
 
   }
 

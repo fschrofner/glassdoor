@@ -3,6 +3,7 @@ package io.glassdoor.plugin.plugins.analyser.grep
 import java.io.{BufferedWriter, FileWriter, File}
 import java.rmi.activation.ActivationGroup_Stub
 
+import io.glassdoor.application.Context
 import io.glassdoor.application.{Constant, Context}
 import io.glassdoor.plugin.Plugin
 import scala.sys.process._
@@ -33,7 +34,7 @@ class GrepAnalyser extends Plugin{
     val workingDirectory = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory + context.splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + "/" + Constant.Context.Key.GREP + "/" + context.splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 
@@ -44,6 +45,8 @@ class GrepAnalyser extends Plugin{
       val bw = new BufferedWriter(new FileWriter(outputFile))
       bw.write(output)
       bw.close()
+
+      println("grep finished, saved log to: " + outputFile.getAbsolutePath)
 
       //TODO: the path to the exact file should not be saved in context, but only the directory
       context.setResolvedValue(dest, outputFile.getParent)

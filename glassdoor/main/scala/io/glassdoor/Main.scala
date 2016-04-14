@@ -38,6 +38,8 @@ object Main {
 
     if(result.isDefined){
       context = result.get
+    } else {
+      println("there was an error: context of extractor not saved!")
     }
 
     pluginManager.applyPlugin("smali", Array(),context)
@@ -47,8 +49,13 @@ object Main {
       context = result.get
     }
 
-    //pluginManager.applyPlugin("grep", Array(), context)
+    pluginManager.applyPlugin("grep", Array(Constant.Regex.REGEX_PATTERN_EMAIL,Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, Constant.Context.FullKey.RESULT_LOG_GREP_LOGIN), context)
 
+    result = pluginManager.getPluginResult("grep")
+
+    if(result.isDefined){
+      context = result.get
+    }
     //TODO: these plugins should be found dynamically
     //TODO: info about the plugins should be loaded via a manifest file (as main class)
 //

@@ -27,6 +27,7 @@ object Constant {
       val APK = "apk"
       val DEX = "dex"
       val SMALI = "smali"
+      val GREP = "grep"
       val GREP_LOGIN = "grep-login"
     }
 
