@@ -4,7 +4,7 @@ import java.io.{OutputStream, FileOutputStream, InputStream, File}
 import java.util.zip.{ZipEntry, ZipFile}
 import scala.collection.JavaConversions._
 
-import io.glassdoor.application.{Constant, Context}
+import io.glassdoor.application.{ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 
 import scala.collection.immutable.HashMap
@@ -28,11 +28,11 @@ class Extractor extends Plugin{
       val keymapName = keymapSplitString(0)
       val keyValue = keymapSplitString(1)
 
-      val apkPath = context.getResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK)
+      val apkPath = context.getResolvedValue(ContextConstant.FullKey.ORIGINAL_BINARY_APK)
 
       //TODO: load targetfolder from config
 
-      val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+      val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
       if(apkPath.isDefined && workingDir.isDefined){
         val destination = workingDir.get + "/" + keyValue

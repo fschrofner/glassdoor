@@ -5,7 +5,7 @@ import java.nio.file.{CopyOption, Path}
 import java.nio.file.Paths.get
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
-import io.glassdoor.application.{Constant, Context}
+import io.glassdoor.application.{ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import java.nio.file.Files.copy
 
@@ -24,7 +24,7 @@ class ApkLoader extends Plugin{
 
     val path = copyApkToWorkingDirectory(context, srcPath)
     if(path.isDefined){
-      context.setResolvedValue(Constant.Context.FullKey.ORIGINAL_BINARY_APK, path.get)
+      context.setResolvedValue(ContextConstant.FullKey.ORIGINAL_BINARY_APK, path.get)
       mContext = Some(context)
     } else {
       //TODO: error handling
@@ -37,10 +37,10 @@ class ApkLoader extends Plugin{
   }
 
   def copyApkToWorkingDirectory(context:Context, srcPath:String): Option[String] ={
-    val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
     if(workingDir.isDefined){
       try {
-        val destPath = workingDir.get + "/" + Constant.Context.Key.APK + "/" + getFileName(srcPath)
+        val destPath = workingDir.get + "/" + ContextConstant.Key.APK + "/" + getFileName(srcPath)
         createFolderStructure(destPath)
         println("copying apk to: " + destPath + "...")
         copy(get(srcPath),get(destPath), REPLACE_EXISTING)

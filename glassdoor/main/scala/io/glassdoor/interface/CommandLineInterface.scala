@@ -1,56 +1,62 @@
 package io.glassdoor.interface
 
-import com.googlecode.lanterna.input.{KeyType, KeyStroke}
-import com.googlecode.lanterna.terminal.ansi.UnixTerminal
-import com.googlecode.lanterna.terminal.{DefaultTerminalFactory, Terminal}
+import io.glassdoor.application.Context
+import io.glassdoor.bus.{Message, MessageEvent, EventBus}
+import io.glassdoor.controller.{PluginParameters, ControllerConstant}
+import io.glassdoor.plugin.{PluginManagerConstant, PluginInstance}
+import jline.console.ConsoleReader
 
 /**
   * Created by Florian Schrofner on 3/15/16.
   */
-class CommandLineInterface extends UserInterface{
+class CommandLineInterface extends UserInterface {
 
-   def test(): Unit = {
-     //val terminal = new DefaultTerminalFactory().createTerminal()
-     val terminal = new UnixTerminal()
-     terminal.enterPrivateMode()
-     terminal.setCursorVisible(true)
-     terminal.disableSpecialCharacters()
-     //terminal.setTitle("TEST")
-     //terminal.setCBreak(true)
-     //terminal.setEcho(false)
+  var mConsole:Option[ConsoleReader] = None
 
-     //var currentText = new StringBuilder()
-     var loop = true
+  override def initialise(context: Context): Unit = {
+    println("initialising interface..")
 
-     var keyStroke:KeyStroke = null
+    val console = new ConsoleReader()
+    console.clearScreen()
+    console.setPrompt(">")
+    mConsole = Some(console)
 
-     while(keyStroke == null || keyStroke.getKeyType != KeyType.Escape){
-       //ALWAYS READS EOF INSTANTLY!!
-       keyStroke = terminal.readInput() //blocking
+    var line:String = null
 
-       keyStroke.getKeyType match {
-         case KeyType.Enter =>
-           //TODO: handle enter/interpret command
-           terminal.putCharacter('e')
-           //val graphics = terminal.newTextGraphics()
-           //graphics.putString(0,0,"TESTSTRING")
+    //loop forever until exit command is called
+    //TODO: write man + store default commands centrally
+    while({line = console.readLine();line} != "exit"){
+      console.println("line: " + line)
+      handleLine(line)
+    }
 
-           loop = false
-         case KeyType.Tab =>
-           //TODO: handle tab/autocomplete
-           terminal.putCharacter('t')
-         case KeyType.Character =>
-           //TODO: add character to
-           terminal.putCharacter('c')
-           //currentText += keyStroke.getCharacter
-         case _ =>
-           //default
-           Thread.sleep(10)
-       }
+    terminate()
+  }
 
-     }
+  def handleLine(line:String):Unit = {
+    //TODO: interpret input
+    val input = line.split(" ")
 
-     terminal.exitPrivateMode()
-   }
+    //TODO: generate a list of available inputs to distinguish commands vs plugins
+
+    if(input(0) == "list"){
+
+    } else {
+      val inputBuffer = input.toBuffer
+      inputBuffer.remove(0)
+
+      val parameters = new PluginParameters(input(0), inputBuffer.toArray)
+      EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, Some(parameters))))
+    }
+  }
+
+  override def showPluginList(plugins: Array[PluginInstance]): Unit = {
+    if(mConsole.isDefined){
+      val console = mConsole.get
+      for(plugin:PluginInstance <- plugins){
+        console.println(plugin.kind + ":" + plugin.name)
+      }
+    }
+  }
 }
 

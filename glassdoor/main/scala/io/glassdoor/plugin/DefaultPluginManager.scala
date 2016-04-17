@@ -5,7 +5,7 @@ import scala.collection.JavaConverters._
 import java.util
 
 import com.typesafe.config.{ConfigException, Config, ConfigFactory}
-import io.glassdoor.application.{Context, Constant, Configuration}
+import io.glassdoor.application._
 
 import scala.collection.immutable.HashMap
 
@@ -46,21 +46,21 @@ class DefaultPluginManager extends PluginManager{
   }
 
   def loadDefaultPlugins(context:Context):Unit = {
-    val pluginConfigPath = context.getResolvedValue(Constant.Context.FullKey.CONFIG_PLUGIN_CONFIG_PATH)
+    val pluginConfigPath = context.getResolvedValue(ContextConstant.FullKey.CONFIG_PLUGIN_CONFIG_PATH)
 
     if(pluginConfigPath.isDefined){
       val file = new File(pluginConfigPath.get)
       val config = ConfigFactory.parseFile(file);
 
-      val defaultPluginList = config.getConfigList(Constant.Config.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
+      val defaultPluginList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
 
       for(pluginConfig:Config <- defaultPluginList){
         try {
-          val name = pluginConfig.getString(Constant.Config.PluginKey.NAME)
-          val typ = pluginConfig.getString(Constant.Config.PluginKey.TYPE)
-          val dependencies = pluginConfig.getStringList(Constant.Config.PluginKey.DEPENDENCIES).asScala
-          val commands = pluginConfig.getStringList(Constant.Config.PluginKey.COMMANDS).asScala
-          val className = pluginConfig.getString(Constant.Config.PluginKey.CLASSFILE)
+          val name = pluginConfig.getString(ConfigConstant.PluginKey.NAME)
+          val typ = pluginConfig.getString(ConfigConstant.PluginKey.TYPE)
+          val dependencies = pluginConfig.getStringList(ConfigConstant.PluginKey.DEPENDENCIES).asScala
+          val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.COMMANDS).asScala
+          val className = pluginConfig.getString(ConfigConstant.PluginKey.CLASSFILE)
 
           //instantiate the class
           val plugin = instantiateDefaultPlugin(className)

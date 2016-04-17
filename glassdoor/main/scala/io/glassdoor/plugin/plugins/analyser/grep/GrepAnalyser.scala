@@ -3,8 +3,7 @@ package io.glassdoor.plugin.plugins.analyser.grep
 import java.io.{BufferedWriter, FileWriter, File}
 import java.rmi.activation.ActivationGroup_Stub
 
-import io.glassdoor.application.Context
-import io.glassdoor.application.{Constant, Context}
+import io.glassdoor.application.{ContextConstant, Context, Constant}
 import io.glassdoor.plugin.Plugin
 import scala.sys.process._
 
@@ -31,10 +30,10 @@ class GrepAnalyser extends Plugin{
 
   def callGrep(regex:String, src:String, dest:String, context:Context): Unit ={
     val srcPath = context.getResolvedValue(src)
-    val workingDirectory = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDirectory = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory.get + "/" + Constant.Context.Key.GREP + "/" + context.splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + "/" + ContextConstant.Key.GREP + "/" + context.splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 

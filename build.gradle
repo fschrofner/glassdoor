@@ -23,3 +23,8 @@ distZip {
         include 'conf/*'
     }
 }
+
+run{
+    standardInput = System.in
+    standardOutput = System.out
+}

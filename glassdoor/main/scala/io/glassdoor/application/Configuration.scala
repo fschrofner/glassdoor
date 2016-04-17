@@ -13,21 +13,21 @@ object Configuration {
   var mConfig:Option[Config] = None
 
   def loadConfig():Unit = {
-    val file = new File(Constant.Config.Path.CONFIG_FILE)
+    val file = new File(ConfigConstant.Path.CONFIG_FILE)
     mConfig = Some(ConfigFactory.parseFile(file));
   }
 
-  def loadConfigIntoContext(context:Context): Context ={
-    var map = context.getKeymapMatchingString(Constant.Context.Keymap.CONFIG)
+  def loadConfigIntoContext(context:io.glassdoor.application.Context): Context ={
+    var map = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
 
-    val conf = getConfigObject(Constant.Config.ConfigKey.DEFAULT_KEY)
+    val conf = getConfigObject(ConfigConstant.ConfigKey.DEFAULT_KEY)
     val configSet = conf.get.entrySet().asScala
 
     for(entry:Entry[String,ConfigValue] <- configSet){
       map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
     }
 
-    context.setKeymapMatchingString(Constant.Context.Keymap.CONFIG, map)
+    context.setKeymapMatchingString(ContextConstant.Keymap.CONFIG, map)
     context
   }
 
@@ -61,5 +61,44 @@ object Configuration {
     } else {
       return None
     }
+  }
+}
+
+object ConfigConstant {
+  val DESCRIPTOR_SPLIT = "."
+
+  object Path {
+    //TODO: this needs to be adapted dynamically
+    val CONFIG_FILE = "/home/flosch/Projects/glassdoor/conf/glassdoor.conf"
+  }
+
+  object ConfigKey {
+    val DEFAULT_KEY = "glassdoor"
+
+    object Key {
+      val DEFAULT_PLUGINS = "defaultPlugins"
+      val WORKING_DIRECTORY = "workingDirectory"
+      val PLUGIN_CONFIG_PATH = "pluginConfigPath"
+      val PLUGIN_REPOSITORY = "pluginRepository"
+      val RESOURCE_REPOSITORY = "resourceRepository"
+    }
+
+    object FullKey {
+      val DEFAULT_PLUGINS = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.DEFAULT_PLUGINS
+      val WORKING_DIRECTORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.WORKING_DIRECTORY
+      val PLUGIN_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_CONFIG_PATH
+      val PLUGIN_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_REPOSITORY
+      val RESOURCE_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.RESOURCE_REPOSITORY
+    }
+
+  }
+
+  //values describing a certain plugin
+  object PluginKey {
+    val NAME = "name"
+    val TYPE = "type"
+    val DEPENDENCIES = "dependencies"
+    val COMMANDS = "commands"
+    val CLASSFILE = "classFile"
   }
 }

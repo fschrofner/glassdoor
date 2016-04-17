@@ -1,69 +1,38 @@
 package io.glassdoor
 
-import io.glassdoor.application.{Configuration, Constant, Context}
-import io.glassdoor.interface.CommandLineInterface
-import io.glassdoor.plugin.{DefaultPluginManager, Plugin}
+import akka.actor.{Props, ActorSystem}
+import io.glassdoor.application.{ContextConstant, Configuration, Constant, Context}
+import io.glassdoor.bus.{MessageEvent, Message, EventBus}
+import io.glassdoor.controller.{DefaultController, ControllerConstant, Controller}
+import io.glassdoor.interface.{UserInterfaceConstant, UserInterface, CommandLineInterface}
+import io.glassdoor.plugin.{PluginManagerConstant, DefaultResourceManager, DefaultPluginManager, Plugin}
 import io.glassdoor.plugin.plugins.analyser.grep.GrepAnalyser
 import io.glassdoor.plugin.plugins.loader.apk.ApkLoader
 import io.glassdoor.plugin.plugins.preprocessor.extractor.Extractor
 import io.glassdoor.plugin.plugins.preprocessor.smali.SmaliDisassembler
 
 object Main {
-  def main(args:Array[String]):Unit={
 
-    Configuration.loadConfig()
+  def main(args:Array[String]):Unit={
+    val system = ActorSystem()
 
     println("the first line of glassdoor!")
 
-    var context = new Context
-    context = Configuration.loadConfigIntoContext(context)
+    //create components
+    val controller = system.actorOf(Props(new DefaultController))
+    val interface = system.actorOf(Props(new CommandLineInterface))
+    val pluginManager = system.actorOf(Props(new DefaultPluginManager))
+    //val resourceManager = system.actorOf(Props(new DefaultResourceManager))
 
-    val pluginManager = new DefaultPluginManager
-    pluginManager.loadDefaultPlugins(context)
+    //setup subscriptions
+    EventBus.subscribe(controller, ControllerConstant.channel)
+    EventBus.subscribe(interface, UserInterfaceConstant.channel)
+    EventBus.subscribe(pluginManager,PluginManagerConstant.channel)
+    //EventBus.subscribe(resourceManager, "/resourceManager")
 
-    //TODO: load default commands from config & command sequences
 
-    pluginManager.applyPlugin("apk", Array("/home/flosch/glassdoor-testset/dvel.apk"), context)
-
-    var result = pluginManager.getPluginResult("apk")
-
-    //TODO: allow async callbacks here
-    //only assign result if call was successful
-    if(result.isDefined){
-      context = result.get
-    }
-
-    pluginManager.applyPlugin("extractor",Array(Constant.Regex.REGEX_PATTERN_DEX, Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_DEX),context)
-    result = pluginManager.getPluginResult("extractor")
-
-    if(result.isDefined){
-      context = result.get
-    } else {
-      println("there was an error: context of extractor not saved!")
-    }
-
-    pluginManager.applyPlugin("smali", Array(),context)
-    result = pluginManager.getPluginResult("smali")
-
-    if(result.isDefined){
-      context = result.get
-    }
-
-    pluginManager.applyPlugin("grep", Array(Constant.Regex.REGEX_PATTERN_EMAIL,Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, Constant.Context.FullKey.RESULT_LOG_GREP_LOGIN), context)
-
-    result = pluginManager.getPluginResult("grep")
-
-    if(result.isDefined){
-      context = result.get
-    }
-    //TODO: these plugins should be found dynamically
-    //TODO: info about the plugins should be loaded via a manifest file (as main class)
-//
-//    val grep:Plugin = new GrepAnalyser
-//
-//    //TODO: the regex is still too broad
-//    grep.apply(context,Array(Constant.REGEX_PATTERN_EMAIL,"intermediate-assembly.smali","result-log.grep-login"))
-//    context = grep.result
-
+    //initialisation
+    EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.setup, None)))
   }
+
 }

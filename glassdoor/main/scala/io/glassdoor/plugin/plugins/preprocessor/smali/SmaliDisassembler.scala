@@ -2,7 +2,7 @@ package io.glassdoor.plugin.plugins.preprocessor.smali
 
 import java.io.File
 
-import io.glassdoor.application.{Constant, Context}
+import io.glassdoor.application.{ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import org.jf.baksmali.{baksmaliOptions, baksmali}
 import org.jf.dexlib2.{DexFileFactory, Opcodes}
@@ -18,20 +18,20 @@ class SmaliDisassembler extends Plugin{
     //baksmali.disassembleDexFile(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
 
-    val workingDir = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
     if(workingDir.isDefined){
-      val outputDirectory = workingDir.get + "/" + Constant.Context.Key.SMALI
+      val outputDirectory = workingDir.get + "/" + ContextConstant.Key.SMALI
 
       val options = new baksmaliOptions
       options.jobs = 1
       options.outputDirectory = outputDirectory
 
-      val destination = context.getResolvedValue(Constant.Context.FullKey.CONFIG_WORKING_DIRECTORY)
+      val destination = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
       //TODO: use destination
 
-      val dexFilePath = context.getResolvedValue(Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
+      val dexFilePath = context.getResolvedValue(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
 
       if(dexFilePath.isDefined){
         val dexFileFile = new File(dexFilePath.get + "/classes.dex")
@@ -40,7 +40,7 @@ class SmaliDisassembler extends Plugin{
         try {
           baksmali.disassembleDexFile(dexFile, options)
           println("disassembling dex to: " + outputDirectory)
-          context.setResolvedValue(Constant.Context.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, outputDirectory)
+          context.setResolvedValue(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, outputDirectory)
           mContext = Some(context)
         } catch {
           case e:IllegalArgumentException =>
