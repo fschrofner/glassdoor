@@ -8,17 +8,19 @@ import org.jf.baksmali.{baksmaliOptions, baksmali}
 import org.jf.dexlib2.{DexFileFactory, Opcodes}
 import org.jf.dexlib2.iface.{ClassDef, DexFile}
 
+import scala.collection.immutable.HashMap
+
 /**
   * Created by Florian Schrofner on 3/16/16.
   */
 class SmaliDisassembler extends Plugin{
-  var mContext:Option[Context] = None
+  var mResult:Option[Map[String,String]] = None
 
-  override def apply(context: Context, parameters: Array[String]): Unit = {
+  override def apply(data: Map[String,String], parameters: Array[String]): Unit = {
     //baksmali.disassembleDexFile(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
 
-    val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
     if(workingDir.isDefined){
       val outputDirectory = workingDir.get + "/" + ContextConstant.Key.SMALI
@@ -27,11 +29,11 @@ class SmaliDisassembler extends Plugin{
       options.jobs = 1
       options.outputDirectory = outputDirectory
 
-      val destination = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+      val destination = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
       //TODO: use destination
 
-      val dexFilePath = context.getResolvedValue(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
+      val dexFilePath = data.get(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
 
       if(dexFilePath.isDefined){
         val dexFileFile = new File(dexFilePath.get + "/classes.dex")
@@ -40,11 +42,11 @@ class SmaliDisassembler extends Plugin{
         try {
           baksmali.disassembleDexFile(dexFile, options)
           println("disassembling dex to: " + outputDirectory)
-          context.setResolvedValue(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI, outputDirectory)
-          mContext = Some(context)
+          val result = HashMap[String,String](ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI -> outputDirectory)
+          mResult = Some(result)
         } catch {
           case e:IllegalArgumentException =>
-            mContext = None
+            mResult = None
         }
       } else {
         println("dex not defined!")
@@ -54,8 +56,8 @@ class SmaliDisassembler extends Plugin{
 
   }
 
-  override def result:Option[Context] = {
-    mContext
+  override def result:Option[Map[String,String]] = {
+    mResult
   }
 
   override def help(parameters: Array[String]): Unit = ???

@@ -98,6 +98,7 @@ object ConfigConstant {
     val NAME = "name"
     val TYPE = "type"
     val DEPENDENCIES = "dependencies"
+    val CHANGES = "changes"
     val COMMANDS = "commands"
     val CLASSFILE = "classFile"
   }

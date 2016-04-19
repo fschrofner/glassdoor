@@ -14,25 +14,25 @@ import scala.util.matching.Regex
   * Created by Florian Schrofner on 3/17/16.
   */
 class Extractor extends Plugin{
-  var mContext:Option[Context] = None
+  var mResult:Option[Map[String,String]] = None
   val BUFSIZE = 4096
   val buffer = new Array[Byte](BUFSIZE)
 
-  override def apply(context: Context, parameters: Array[String]): Unit = {
+  override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
 
     try {
       //determine destination
       val keymapDescription = parameters(1)
-      val keymapSplitString = context.splitDescriptor(keymapDescription)
+      val keymapSplitString = splitDescriptor(keymapDescription)
 
       val keymapName = keymapSplitString(0)
       val keyValue = keymapSplitString(1)
 
-      val apkPath = context.getResolvedValue(ContextConstant.FullKey.ORIGINAL_BINARY_APK)
+      val apkPath = data.get(ContextConstant.FullKey.ORIGINAL_BINARY_APK)
 
       //TODO: load targetfolder from config
 
-      val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+      val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
       if(apkPath.isDefined && workingDir.isDefined){
         val destination = workingDir.get + "/" + keyValue
@@ -43,15 +43,15 @@ class Extractor extends Plugin{
         //TODO: get keymap from parameters + destination dir
         extract(apkPath.get, regex, destination)
 
-        context.setResolvedValue(keymapDescription,destination)
-        mContext = Some(context)
+        val result = HashMap[String,String](keymapDescription -> destination)
+        mResult = Some(result)
       } else {
         //TODO: error handling when working dir is not defined
-        mContext = None
+        mResult = None
       }
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
-        mContext = None
+        mResult = None
     }
 
 
@@ -93,8 +93,12 @@ class Extractor extends Plugin{
     }
   }
 
-  override def result:Option[Context] = {
-    mContext
+  def splitDescriptor(descriptor:String):Array[String] = {
+    descriptor.split(Constant.Regex.DESCRIPTOR_SPLIT_REGEX)
+  }
+
+  override def result:Option[Map[String,String]] = {
+    mResult
   }
 
   override def help(parameters: Array[String]): Unit = ???

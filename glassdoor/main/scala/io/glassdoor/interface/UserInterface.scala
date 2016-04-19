@@ -12,6 +12,8 @@ import io.glassdoor.plugin.PluginInstance
   */
 trait UserInterface extends Actor {
   def initialise(context:Context):Unit
+  def showProgress(taskName:String, progress: Float):Unit
+  def showEndlessSpinner(taskName:String, show:Boolean):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.terminate, None)))
@@ -41,5 +43,7 @@ object UserInterfaceConstant {
   object Action {
     val initialise = "initialise"
     val showPluginList = "showPluginList"
+    val showEndlessSpinner = "showEndlessSpinner"
+    val showProgress = "showProgress"
   }
 }

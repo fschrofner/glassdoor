@@ -5,7 +5,7 @@ import akka.actor.Actor.Receive
 import io.glassdoor.application.{Configuration, Context}
 import io.glassdoor.bus.{EventBus, MessageEvent, Message}
 import io.glassdoor.interface.UserInterfaceConstant
-import io.glassdoor.plugin.{ApplyPluginParameters, PluginManagerConstant}
+import io.glassdoor.plugin.manager.{PluginManagerPluginParameters, PluginManagerConstant}
 
 /**
   * Created by Florian Schrofner on 4/17/16.
@@ -40,8 +40,8 @@ trait Controller extends Actor {
           terminate()
         case ControllerConstant.Action.applyPlugin =>
           if(data.isDefined){
-            val receivedParameters = data.get.asInstanceOf[PluginParameters]
-            val parameters = new ApplyPluginParameters(receivedParameters.pluginName, receivedParameters.parameters, mContext)
+            val receivedParameters = data.get.asInstanceOf[ControllerPluginParameters]
+            val parameters = new PluginManagerPluginParameters(receivedParameters.pluginName, receivedParameters.parameters, mContext)
             EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.applyPlugin, Some(parameters))))
           }
       }
@@ -59,4 +59,4 @@ object ControllerConstant {
   }
 }
 
-case class PluginParameters(pluginName:String,parameters:Array[String])
+case class ControllerPluginParameters(pluginName:String, parameters:Array[String])

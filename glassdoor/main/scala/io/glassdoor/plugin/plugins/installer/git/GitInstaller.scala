@@ -5,6 +5,7 @@ import java.nio.file.{Files, Path}
 
 import io.glassdoor.application.{ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
+import scala.collection.immutable.HashMap
 import scala.sys.process._
 
 /**
@@ -13,9 +14,10 @@ import scala.sys.process._
   * Created by Florian Schrofner on 4/15/16.
   */
 class GitInstaller extends Plugin {
-  var mContext:Option[Context] = None
 
-  override def apply(context: Context, parameters: Array[String]): Unit = {
+  var mResult:Option[Map[String,String]] = None
+
+  override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
     try {
       val repoUrl = parameters(0)
       val path = parameters(1)
@@ -27,7 +29,7 @@ class GitInstaller extends Plugin {
         keymap = Some(parameters(2))
       }
 
-      val workingDir = context.getResolvedValue(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+      val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
       if(workingDir.isDefined){
         //TODO: if repository exists, just merge the newest commit from master
@@ -45,16 +47,16 @@ class GitInstaller extends Plugin {
 
         if(resultCode == 0){
           if(keymap.isDefined){
-            context.setResolvedValue(keymap.get, workingDir.get + "/" + path)
+            val result = HashMap[String,String](keymap.get -> (workingDir.get + "/" + path))
+            mResult = Some(result)
           }
-          mContext = Some(context)
         } else {
-          mContext = None
+          mResult = None
         }
       }
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
-        mContext = None
+        mResult = None
     }
 
 
@@ -71,8 +73,8 @@ class GitInstaller extends Plugin {
 
   }
 
-  override def result: Option[Context] = {
-    mContext
+  override def result: Option[Map[String,String]] = {
+    mResult
   }
 
   override def help(parameters: Array[String]): Unit = ???

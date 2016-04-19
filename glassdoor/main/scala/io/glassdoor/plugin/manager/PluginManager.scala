@@ -1,4 +1,4 @@
-package io.glassdoor.plugin
+package io.glassdoor.plugin.manager
 
 import akka.actor.Actor
 import io.glassdoor.application.Context
@@ -13,7 +13,6 @@ trait PluginManager extends Actor {
   def findPlugin(pluginName:String):Array[String]
   def buildPluginIndex(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
-  def getPluginResult(pluginName:String):Option[Context]
 
   override def receive = {
     case Message(action, data) =>
@@ -24,7 +23,7 @@ trait PluginManager extends Actor {
           }
         case PluginManagerConstant.Action.applyPlugin =>
           if(data.isDefined){
-            val parameter = data.get.asInstanceOf[ApplyPluginParameters]
+            val parameter = data.get.asInstanceOf[PluginManagerPluginParameters]
             applyPlugin(parameter.pluginName,parameter.parameters, parameter.context)
           }
       }
@@ -39,4 +38,4 @@ object PluginManagerConstant {
   }
 }
 
-case class ApplyPluginParameters(pluginName:String,parameters:Array[String],context:Context)
+case class PluginManagerPluginParameters(pluginName:String, parameters:Array[String], context:Context)

@@ -1,4 +1,4 @@
-package io.glassdoor.plugin
+package io.glassdoor.plugin.manager
 
 import akka.actor.Actor
 import io.glassdoor.bus.Message

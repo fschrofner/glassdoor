@@ -1,4 +1,4 @@
-package io.glassdoor.plugin
+package io.glassdoor.plugin.manager
 
 /**
   * Created by Florian Schrofner on 4/15/16.
