@@ -2,7 +2,8 @@ package io.glassdoor.plugin
 
 import akka.actor.Actor
 import io.glassdoor.application.Context
-import io.glassdoor.bus.{EventBus, Message}
+import io.glassdoor.bus.{MessageEvent, EventBus, Message}
+import io.glassdoor.plugin.manager.PluginManagerConstant
 
 /**
   * Created by Florian Schrofner on 3/16/16.
@@ -14,7 +15,7 @@ trait Plugin extends Actor {
 
   //method should be called when the plugin is ready to return a result
   def ready():Unit = {
-    //EventBus.
+    EventBus.publish(new MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.pluginResult, result)))
   }
 
   override def receive: Receive = {

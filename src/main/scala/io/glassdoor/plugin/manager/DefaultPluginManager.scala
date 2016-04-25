@@ -70,7 +70,7 @@ class DefaultPluginManager extends PluginManager{
       //TODO: put config inside as well
       mutableHashmap.put(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY, "/home/flosch/glassdoor")
 
-      //mutableHashmap.toMap
+      //TODO: make sure that the plugins return values!! send value to plugin manager, which checks for permission, then forwards value
       plugin ! Message(PluginConstant.Action.apply, Some(new PluginParameters(mutableHashmap.toMap[String,String], parameters)))
       //plugin.apply(context,parameters)
     }

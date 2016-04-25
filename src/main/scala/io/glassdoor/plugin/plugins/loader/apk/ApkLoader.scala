@@ -32,6 +32,8 @@ class ApkLoader extends Plugin{
       //TODO: error handling
       mResult = None
     }
+
+    ready()
   }
 
   override def result: Option[Map[String,String]] = {

@@ -5,3 +5,5 @@ build
 *.ipr
 *.iws
 out
+/.ensime
+./ensime_cache.d

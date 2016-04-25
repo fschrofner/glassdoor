@@ -1,5 +1,7 @@
 package io.glassdoor.plugin.manager
 
+import java.util.Map.Entry
+
 import akka.actor.Actor
 import io.glassdoor.application.Context
 import io.glassdoor.bus.Message
@@ -26,6 +28,17 @@ trait PluginManager extends Actor {
             val parameter = data.get.asInstanceOf[PluginManagerPluginParameters]
             applyPlugin(parameter.pluginName,parameter.parameters, parameter.context)
           }
+        case PluginManagerConstant.Action.pluginResult =>
+          if(data.isDefined){
+            //TODO: check if permissions are met
+            //TODO: remove from running plugin list
+            //TODO: remove keymaps in change and reduce dependency counter
+            val changedValues = data.get.asInstanceOf[Map[String,String]]
+            for(value <- changedValues){
+              println("changing value for key: " + value._1)
+              println("changed value: " + value._2)
+            }
+          }
       }
   }
 }
@@ -35,6 +48,7 @@ object PluginManagerConstant {
   object Action {
     val buildPluginIndex = "buildPluginIndex"
     val applyPlugin = "applyPlugin"
+    val pluginResult = "pluginResult"
   }
 }
 

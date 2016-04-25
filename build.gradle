@@ -1,5 +1,10 @@
+plugins {
+  id 'org.ensime.gradle' version '0.2.6'
+}
+
 apply plugin: 'idea'
 apply plugin: 'application'
+apply plugin: 'scala'
 
 allprojects {
   repositories {
@@ -10,7 +15,12 @@ allprojects {
 mainClassName = "io.glassdoor.Main"
 
 dependencies {
-  compile project(':glassdoor')
+    compile 'org.scala-lang:scala-library:2.11.7'
+    compile 'org.codehaus.groovy:groovy:2.4.6'
+    compile 'com.typesafe.akka:akka-actor_2.11:2.4.4'
+    compile 'com.typesafe:config:1.3.0'
+    compile 'org.smali:baksmali:2.1.1'
+    compile 'jline:jline:2.12'
 }
 
 task wrapper(type: Wrapper) {
@@ -28,3 +38,16 @@ run{
     standardInput = System.in
     standardOutput = System.out
 }
+
+// sourceSets {
+//     main {
+//         scala {
+//             srcDirs = ['main/scala']
+//         }
+//     }
+//     test {
+//         scala {
+//             srcDirs = ['test/scala']
+//         }
+//     }
+// }

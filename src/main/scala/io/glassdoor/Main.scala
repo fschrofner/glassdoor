@@ -31,7 +31,6 @@ object Main {
     EventBus.subscribe(pluginManager,PluginManagerConstant.channel)
     //EventBus.subscribe(resourceManager, "/resourceManager")
 
-
     //initialisation
     EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.setup, None)))
   }
