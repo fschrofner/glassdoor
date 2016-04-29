@@ -14,23 +14,26 @@ class Context {
   private var resource:Map[String,String] = new HashMap[String,String]
   private var configuration:Map[String,String] = new HashMap[String,String]
 
-  def getKeymapMatchingString(keymapDescription:String):Map[String,String] = {
+  def getKeymapMatchingString(keymapDescription:String):Option[Map[String,String]] = {
+    var result:Option[Map[String,String]] = None
+
     keymapDescription match {
       case ContextConstant.Keymap.ORIGINAL_BINARY =>
-        return originalBinary
+        result = Some(originalBinary)
       case ContextConstant.Keymap.INTERMEDIATE_ASSEMBLY =>
-        return intermediateAssembly
+        result = Some(intermediateAssembly)
       case ContextConstant.Keymap.INTERMEDIATE_SOURCE =>
-        return intermediateSource
+        result = Some(intermediateSource)
       case ContextConstant.Keymap.INTERMEDIATE_RESOURCES =>
-        return intermediateResource
+        result = Some(intermediateResource)
       case ContextConstant.Keymap.RESULT_LOG =>
-        return resultLog
+        result = Some(resultLog)
       case ContextConstant.Keymap.RESOURCE =>
-        return resource
+        result = Some(resource)
       case ContextConstant.Keymap.CONFIG =>
-        return configuration
+        result = Some(configuration)
     }
+    result
   }
 
   def setKeymapMatchingString(keymapDescription:String, keymap:Map[String,String]): Unit = {
@@ -63,9 +66,14 @@ class Context {
       val keymapDescriptor = descriptorSplitString(0)
       val keyDescriptor = descriptorSplitString(1)
 
-      val keymap = getKeymapMatchingString(keymapDescriptor)
-      val result = keymap.get(keyDescriptor)
-      result
+      val keymapOpt = getKeymapMatchingString(keymapDescriptor)
+
+      if(keymapOpt.isDefined){
+        val result = keymapOpt.get.get(keyDescriptor)
+        result
+      } else {
+        None
+      }
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
         None
@@ -73,16 +81,22 @@ class Context {
 
   }
 
-  def setResolvedValue(descriptor:String, value:String):Context = {
+  def setResolvedValue(descriptor:String, value:String):Option[Context] = {
     val descriptorSplitString = splitDescriptor(descriptor)
     val keymapDescriptor = descriptorSplitString(0)
     val keyDescriptor = descriptorSplitString(1)
 
-    var keymap:Map[String,String] = getKeymapMatchingString(keymapDescriptor)
-    keymap = keymap + ((keyDescriptor,value))
+    val keymapOpt = getKeymapMatchingString(keymapDescriptor)
 
-    setKeymapMatchingString(keymapDescriptor,keymap)
-    this
+    if(keymapOpt.isDefined){
+      var keymap = keymapOpt.get
+      keymap = keymap + ((keyDescriptor,value))
+      setKeymapMatchingString(keymapDescriptor,keymap)
+      Some(this)
+    } else {
+      None
+    }
+
   }
 
   //TODO: abstract keymaps behind more, provide context interface

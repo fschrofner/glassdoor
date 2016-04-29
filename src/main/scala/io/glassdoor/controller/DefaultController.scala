@@ -4,6 +4,16 @@ package io.glassdoor.controller
   * Created by Florian Schrofner on 4/17/16.
   */
 class DefaultController extends Controller{
+  override def handleChangedValues(changedValues:Map[String,String]){
+    //update context with values given in changed values
+    for((key,value) <- changedValues){
+      println("changing value for key: " + key)
+      println("changed value: " + value)
+
+      mContext.setResolvedValue(key,value)
+    }
+  }
+
   //  def launchPluginTest(): Unit ={
   //    val pluginManager = new DefaultPluginManager
   //    pluginManager.loadDefaultPlugins(context)

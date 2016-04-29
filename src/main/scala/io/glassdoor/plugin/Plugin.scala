@@ -9,13 +9,16 @@ import io.glassdoor.plugin.manager.PluginManagerConstant
   * Created by Florian Schrofner on 3/16/16.
   */
 trait Plugin extends Actor {
+  private var uniqueId:Option[Long] = None
+
   def apply(data:Map[String,String], parameters:Array[String])
   def result:Option[Map[String,String]]
   def help(parameters:Array[String])
 
   //method should be called when the plugin is ready to return a result
   def ready():Unit = {
-    EventBus.publish(new MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.pluginResult, result)))
+    val resultData = PluginResult(uniqueId, result)
+    EventBus.publish(new MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.pluginResult, Some(resultData))))
   }
 
   override def receive: Receive = {
@@ -26,6 +29,11 @@ trait Plugin extends Actor {
             val pluginParameters = data.get.asInstanceOf[PluginParameters]
             apply(pluginParameters.data, pluginParameters.parameters)
           }
+        case PluginConstant.Action.setUniqueId =>
+          if(data.isDefined){
+            val id = data.get.asInstanceOf[Long]
+            uniqueId = Some(id)
+          }
       }
   }
 }
@@ -34,7 +42,9 @@ object PluginConstant {
   object Action {
     val apply = "apply"
     val help = "help"
+    val setUniqueId = "id"
   }
 }
 
 case class PluginParameters(data:Map[String, String], parameters:Array[String])
+case class PluginResult(uniqueId:Option[Long], result:Option[Map[String,String]])

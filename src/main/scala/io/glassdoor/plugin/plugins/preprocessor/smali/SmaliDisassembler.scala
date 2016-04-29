@@ -51,6 +51,8 @@ class SmaliDisassembler extends Plugin{
       } else {
         println("dex not defined!")
       }
+
+      ready
     }
 
 

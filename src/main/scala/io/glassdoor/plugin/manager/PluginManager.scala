@@ -2,9 +2,11 @@ package io.glassdoor.plugin.manager
 
 import java.util.Map.Entry
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import io.glassdoor.application.Context
-import io.glassdoor.bus.Message
+import io.glassdoor.bus.{Message,EventBus, MessageEvent}
+import io.glassdoor.controller.ControllerConstant
+import io.glassdoor.plugin.{PluginInstance, PluginResult}
 
 /**
   * Created by Florian Schrofner on 3/16/16.
@@ -15,6 +17,12 @@ trait PluginManager extends Actor {
   def findPlugin(pluginName:String):Array[String]
   def buildPluginIndex(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
+  def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
+
+  def applyChangedValues(changedValues:Map[String,String]):Unit = {
+    val message = new Message(ControllerConstant.Action.applyChangedValues, Some(changedValues))
+    EventBus.publish(new MessageEvent(ControllerConstant.channel, message))
+  }
 
   override def receive = {
     case Message(action, data) =>
@@ -30,13 +38,9 @@ trait PluginManager extends Actor {
           }
         case PluginManagerConstant.Action.pluginResult =>
           if(data.isDefined){
-            //TODO: check if permissions are met
-            //TODO: remove from running plugin list
-            //TODO: remove keymaps in change and reduce dependency counter
-            val changedValues = data.get.asInstanceOf[Map[String,String]]
-            for(value <- changedValues){
-              println("changing value for key: " + value._1)
-              println("changed value: " + value._2)
+            val resultData = data.get.asInstanceOf[PluginResult]
+            if(resultData.uniqueId.isDefined && resultData.result.isDefined){
+              handlePluginResult(resultData.uniqueId.get, resultData.result.get)
             }
           }
       }

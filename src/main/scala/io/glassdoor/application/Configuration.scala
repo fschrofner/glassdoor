@@ -17,18 +17,24 @@ object Configuration {
     mConfig = Some(ConfigFactory.parseFile(file));
   }
 
-  def loadConfigIntoContext(context:io.glassdoor.application.Context): Context ={
-    var map = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
+  def loadConfigIntoContext(context:io.glassdoor.application.Context): Option[Context] ={
+    var result:Option[Context] = None
+    val mapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
 
-    val conf = getConfigObject(ConfigConstant.ConfigKey.DEFAULT_KEY)
-    val configSet = conf.get.entrySet().asScala
+    if(mapOpt.isDefined){
+      var map = mapOpt.get
+      val conf = getConfigObject(ConfigConstant.ConfigKey.DEFAULT_KEY)
+      val configSet = conf.get.entrySet().asScala
 
-    for(entry:Entry[String,ConfigValue] <- configSet){
-      map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
+      for(entry:Entry[String,ConfigValue] <- configSet){
+        map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
+      }
+
+      context.setKeymapMatchingString(ContextConstant.Keymap.CONFIG, map)
+      result = Some(context)
     }
 
-    context.setKeymapMatchingString(ContextConstant.Keymap.CONFIG, map)
-    context
+    result
   }
 
   def getConfigObject(key:String):Option[Config] = {

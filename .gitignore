@@ -6,4 +6,6 @@ build
 *.iws
 out
 /.ensime
-./ensime_cache.d
+.ensime_cache.d
+/#build.gradle#
+.idea

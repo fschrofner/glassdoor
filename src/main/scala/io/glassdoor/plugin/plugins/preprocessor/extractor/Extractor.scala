@@ -52,6 +52,9 @@ class Extractor extends Plugin{
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
         mResult = None
+    } finally {
+      println("extractor ready")
+      ready
     }
 
 

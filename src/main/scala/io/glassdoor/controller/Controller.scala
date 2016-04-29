@@ -11,12 +11,21 @@ import io.glassdoor.plugin.manager.{PluginManagerPluginParameters, PluginManager
   * Created by Florian Schrofner on 4/17/16.
   */
 trait Controller extends Actor {
-  private var mContext:Context = null
+  protected var mContext:Context = null
+
+  def handleChangedValues(changedValues:Map[String,String]):Unit
 
   def setup():Unit = {
     Configuration.loadConfig()
     mContext = new Context
-    mContext = Configuration.loadConfigIntoContext(mContext)
+
+    val contextOpt = Configuration.loadConfigIntoContext(mContext)
+
+    if(contextOpt.isDefined){
+      mContext = contextOpt.get
+    } else {
+      //TODO: error handling
+    }
 
     //setup other components
     EventBus.publish(MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.initialise , Some(mContext))))
@@ -44,6 +53,12 @@ trait Controller extends Actor {
             val parameters = new PluginManagerPluginParameters(receivedParameters.pluginName, receivedParameters.parameters, mContext)
             EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.applyPlugin, Some(parameters))))
           }
+
+        case ControllerConstant.Action.applyChangedValues =>
+          if(data.isDefined){
+            val changedValues = data.get.asInstanceOf[Map[String,String]]
+            handleChangedValues(changedValues)
+          }
       }
   }
 
@@ -56,6 +71,7 @@ object ControllerConstant {
     val context = "context"
     val terminate = "terminate"
     val applyPlugin = "applyPlugin"
+    val applyChangedValues = "applyChangedValues"
   }
 }
 
