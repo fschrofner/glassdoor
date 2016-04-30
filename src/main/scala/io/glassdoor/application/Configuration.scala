@@ -83,16 +83,20 @@ object ConfigConstant {
 
     object Key {
       val DEFAULT_PLUGINS = "defaultPlugins"
+      val ALIASES = "aliases"
       val WORKING_DIRECTORY = "workingDirectory"
       val PLUGIN_CONFIG_PATH = "pluginConfigPath"
+      val ALIAS_CONFIG_PATH ="aliasConfigPath"
       val PLUGIN_REPOSITORY = "pluginRepository"
       val RESOURCE_REPOSITORY = "resourceRepository"
     }
 
     object FullKey {
       val DEFAULT_PLUGINS = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.DEFAULT_PLUGINS
+      val ALIASES = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.ALIASES
       val WORKING_DIRECTORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.WORKING_DIRECTORY
       val PLUGIN_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_CONFIG_PATH
+      val ALIAS_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.ALIAS_CONFIG_PATH
       val PLUGIN_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_REPOSITORY
       val RESOURCE_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.RESOURCE_REPOSITORY
     }
@@ -107,5 +111,10 @@ object ConfigConstant {
     val CHANGES = "changes"
     val COMMANDS = "commands"
     val CLASSFILE = "classFile"
+  }
+
+  object AliasKey  {
+    val SHORTHAND = "shorthand"
+    val COMMANDS = "commands"
   }
 }

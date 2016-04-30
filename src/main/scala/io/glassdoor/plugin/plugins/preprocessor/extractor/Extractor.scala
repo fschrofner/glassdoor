@@ -21,27 +21,27 @@ class Extractor extends Plugin{
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
 
     try {
+      //get source
+      val srcKeymapDescription = parameters(1)
+      val srcPath = data.get(srcKeymapDescription)
+
       //determine destination
-      val keymapDescription = parameters(1)
+      val keymapDescription = parameters(2)
       val keymapSplitString = splitDescriptor(keymapDescription)
 
       val keymapName = keymapSplitString(0)
       val keyValue = keymapSplitString(1)
 
-      val apkPath = data.get(ContextConstant.FullKey.ORIGINAL_BINARY_APK)
-
-      //TODO: load targetfolder from config
-
       val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
 
-      if(apkPath.isDefined && workingDir.isDefined){
+      if(srcPath.isDefined && workingDir.isDefined){
         val destination = workingDir.get + "/" + keyValue
 
         val regex = parameters(0)
         //TODO: check regex for null
 
         //TODO: get keymap from parameters + destination dir
-        extract(apkPath.get, regex, destination)
+        extract(srcPath.get, regex, destination)
 
         val result = HashMap[String,String](keymapDescription -> destination)
         mResult = Some(result)

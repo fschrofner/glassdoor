@@ -20,8 +20,8 @@ import scala.util.Random
   * Created by Florian Schrofner on 3/30/16.
   */
 class DefaultPluginManager extends PluginManager{
-  //a list with the loaded plugins and their key values
-  var mLoadedPlugins:HashMap[String, PluginInstance] = new HashMap[String,PluginInstance]
+  //a map of the loaded plugins and their key values
+  var mLoadedPlugins:Map[String, PluginInstance] = new HashMap[String,PluginInstance]
 
   //this should contain all plugins found in the plugin directory
   var mPluginMap:Map[String, String] = new HashMap[String, String]
@@ -133,7 +133,7 @@ class DefaultPluginManager extends PluginManager{
 
     if(pluginConfigPath.isDefined){
       val file = new File(pluginConfigPath.get)
-      val config = ConfigFactory.parseFile(file);
+      val config = ConfigFactory.parseFile(file)
 
       val defaultPluginList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
 
@@ -165,13 +165,10 @@ class DefaultPluginManager extends PluginManager{
 
       }
     }
-
-
   }
 
   def instantiateDefaultPlugin(className:String):ActorRef = {
     val pluginClass = Class.forName(className)
     context.system.actorOf(Props(pluginClass))
   }
-
 }

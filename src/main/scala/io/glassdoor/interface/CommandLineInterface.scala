@@ -1,8 +1,8 @@
 package io.glassdoor.interface
 
-import io.glassdoor.application.Context
+import io.glassdoor.application.{Context, CommandInterpreter, Command}
 import io.glassdoor.bus.{Message, MessageEvent, EventBus}
-import io.glassdoor.controller.{ControllerPluginParameters, ControllerConstant}
+import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
 import jline.console.ConsoleReader
 
@@ -34,22 +34,14 @@ class CommandLineInterface extends UserInterface {
   }
 
   def handleLine(line:String):Unit = {
-    //TODO: interpret input
-    val input = line.split(" ")
+    val input = CommandInterpreter.interpret(line)
 
-    //TODO: generate a list of available inputs to distinguish commands vs plugins
-
-    if(input(0) == "list"){
-
-    } else {
+    if(input.isDefined){
       //don't show next command prompt, while there is still a task executing
       mConsole.get.resetPromptLine("","",0)
-
-      val inputBuffer = input.toBuffer
-      inputBuffer.remove(0)
-      val parameters = new ControllerPluginParameters(input(0), inputBuffer.toArray)
-      EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, Some(parameters))))
+      EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
     }
+
   }
 
   override def showPluginList(plugins: Array[PluginInstance]): Unit = {

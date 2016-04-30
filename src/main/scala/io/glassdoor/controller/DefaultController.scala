@@ -1,9 +1,19 @@
 package io.glassdoor.controller
 
+import java.io.File
+
+import scala.collection.immutable.HashMap
+import io.glassdoor.application.{Configuration, ConfigConstant, Context, ContextConstant, CommandInterpreter, Command}
+import com.typesafe.config.{Config, ConfigException, ConfigFactory}
+import scala.collection.JavaConverters._
+
 /**
   * Created by Florian Schrofner on 4/17/16.
   */
 class DefaultController extends Controller{
+  //a map of the aliases for commands
+  var mAliasMap:Map[String,Array[String]] = new HashMap[String,Array[String]]
+
   override def handleChangedValues(changedValues:Map[String,String]){
     //update context with values given in changed values
     for((key,value) <- changedValues){
@@ -11,6 +21,55 @@ class DefaultController extends Controller{
       println("changed value: " + value)
 
       mContext.setResolvedValue(key,value)
+    }
+  }
+
+  override def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit = {
+
+    if(mAliasMap.contains(pluginName)){
+      //load commands behind alias and execute them
+      println("alias map contains command! replacing..")
+      val commandStrings = mAliasMap.get(pluginName).get
+
+      for(commandString <- commandStrings){
+        val command = CommandInterpreter.interpret(commandString)
+
+        if(command.isDefined){
+          applyPlugin(command.get.name,command.get.parameters)
+        } else {
+          //TODO: could not interpret command!
+        }
+
+      }
+    } else {
+      //directly launch plugin
+      applyPlugin(pluginName, parameters)
+    }
+  }
+
+  override def buildAliasIndex(context:Context):Unit = {
+    val aliasConfigPath = context.getResolvedValue(ContextConstant.FullKey.CONFIG_ALIAS_CONFIG_PATH)
+
+    if(aliasConfigPath.isDefined){
+      val file = new File(aliasConfigPath.get)
+      val config = ConfigFactory.parseFile(file)
+
+      val aliasList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.ALIASES).asScala
+
+      for(aliasConfig:Config <- aliasList){
+        try{
+        //TODO: save aliases into hashmap
+        val shorthand = aliasConfig.getString(ConfigConstant.AliasKey.SHORTHAND)
+        val commands = aliasConfig.getStringList(ConfigConstant.AliasKey.COMMANDS).asScala
+          mAliasMap += ((shorthand,commands.toArray))
+
+          println("alias detected: "  + shorthand)
+        } catch {
+          case e:ConfigException =>
+            println("alias information missing")
+        }
+
+      }
     }
   }
 
