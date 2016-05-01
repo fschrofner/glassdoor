@@ -8,7 +8,7 @@ import groovy.lang.GroovyClassLoader
 import io.glassdoor.application._
 import io.glassdoor.bus.Message
 import io.glassdoor.plugin.language.GroovyPlugin
-import io.glassdoor.plugin.{PluginParameters, PluginConstant, Plugin, PluginInstance, PluginResult}
+import io.glassdoor.plugin.{PluginParameters, PluginConstant, Plugin, PluginInstance, PluginResult, PluginData}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
@@ -20,11 +20,15 @@ import scala.util.Random
   * Created by Florian Schrofner on 3/30/16.
   */
 class DefaultPluginManager extends PluginManager{
-  //a map of the loaded plugins and their key values
-  var mLoadedPlugins:Map[String, PluginInstance] = new HashMap[String,PluginInstance]
 
-  //this should contain all plugins found in the plugin directory
-  var mPluginMap:Map[String, String] = new HashMap[String, String]
+  //contains all currently running plugins, unique id as key value
+  var mRunningPlugins:scala.collection.mutable.Map[Long,PluginInstance] = new scala.collection.mutable.HashMap[Long, PluginInstance]
+
+  //a list for plugins currently waiting to be executed
+  var mPluginQueue:List[PluginInstance] = List[PluginInstance]()
+
+  //a map of the loaded plugins, plugin names are the key values
+  var mLoadedPlugins:Map[String, PluginData] = new HashMap[String,PluginData]
 
   override def loadPlugin(pluginName: String): Unit = ???
 
@@ -34,16 +38,12 @@ class DefaultPluginManager extends PluginManager{
 
   override def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit = {
     //TODO: check if permissions are met
-    //TODO: remove from running plugin list
     //TODO: remove keymaps in change and reduce dependency counter
-    //TODO: find plugin instance by pluginRef
 
     var matchingPlugin:Option[PluginInstance] = None
 
-    for((key, pluginInstance) <- mLoadedPlugins){
-      if(pluginInstance.uniqueId == pluginId){
-        matchingPlugin = Some(pluginInstance)
-      }
+    if(mRunningPlugins.contains(pluginId)){
+      matchingPlugin = mRunningPlugins.get(pluginId)
     }
 
     if(matchingPlugin.isDefined){
@@ -60,6 +60,9 @@ class DefaultPluginManager extends PluginManager{
       }
 
       applyChangedValues(changedValues)
+      mRunningPlugins.remove(pluginId)
+
+      //TODO: start next (launchable) plugin in queue
 
     } else {
       println("no matching plugin found!")
@@ -68,26 +71,23 @@ class DefaultPluginManager extends PluginManager{
 
   override def applyPlugin(pluginName: String, parameters: Array[String], context: Context): Unit = {
     //TODO: only send the data the plugin needs
-    var pluginInstance:Option[PluginInstance] = None
+    var pluginDataOpt:Option[PluginData] = None
 
     if(mLoadedPlugins.contains(pluginName)){
-       pluginInstance = mLoadedPlugins.get(pluginName)
+      pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
-      //TODO: differentiate programming languages, handover parameters
-      // println("received unknown command, instantiating and calling groovy plugin!")
-      // val actor = this.context.system.actorOf(Props[GroovyPlugin])
-      // actor ! "testMessage"
+      //TODO: error, plugin not found
     }
 
-    if(pluginInstance.isDefined){
+    if(pluginDataOpt.isDefined){
       //TODO: check if dependencies satisfied
       //TODO: check that no two plugins can run at the same time, which will work with the same data
 
-      val plugin = pluginInstance.get.plugin
-      val dependencies = pluginInstance.get.dependencies
-      val changes = pluginInstance.get.changes
+      val pluginData = pluginDataOpt.get
+      val dependencies = pluginData.dependencies
+      val changes = pluginData.changes
 
-      val mutableHashmap = new mutable.HashMap[String,String]()
+      val mutableHashmap = new mutable.HashMap[String,String]
 
       //provide access to the dependencies
       for(dependency <- dependencies){
@@ -97,7 +97,7 @@ class DefaultPluginManager extends PluginManager{
         }
       }
 
-      //provide access 
+      //provide access to values it changes
       for(change <- changes){
         val value = context.getResolvedValue(change)
         if(value.isDefined){
@@ -105,6 +105,7 @@ class DefaultPluginManager extends PluginManager{
         }
       }
 
+      //provide configuration in context
       val configKeymapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
 
       if(configKeymapOpt.isDefined){
@@ -116,12 +117,34 @@ class DefaultPluginManager extends PluginManager{
         }
       }
 
-      //TODO: put config inside as well
-      //mutableHashmap.put(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY, "/home/flosch/glassdoor")
+      val actor = instantiatePlugin(pluginData.pluginClass, pluginData.pluginEnvironment)
 
-      //TODO: make sure that the plugins return values!! send value to plugin manager, which checks for permission, then forwards value
-      plugin ! Message(PluginConstant.Action.apply, Some(new PluginParameters(mutableHashmap.toMap[String,String], parameters)))
+      //if plugin instantiation successful
+      if(actor.isDefined){
+        val id = UniqueIdGenerator.generate()
+
+        actor.get ! Message(PluginConstant.Action.setUniqueId, Some(id))
+
+        //create a new plugin instance with the data
+        val pluginInstance = PluginInstance(id, pluginData.name, pluginData.kind, pluginData.dependencies, pluginData.changes, pluginData.commands, actor.get)
+
+        mRunningPlugins.put(pluginInstance.uniqueId, pluginInstance)
+
+        //apply plugin
+        actor.get ! Message(PluginConstant.Action.apply, Some(new PluginParameters(mutableHashmap.toMap[String,String], parameters)))
+      }
     }
+  }
+
+  def instantiatePlugin(pluginClass:String, pluginEnvironment:Option[Map[String, String]] = None):Option[ActorRef] = {
+    val targetClass = Class.forName(pluginClass)
+    val actor = context.system.actorOf(Props(targetClass))
+
+    if(pluginEnvironment.isDefined){
+      //TODO: send environment to plugin, e.g. path to groovy script
+    }
+
+    Some(actor)
   }
 
   override def buildPluginIndex(context:Context): Unit = {
@@ -139,23 +162,17 @@ class DefaultPluginManager extends PluginManager{
 
       for(pluginConfig:Config <- defaultPluginList){
         try {
-          val uniqueId = UniqueIdGenerator.generate()
           val name = pluginConfig.getString(ConfigConstant.PluginKey.NAME)
           val typ = pluginConfig.getString(ConfigConstant.PluginKey.TYPE)
           val dependencies = pluginConfig.getStringList(ConfigConstant.PluginKey.DEPENDENCIES).asScala
           val changes = pluginConfig.getStringList(ConfigConstant.PluginKey.CHANGES).asScala
           val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.COMMANDS).asScala
-          val className = pluginConfig.getString(ConfigConstant.PluginKey.CLASSFILE)
+          val pluginClass = pluginConfig.getString(ConfigConstant.PluginKey.CLASSFILE)
+          val pluginEnvironment = None
 
-          //instantiate the class
-          val plugin = instantiateDefaultPlugin(className)
+          val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass, pluginEnvironment)
 
-          //setting the unique id for the plugin
-          println(name + ":" + uniqueId)
-          plugin ! Message(PluginConstant.Action.setUniqueId, Some(uniqueId))
-
-          val pluginInstance = new PluginInstance(uniqueId,name,typ,dependencies.toArray,changes.toArray, commands.toArray, plugin)
-          mLoadedPlugins += ((pluginInstance.name,pluginInstance))
+          mLoadedPlugins += ((pluginData.name, pluginData))
 
           println("plugin detected: " + name)
         } catch {
