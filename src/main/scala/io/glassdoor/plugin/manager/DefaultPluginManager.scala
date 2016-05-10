@@ -12,7 +12,7 @@ import io.glassdoor.plugin.{PluginParameters, PluginConstant, Plugin, PluginInst
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
-import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.io.Source
 import scala.util.Random
 
@@ -24,11 +24,17 @@ class DefaultPluginManager extends PluginManager{
   //contains all currently running plugins, unique id as key value
   var mRunningPlugins:scala.collection.mutable.Map[Long,PluginInstance] = new scala.collection.mutable.HashMap[Long, PluginInstance]
 
+  //a list of the dependencies of the currently executed plugins with a counter of how many plugins depend on this value (there can be multiple plugins using the same value). it is not allowed for plugins to change values that other plugins depend on.
+  var mWorkedOnDependencies:scala.collection.mutable.Map[String, Integer] = new scala.collection.mutable.HashMap[String, Integer]
+
+  //a list of the values that are currently being changed. there must not be more than one plugin working on a value!
+  var mChangingValues:ArrayBuffer[String] = ArrayBuffer[String]()
+
   //a list for plugins currently waiting to be executed
-  var mPluginQueue:List[PluginInstance] = List[PluginInstance]()
+  var mPluginQueue:ArrayBuffer[PluginInstance] = ArrayBuffer[PluginInstance]()
 
   //a map of the loaded plugins, plugin names are the key values
-  var mLoadedPlugins:Map[String, PluginData] = new HashMap[String,PluginData]
+  var mLoadedPlugins:Map[String, PluginData] = new scala.collection.immutable.HashMap[String,PluginData]
 
   override def loadPlugin(pluginName: String): Unit = ???
 
@@ -53,13 +59,15 @@ class DefaultPluginManager extends PluginManager{
 
       for((key,value) <- changedValues){
         if(pluginInstance.changes.contains(key)){
-          println("correctly changed key: " + key)
+          println("correctly changing key: " + key)
         } else {
           println("error: change not specified in manifest!")
         }
       }
 
       applyChangedValues(changedValues)
+      
+      clearChangingValuesAndDependencies(pluginInstance)
       mRunningPlugins.remove(pluginId)
 
       //TODO: start next (launchable) plugin in queue
@@ -68,6 +76,26 @@ class DefaultPluginManager extends PluginManager{
       println("no matching plugin found!")
     }
   }
+
+  def clearChangingValuesAndDependencies(pluginInstance:PluginInstance):Unit = {
+    val changes = pluginInstance.changes
+    val dependencies = pluginInstance.dependencies
+
+    for(change <- changes){
+      mChangingValues.remove(mChangingValues.indexOf(change))
+    }
+
+    for(dependency <- dependencies){
+      val prevVal = mWorkedOnDependencies.get(dependency).get
+      if(prevVal > 1){
+        mWorkedOnDependencies.put(dependency, prevVal - 1)
+      } else {
+        mWorkedOnDependencies.remove(dependency)
+      }
+    }
+  }
+
+
 
   override def applyPlugin(pluginName: String, parameters: Array[String], context: Context): Unit = {
     //TODO: only send the data the plugin needs
@@ -87,21 +115,41 @@ class DefaultPluginManager extends PluginManager{
       val dependencies = pluginData.dependencies
       val changes = pluginData.changes
 
-      val mutableHashmap = new mutable.HashMap[String,String]
+      val mutableHashmap = new scala.collection.mutable.HashMap[String,String]
 
-      //provide access to the dependencies
+      //provide access to the dependencies and add them to the current dependencies
       for(dependency <- dependencies){
-        val value = context.getResolvedValue(dependency)
-        if(value.isDefined){
-          mutableHashmap.put(dependency, value.get)
+        if(mChangingValues.contains(dependency)){
+          //TODO: can not launch plugin! values in change, schedule plugin
+          println("dependency in change! can not safely launch plugin!")
+        } else {
+          if(mWorkedOnDependencies.contains(dependency)){
+            val prevVal = mWorkedOnDependencies.get(dependency).get
+            mWorkedOnDependencies.put(dependency, prevVal+1)
+          } else {
+            mWorkedOnDependencies.put(dependency, 1)
+          }
+
+          val value = context.getResolvedValue(dependency)
+          if(value.isDefined){
+            mutableHashmap.put(dependency, value.get)
+          }
         }
       }
 
-      //provide access to values it changes
+      //provide access to values it changes and add value to changed values
       for(change <- changes){
-        val value = context.getResolvedValue(change)
-        if(value.isDefined){
-          mutableHashmap.put(change, value.get)
+        if(mWorkedOnDependencies.contains(change) || mChangingValues.contains(change)){
+          //TODO: can not work on values that other plugins need/ already work on
+          println("value is depended on or already changing! can not safely launch plugin!")
+        } else {
+
+          mChangingValues.append(change)
+
+          val value = context.getResolvedValue(change)
+          if(value.isDefined){
+            mutableHashmap.put(change, value.get)
+          }
         }
       }
 
@@ -122,6 +170,8 @@ class DefaultPluginManager extends PluginManager{
       //if plugin instantiation successful
       if(actor.isDefined){
         val id = UniqueIdGenerator.generate()
+
+        println("starting plugin " + pluginData.name + " with id: " + id)
 
         actor.get ! Message(PluginConstant.Action.setUniqueId, Some(id))
 
