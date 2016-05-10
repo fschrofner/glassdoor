@@ -6,6 +6,7 @@ import io.glassdoor.application.{Configuration, Context, Command}
 import io.glassdoor.bus.{EventBus, MessageEvent, Message}
 import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.manager.{PluginManagerPluginParameters, PluginManagerConstant}
+import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerResourceParameters}
 
 /**
   * Created by Florian Schrofner on 4/17/16.
@@ -18,8 +19,14 @@ trait Controller extends Actor {
     EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.applyPlugin, Some(message))))
   }
 
+  def installResource(resourceName:String):Unit = {
+    val message = new ResourceManagerResourceParameters(resourceName, mContext)
+    EventBus.publish(MessageEvent(ResourceManagerConstant.channel, Message(ResourceManagerConstant.Action.installResource, Some(message))))
+  }
+
   def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
   def handleChangedValues(changedValues:Map[String,String]):Unit
+  def handleInstallResource(names:Array[String])
   def buildAliasIndex(context:Context):Unit
 
   def setup():Unit = {
@@ -38,6 +45,7 @@ trait Controller extends Actor {
     //setup other components
     EventBus.publish(MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.initialise , Some(mContext))))
     EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.buildPluginIndex, Some(mContext))))
+    EventBus.publish(MessageEvent(ResourceManagerConstant.channel, Message(ResourceManagerConstant.Action.buildResourceIndex, Some(mContext))))
   }
 
   def terminate():Unit = {
@@ -65,6 +73,12 @@ trait Controller extends Actor {
             val changedValues = data.get.asInstanceOf[Map[String,String]]
             handleChangedValues(changedValues)
           }
+
+        case ControllerConstant.Action.installResource =>
+          if(data.isDefined){
+            val name = data.get.asInstanceOf[Array[String]]
+            handleInstallResource(name)
+          }
       }
   }
 
@@ -77,6 +91,7 @@ object ControllerConstant {
     val context = "context"
     val terminate = "terminate"
     val applyPlugin = "applyPlugin"
+    val installResource = "installResource"
     val applyChangedValues = "applyChangedValues"
   }
 }

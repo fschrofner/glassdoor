@@ -39,7 +39,13 @@ class CommandLineInterface extends UserInterface {
     if(input.isDefined){
       //don't show next command prompt, while there is still a task executing
       mConsole.get.resetPromptLine("","",0)
-      EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
+
+      //TODO: use list of system commands instead
+      if(input.get.name == "install"){
+        EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.installResource, Some(input.get.parameters))))
+      } else {
+        EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
+      }
     }
 
   }

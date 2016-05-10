@@ -47,6 +47,12 @@ class DefaultController extends Controller{
     }
   }
 
+  override def handleInstallResource(names:Array[String]):Unit = {
+    for(name <- names){
+      installResource(name)
+    }
+  }
+
   override def buildAliasIndex(context:Context):Unit = {
     val aliasConfigPath = context.getResolvedValue(ContextConstant.FullKey.CONFIG_ALIAS_CONFIG_PATH)
 

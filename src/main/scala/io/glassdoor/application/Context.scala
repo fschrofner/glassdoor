@@ -32,6 +32,8 @@ class Context {
         result = Some(resource)
       case ContextConstant.Keymap.CONFIG =>
         result = Some(configuration)
+      case _ =>
+        result = None
     }
     result
   }
@@ -52,6 +54,8 @@ class Context {
         resource = keymap
       case ContextConstant.Keymap.CONFIG =>
         configuration = keymap
+      case _ =>
+        //TODO: error!
     }
   }
 
@@ -134,5 +138,6 @@ object ContextConstant {
     val CONFIG_WORKING_DIRECTORY = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.WORKING_DIRECTORY
     val CONFIG_PLUGIN_CONFIG_PATH = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.PLUGIN_CONFIG_PATH
     val CONFIG_ALIAS_CONFIG_PATH = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.ALIAS_CONFIG_PATH
+    val CONFIG_RESOURCE_DIRECTORY = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.RESOURCE_DIRECTORY
   }
 }
