@@ -109,7 +109,7 @@ class DefaultPluginManager extends PluginManager{
 
     if(pluginDataOpt.isDefined){
       //TODO: check if dependencies satisfied
-      //TODO: check that no two plugins can run at the same time, which will work with the same data
+      //TODO: check that no two plugins can run at the same time, which will work with the same datan
 
       val pluginData = pluginDataOpt.get
       val dependencies = pluginData.dependencies

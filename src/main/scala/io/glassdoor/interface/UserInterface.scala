@@ -12,8 +12,9 @@ import io.glassdoor.plugin.PluginInstance
   */
 trait UserInterface extends Actor {
   def initialise(context:Context):Unit
-  def showProgress(taskName:String, progress: Float):Unit
-  def showEndlessSpinner(taskName:String, show:Boolean):Unit
+  def showProgress(taskId:Long, progress: Float):Unit
+  def showEndlessProgress(taskId:Long):Unit
+  def taskCompleted(taskId: Long):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.terminate, None)))
@@ -33,6 +34,17 @@ trait UserInterface extends Actor {
           if(data.isDefined){
             showPluginList(data.get.asInstanceOf[Array[PluginInstance]])
           }
+        case UserInterfaceConstant.Action.showEndlessProgress =>
+          if(data.isDefined){
+            val taskId = data.get.asInstanceOf[Long]
+            showEndlessProgress(taskId)
+          }
+        case UserInterfaceConstant.Action.taskCompleted =>
+          println("received task completed in user interface")
+          if(data.isDefined){
+            val taskId = data.get.asInstanceOf[Long]
+            taskCompleted(taskId)
+          }
     }
   }
 }
@@ -43,7 +55,8 @@ object UserInterfaceConstant {
   object Action {
     val initialise = "initialise"
     val showPluginList = "showPluginList"
-    val showEndlessSpinner = "showEndlessSpinner"
+    val showEndlessProgress = "showEndlessProgress"
     val showProgress = "showProgress"
+    val taskCompleted = "taskCompleted"
   }
 }

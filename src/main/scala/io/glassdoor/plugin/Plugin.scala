@@ -3,6 +3,7 @@ package io.glassdoor.plugin
 import akka.actor.Actor
 import io.glassdoor.application.Context
 import io.glassdoor.bus.{MessageEvent, EventBus, Message}
+import io.glassdoor.interface.{UserInterfaceConstant}
 import io.glassdoor.plugin.manager.PluginManagerConstant
 
 /**
@@ -19,6 +20,18 @@ trait Plugin extends Actor {
   def ready():Unit = {
     val resultData = PluginResult(uniqueId, result)
     EventBus.publish(new MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.pluginResult, Some(resultData))))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.taskCompleted, uniqueId)))
+  }
+
+  //updates the progress of this task to the specified value
+  def showProgress(progress:Double):Unit = {
+    //TODO
+  }
+
+  def showEndlessProgress():Unit = {
+    if(uniqueId.isDefined){
+      EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.showEndlessProgress, Some(uniqueId.get))))
+    }
   }
 
   override def receive: Receive = {

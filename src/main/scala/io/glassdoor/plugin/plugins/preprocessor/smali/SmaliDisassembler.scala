@@ -29,10 +29,6 @@ class SmaliDisassembler extends Plugin{
       options.jobs = 1
       options.outputDirectory = outputDirectory
 
-      val destination = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
-
-      //TODO: use destination
-
       val dexFilePath = data.get(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
 
       if(dexFilePath.isDefined){
@@ -51,11 +47,9 @@ class SmaliDisassembler extends Plugin{
       } else {
         println("dex not defined!")
       }
-
-      ready
     }
 
-
+    ready
   }
 
   override def result:Option[Map[String,String]] = {
