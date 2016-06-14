@@ -1,10 +1,14 @@
 package io.glassdoor.interface
 
+import java.io.PrintWriter
+import javax.smartcardio.TerminalFactory
+
 import akka.actor.{ActorRef, Props}
 import io.glassdoor.application.{Log, Context, CommandInterpreter, Command}
 import io.glassdoor.bus.{Message, MessageEvent, EventBus}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
+import jline.{UnixTerminal, Terminal}
 import jline.console.ConsoleReader
 import jline.console.completer.StringsCompleter
 
@@ -37,8 +41,11 @@ class CommandLineInterface extends UserInterface {
     Log.debug("initialising interface..")
 
     val console = new ConsoleReader()
+
+    console.getTerminal.init()
     console.clearScreen()
     console.setPrompt(">")
+
     mConsole = Some(console)
 
     startReadingFromCommandline()
@@ -78,6 +85,8 @@ class CommandLineInterface extends UserInterface {
       //TODO: use list of system commands instead
       if(input.get.name == "install"){
         EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.installResource, Some(input.get.parameters))))
+      } else if(input.get.name == "exit"){
+        terminate()
       } else {
         EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
       }
@@ -103,11 +112,20 @@ class CommandLineInterface extends UserInterface {
   override def showProgress(taskId: Long, progress: Float): Unit = ???
 
   override def showEndlessProgress(taskId: Long): Unit = {
+    Log.debug("commandline interface: showing endless progress")
     if(mConsole.isDefined){
+      Log.debug("console defined")
       val console = mConsole.get
+
       for(i <- 1 to 20){
-        console.print("-")
+        //TODO: find out how to update the line
+        console.killLine()
+        console.flush()
+        console.print("" + i)
+        console.flush()
       }
+    } else {
+      Log.debug("error: console not defined!")
     }
   }
 
