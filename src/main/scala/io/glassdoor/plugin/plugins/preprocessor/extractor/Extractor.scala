@@ -4,7 +4,7 @@ import java.io.{OutputStream, FileOutputStream, InputStream, File}
 import java.util.zip.{ZipEntry, ZipFile}
 import scala.collection.JavaConversions._
 
-import io.glassdoor.application.{ContextConstant, Constant, Context}
+import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 
 import scala.collection.immutable.HashMap
@@ -53,7 +53,7 @@ class Extractor extends Plugin{
       case e:ArrayIndexOutOfBoundsException =>
         mResult = None
     } finally {
-      println("extractor ready")
+      Log.debug("extractor ready")
       ready
     }
 
@@ -66,7 +66,7 @@ class Extractor extends Plugin{
     val entryList = sourceFile.entries().toList
     val regexObject = regex.r
 
-    println("extracting files to: " + targetFolder)
+    Log.debug("extracting files to: " + targetFolder)
 
     for (entry <- entryList) {
       entry.getName match {

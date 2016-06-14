@@ -2,7 +2,7 @@ package io.glassdoor.interface
 
 import akka.actor.Actor
 import akka.actor.Actor.Receive
-import io.glassdoor.application.Context
+import io.glassdoor.application.{Log, Context}
 import io.glassdoor.bus.{MessageEvent, EventBus, Message}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
@@ -23,7 +23,7 @@ trait UserInterface extends Actor {
 
   def showPluginList(plugins:Array[PluginInstance]):Unit
 
-  def receive = {
+  override def receive = {
     case Message(action, data) =>
       action match {
         case UserInterfaceConstant.Action.initialise =>
@@ -36,11 +36,12 @@ trait UserInterface extends Actor {
           }
         case UserInterfaceConstant.Action.showEndlessProgress =>
           if(data.isDefined){
+            Log.debug("received show endless progress")
             val taskId = data.get.asInstanceOf[Long]
             showEndlessProgress(taskId)
           }
         case UserInterfaceConstant.Action.taskCompleted =>
-          println("received task completed in user interface")
+          Log.debug("received task completed in user interface")
           if(data.isDefined){
             val taskId = data.get.asInstanceOf[Long]
             taskCompleted(taskId)

@@ -55,13 +55,13 @@ class DefaultPluginManager extends PluginManager{
     if(matchingPlugin.isDefined){
       val pluginInstance = matchingPlugin.get
 
-      println("received result from: " + pluginInstance.name)
+      Log.debug("received result from: " + pluginInstance.name)
 
       for((key,value) <- changedValues){
         if(pluginInstance.changes.contains(key)){
-          println("correctly changing key: " + key)
+          Log.debug("correctly changing key: " + key)
         } else {
-          println("error: change not specified in manifest!")
+          Log.debug("error: change not specified in manifest!")
         }
       }
 
@@ -73,7 +73,7 @@ class DefaultPluginManager extends PluginManager{
       //TODO: start next (launchable) plugin in queue
 
     } else {
-      println("no matching plugin found!")
+      Log.debug("no matching plugin found!")
     }
   }
 
@@ -121,7 +121,7 @@ class DefaultPluginManager extends PluginManager{
       for(dependency <- dependencies){
         if(mChangingValues.contains(dependency)){
           //TODO: can not launch plugin! values in change, schedule plugin
-          println("dependency in change! can not safely launch plugin!")
+          Log.debug("dependency in change! can not safely launch plugin!")
         } else {
           if(mWorkedOnDependencies.contains(dependency)){
             val prevVal = mWorkedOnDependencies.get(dependency).get
@@ -141,7 +141,7 @@ class DefaultPluginManager extends PluginManager{
       for(change <- changes){
         if(mWorkedOnDependencies.contains(change) || mChangingValues.contains(change)){
           //TODO: can not work on values that other plugins need/ already work on
-          println("value is depended on or already changing! can not safely launch plugin!")
+          Log.debug("value is depended on or already changing! can not safely launch plugin!")
         } else {
 
           mChangingValues.append(change)
@@ -171,7 +171,7 @@ class DefaultPluginManager extends PluginManager{
       if(actor.isDefined){
         val id = UniqueIdGenerator.generate()
 
-        println("starting plugin " + pluginData.name + " with id: " + id)
+        Log.debug("starting plugin " + pluginData.name + " with id: " + id)
 
         actor.get ! Message(PluginConstant.Action.setUniqueId, Some(id))
 
@@ -224,10 +224,10 @@ class DefaultPluginManager extends PluginManager{
 
           mLoadedPlugins += ((pluginData.name, pluginData))
 
-          println("plugin detected: " + name)
+          Log.debug("plugin detected: " + name)
         } catch {
           case e:ConfigException =>
-            println("plugin information missing!")
+            Log.debug("plugin information missing!")
         }
 
       }

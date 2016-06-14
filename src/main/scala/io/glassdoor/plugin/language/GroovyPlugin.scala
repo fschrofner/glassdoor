@@ -5,7 +5,7 @@ import java.io.File
 import akka.actor.Actor
 import akka.actor.Actor.Receive
 import groovy.lang.{GroovyClassLoader, GroovyObject}
-import io.glassdoor.application.Context
+import io.glassdoor.application.{Log, Context}
 import io.glassdoor.bus.Message
 import io.glassdoor.plugin.Plugin
 
@@ -18,7 +18,7 @@ class GroovyPlugin extends Plugin {
     val plugin = instantiateGroovyPlugin("/home/flosch/Projects/groovy-test/main.groovy")
     if(plugin.isDefined){
       val output = plugin.get.invokeMethod("saySomething",null)
-      println(output)
+      //Log.debug(output)
     }
   }
 

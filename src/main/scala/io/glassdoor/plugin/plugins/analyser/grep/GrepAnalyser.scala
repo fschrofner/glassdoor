@@ -3,7 +3,7 @@ package io.glassdoor.plugin.plugins.analyser.grep
 import java.io.{BufferedWriter, FileWriter, File}
 import java.rmi.activation.ActivationGroup_Stub
 
-import io.glassdoor.application.{ContextConstant, Context, Constant}
+import io.glassdoor.application.{Log, ContextConstant, Context, Constant}
 import io.glassdoor.plugin.Plugin
 import scala.collection.immutable.HashMap
 import scala.sys.process._
@@ -49,7 +49,7 @@ class GrepAnalyser extends Plugin{
       bw.write(output)
       bw.close()
 
-      println("grep finished, saved log to: " + outputFile.getAbsolutePath)
+      Log.debug("grep finished, saved log to: " + outputFile.getAbsolutePath)
 
       //TODO: the path to the exact file should not be saved in context, but only the directory
       val result = HashMap[String,String](dest -> outputFile.getParent)

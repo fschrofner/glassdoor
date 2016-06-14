@@ -2,7 +2,7 @@ package io.glassdoor.plugin.plugins.preprocessor.smali
 
 import java.io.File
 
-import io.glassdoor.application.{ContextConstant, Constant, Context}
+import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import org.jf.baksmali.{baksmaliOptions, baksmali}
 import org.jf.dexlib2.{DexFileFactory, Opcodes}
@@ -37,7 +37,7 @@ class SmaliDisassembler extends Plugin{
 
         try {
           baksmali.disassembleDexFile(dexFile, options)
-          println("disassembling dex to: " + outputDirectory)
+          Log.debug("disassembling dex to: " + outputDirectory)
           val result = HashMap[String,String](ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI -> outputDirectory)
           mResult = Some(result)
         } catch {
@@ -45,7 +45,7 @@ class SmaliDisassembler extends Plugin{
             mResult = None
         }
       } else {
-        println("dex not defined!")
+        Log.debug("dex not defined!")
       }
     }
 

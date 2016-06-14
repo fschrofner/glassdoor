@@ -5,7 +5,7 @@ import java.nio.file.{CopyOption, Path}
 import java.nio.file.Paths.get
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
-import io.glassdoor.application.{ContextConstant, Constant, Context}
+import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import java.nio.file.Files.copy
 
@@ -46,7 +46,7 @@ class ApkLoader extends Plugin{
       try {
         val destPath = workingDir.get + "/" + ContextConstant.Key.APK + "/" + getFileName(srcPath)
         createFolderStructure(destPath)
-        println("copying apk to: " + destPath + "...")
+        Log.debug("copying apk to: " + destPath + "...")
         copy(get(srcPath),get(destPath), REPLACE_EXISTING)
         return Some(destPath)
       } catch {
@@ -54,7 +54,7 @@ class ApkLoader extends Plugin{
           return None
       }
     } else {
-      println("working directory not defined!")
+      Log.debug("working directory not defined!")
     }
     return None
   }

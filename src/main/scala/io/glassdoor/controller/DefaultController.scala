@@ -3,7 +3,7 @@ package io.glassdoor.controller
 import java.io.File
 
 import scala.collection.immutable.HashMap
-import io.glassdoor.application.{Configuration, ConfigConstant, Context, ContextConstant, CommandInterpreter, Command}
+import io.glassdoor.application._
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import scala.collection.JavaConverters._
 
@@ -17,8 +17,8 @@ class DefaultController extends Controller{
   override def handleChangedValues(changedValues:Map[String,String]){
     //update context with values given in changed values
     for((key,value) <- changedValues){
-      println("changing value for key: " + key)
-      println("changed value: " + value)
+      Log.debug("changing value for key: " + key)
+      Log.debug("changed value: " + value)
 
       mContext.setResolvedValue(key,value)
     }
@@ -28,7 +28,7 @@ class DefaultController extends Controller{
 
     if(mAliasMap.contains(pluginName)){
       //load commands behind alias and execute them
-      println("alias map contains command! replacing..")
+      Log.debug("alias map contains command! replacing..")
       val commandStrings = mAliasMap.get(pluginName).get
 
       for(commandString <- commandStrings){
@@ -69,10 +69,10 @@ class DefaultController extends Controller{
         val commands = aliasConfig.getStringList(ConfigConstant.AliasKey.COMMANDS).asScala
           mAliasMap += ((shorthand,commands.toArray))
 
-          println("alias detected: "  + shorthand)
+          Log.debug("alias detected: "  + shorthand)
         } catch {
           case e:ConfigException =>
-            println("alias information missing")
+            Log.debug("alias information missing")
         }
 
       }

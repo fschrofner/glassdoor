@@ -2,7 +2,7 @@ package io.glassdoor.plugin.plugins.preprocessor.java
 
 import java.io.File
 
-import io.glassdoor.application.{ContextConstant, Constant, Context}
+import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import jadx.api._
 
@@ -18,7 +18,8 @@ class JavaDecompiler extends Plugin {
       val apkPath = data.get(ContextConstant.FullKey.ORIGINAL_BINARY_APK)
 
       if(apkPath.isDefined){
-        println("decompiling " + apkPath.get)
+        Log.debug("decompiling " + apkPath.get)
+        showEndlessProgress()
 
         val decompiler = new JadxDecompiler()
         val file = new File(apkPath.get)
@@ -28,7 +29,6 @@ class JavaDecompiler extends Plugin {
         decompiler.setOutputDir(outputDir)
         decompiler.loadFile(file)
         decompiler.saveSources()
-        //decompiler.parse()
 
         val result = HashMap[String,String](ContextConstant.FullKey.INTERMEDIATE_SOURCE_JAVA -> outputDirPath)
         mResult = Some(result)

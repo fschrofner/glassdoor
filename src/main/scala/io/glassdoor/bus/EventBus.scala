@@ -2,6 +2,7 @@ package io.glassdoor.bus
 
 import akka.actor.ActorRef
 import akka.event.{LookupClassification, ActorEventBus}
+import io.glassdoor.application.Log
 
 /**
   * Created by Florian Schrofner on 4/17/16.
@@ -19,6 +20,7 @@ object EventBus extends ActorEventBus with LookupClassification {
 
   override protected def publish(event: Event, subscriber: Subscriber): Unit = {
     subscriber ! event.message
+    Log.debug("eventbus: sent message: " + event.message.action)
   }
 
   override protected def classify(event: Event): Classifier = {

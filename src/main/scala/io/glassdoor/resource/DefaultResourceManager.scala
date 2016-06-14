@@ -16,7 +16,7 @@ class DefaultResourceManager extends ResourceManager{
   //TODO: somehow allow installation of new resources
 
   override def installResource(name: String, context:Context):Unit = {
-    println("install resource called!")
+    Log.debug("install resource called!")
     //TODO: check if list of resources is present, otherwise can not execute. update needs to be doen manually
     //TODO: install resource using git and save in resource map
 
@@ -33,13 +33,13 @@ class DefaultResourceManager extends ResourceManager{
       val subdirPaths = resourceRepositoryDir.list()
 
       if(subdirPaths != null){
-        println("number of subdirs: " + subdirPaths.length)
+        Log.debug("number of subdirs: " + subdirPaths.length)
       } else {
         //directory might not exist!
-        println("number of subdirs: 0")
+        Log.debug("number of subdirs: 0")
       }
     } else {
-      println("resource directory is not defined!")
+      Log.debug("resource directory is not defined!")
     }
   }
 

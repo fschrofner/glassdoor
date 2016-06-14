@@ -3,7 +3,7 @@ package io.glassdoor.plugin.plugins.installer.git
 import java.io.{IOException, File}
 import java.nio.file.{Files, Path}
 
-import io.glassdoor.application.{ContextConstant, Constant, Context}
+import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
 import io.glassdoor.plugin.Plugin
 import scala.collection.immutable.HashMap
 import scala.sys.process._
@@ -37,9 +37,9 @@ class GitInstaller extends Plugin {
 
         if(destinationDirectory.exists && destinationDirectory.isDirectory && !isDirEmpty(destinationDirectory.toPath)){
           //TODO: just update the repository
-          println("directory already exists, starting update..")
+          Log.debug("directory already exists, starting update..")
         } else {
-          println("directory does not exist, initialising download..")
+          Log.debug("directory does not exist, initialising download..")
           destinationDirectory.mkdirs()
           val command = "git -C " + workingDir.get + " clone " + repoUrl + " " +  path
           resultCode = command.!

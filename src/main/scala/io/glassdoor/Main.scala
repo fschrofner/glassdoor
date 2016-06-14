@@ -1,7 +1,7 @@
 package io.glassdoor
 
 import akka.actor.{Props, ActorSystem}
-import io.glassdoor.application.{ContextConstant, Configuration, Constant, Context}
+import io.glassdoor.application._
 import io.glassdoor.bus.{MessageEvent, Message, EventBus}
 import io.glassdoor.controller.{DefaultController, ControllerConstant, Controller}
 import io.glassdoor.interface.{UserInterfaceConstant, UserInterface, CommandLineInterface}
@@ -18,7 +18,7 @@ object Main {
   def main(args:Array[String]):Unit={
     val system = ActorSystem()
 
-    println("the first line of glassdoor!")
+    Log.debug("the first line of glassdoor!")
 
     //create components
     val controller = system.actorOf(Props[DefaultController])
