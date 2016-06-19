@@ -52,7 +52,7 @@ class CommandLineInterface extends UserInterface {
     val console = new ConsoleReader()
 
     console.getTerminal.init()
-    console.clearScreen()
+    //console.clearScreen() //TODO: uncomment
     console.setPrompt(">")
 
     mConsole = Some(console)

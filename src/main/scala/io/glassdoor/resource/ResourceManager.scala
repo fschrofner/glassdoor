@@ -11,14 +11,14 @@ import io.glassdoor.application._
 trait ResourceManager extends Actor {
   def installResource(name:String, context:Context):Unit
   def getResource(name:String):Option[Resource]
-  def buildResourceIndex(context:Context):Unit
+  def initialise(context:Context):Unit
 
   override def receive = {
     case Message(action, data) =>
       action match {
-        case ResourceManagerConstant.Action.BuildResourceIndex =>
+        case ResourceManagerConstant.Action.Initialise =>
           if(data.isDefined){
-            buildResourceIndex(data.get.asInstanceOf[Context])
+            initialise(data.get.asInstanceOf[Context])
           }
         case ResourceManagerConstant.Action.InstallResource =>
           if(data.isDefined){
@@ -33,7 +33,7 @@ object ResourceManagerConstant {
   val Channel = "/resourceManager"
 
   object Action {
-    val BuildResourceIndex = "buildPluginIndex"
+    val Initialise = "initialise"
     val InstallResource = "installResource"
   }
 }

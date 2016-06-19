@@ -210,8 +210,9 @@ class DefaultPluginManager extends PluginManager{
     Some(actor)
   }
 
-  override def buildPluginIndex(context:Context): Unit = {
+  override def initialise(context:Context): Unit = {
     loadDefaultPlugins(context)
+    //TODO: load plugins available for download
   }
 
   def loadDefaultPlugins(context:Context):Unit = {

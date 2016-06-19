@@ -24,4 +24,5 @@ object CommandInterpreter {
   }
 }
 
+//TODO: parameters could be optional..
 case class Command(name:String, parameters:Array[String])

@@ -49,10 +49,11 @@ trait Controller extends Actor {
     }
 
     buildAliasIndex(mContext)
+
     //setup other components
     EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Initialise , Some(mContext))))
-    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.BuildPluginIndex, Some(mContext))))
-    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.BuildResourceIndex, Some(mContext))))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.Initialise, Some(mContext))))
+    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.Initialise, Some(mContext))))
   }
 
   def terminate():Unit = {

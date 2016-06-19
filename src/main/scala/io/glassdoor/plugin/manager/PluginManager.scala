@@ -15,7 +15,7 @@ trait PluginManager extends Actor {
   def loadPlugin(pluginName:String):Unit
   def unloadPlugin(pluginName:String):Unit
   def findPlugin(pluginName:String):Array[String]
-  def buildPluginIndex(context:Context):Unit
+  def initialise(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
 
@@ -33,9 +33,9 @@ trait PluginManager extends Actor {
   override def receive = {
     case Message(action, data) =>
       action match {
-        case PluginManagerConstant.Action.BuildPluginIndex =>
+        case PluginManagerConstant.Action.Initialise =>
           if(data.isDefined){
-            buildPluginIndex(data.get.asInstanceOf[Context])
+            initialise(data.get.asInstanceOf[Context])
           }
         case PluginManagerConstant.Action.ApplyPlugin =>
           if(data.isDefined){
@@ -56,7 +56,7 @@ trait PluginManager extends Actor {
 object PluginManagerConstant {
   val Channel = "/pluginManager"
   object Action {
-    val BuildPluginIndex = "buildPluginIndex"
+    val Initialise = "initialise"
     val ApplyPlugin = "applyPlugin"
     val PluginResult = "pluginResult"
   }
