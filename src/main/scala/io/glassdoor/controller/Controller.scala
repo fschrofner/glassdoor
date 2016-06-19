@@ -22,18 +22,18 @@ trait Controller extends Actor {
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     val message = new PluginManagerPluginParameters(pluginName, parameters, mContext)
-    EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.applyPlugin, Some(message))))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
   }
 
   def installResource(resourceName:String):Unit = {
     val message = new ResourceManagerResourceParameters(resourceName, mContext)
-    EventBus.publish(MessageEvent(ResourceManagerConstant.channel, Message(ResourceManagerConstant.Action.installResource, Some(message))))
+    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.InstallResource, Some(message))))
   }
 
   def forwardErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]): Unit ={
     val messageData = new PluginErrorMessage(pluginId, errorCode, data)
-    val message = new Message(UserInterfaceConstant.Action.pluginError, Some(messageData))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, message))
+    val message = new Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
   def setup():Unit = {
@@ -50,9 +50,9 @@ trait Controller extends Actor {
 
     buildAliasIndex(mContext)
     //setup other components
-    EventBus.publish(MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.initialise , Some(mContext))))
-    EventBus.publish(MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.buildPluginIndex, Some(mContext))))
-    EventBus.publish(MessageEvent(ResourceManagerConstant.channel, Message(ResourceManagerConstant.Action.buildResourceIndex, Some(mContext))))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Initialise , Some(mContext))))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.BuildPluginIndex, Some(mContext))))
+    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.BuildResourceIndex, Some(mContext))))
   }
 
   def terminate():Unit = {
@@ -63,30 +63,30 @@ trait Controller extends Actor {
   override def receive = {
     case Message(action, data) =>
       action match {
-        case ControllerConstant.Action.setup =>
+        case ControllerConstant.Action.Setup =>
           setup()
-        case ControllerConstant.Action.context =>
+        case ControllerConstant.Action.Context =>
           if(data.isDefined){
             mContext = data.get.asInstanceOf[Context]
           }
-        case ControllerConstant.Action.terminate =>
+        case ControllerConstant.Action.Terminate =>
           terminate()
-        case ControllerConstant.Action.applyPlugin =>
+        case ControllerConstant.Action.ApplyPlugin =>
           if(data.isDefined){
             val receivedParameters = data.get.asInstanceOf[Command]
             handleApplyPlugin(receivedParameters.name,receivedParameters.parameters)
           }
-        case ControllerConstant.Action.applyChangedValues =>
+        case ControllerConstant.Action.ApplyChangedValues =>
           if(data.isDefined){
             val changedValues = data.get.asInstanceOf[Map[String,String]]
             handleChangedValues(changedValues)
           }
-        case ControllerConstant.Action.installResource =>
+        case ControllerConstant.Action.InstallResource =>
           if(data.isDefined){
             val name = data.get.asInstanceOf[Array[String]]
             handleInstallResource(name)
           }
-        case ControllerConstant.Action.pluginError =>
+        case ControllerConstant.Action.PluginError =>
           if(data.isDefined){
             val messageData = data.get.asInstanceOf[PluginErrorMessage]
             handlePluginError(messageData.pluginId, messageData.errorCode, messageData.data)
@@ -97,14 +97,14 @@ trait Controller extends Actor {
 }
 
 object ControllerConstant {
-  val channel = "/controller"
+  val Channel = "/controller"
   object Action {
-    val setup = "setup"
-    val context = "context"
-    val terminate = "terminate"
-    val applyPlugin = "applyPlugin"
-    val installResource = "installResource"
-    val applyChangedValues = "applyChangedValues"
-    val pluginError = "pluginError"
+    val Setup = "setup"
+    val Context = "context"
+    val Terminate = "terminate"
+    val ApplyPlugin = "applyPlugin"
+    val InstallResource = "installResource"
+    val ApplyChangedValues = "applyChangedValues"
+    val PluginError = "pluginError"
   }
 }

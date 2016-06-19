@@ -29,7 +29,7 @@ class GitInstaller extends Plugin {
         keymap = Some(parameters(2))
       }
 
-      val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+      val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
       if(workingDir.isDefined){
         //TODO: if repository exists, just merge the newest commit from master

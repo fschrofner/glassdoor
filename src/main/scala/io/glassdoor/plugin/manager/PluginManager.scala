@@ -20,29 +20,29 @@ trait PluginManager extends Actor {
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
 
   def applyChangedValues(changedValues:Map[String,String]):Unit = {
-    val message = new Message(ControllerConstant.Action.applyChangedValues, Some(changedValues))
-    EventBus.publish(new MessageEvent(ControllerConstant.channel, message))
+    val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
   def sendErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]):Unit = {
     val messageData = new PluginErrorMessage(pluginId, errorCode, data)
-    val message = new Message(ControllerConstant.Action.pluginError, Some(messageData))
-    EventBus.publish(new MessageEvent(ControllerConstant.channel, message))
+    val message = new Message(ControllerConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
   override def receive = {
     case Message(action, data) =>
       action match {
-        case PluginManagerConstant.Action.buildPluginIndex =>
+        case PluginManagerConstant.Action.BuildPluginIndex =>
           if(data.isDefined){
             buildPluginIndex(data.get.asInstanceOf[Context])
           }
-        case PluginManagerConstant.Action.applyPlugin =>
+        case PluginManagerConstant.Action.ApplyPlugin =>
           if(data.isDefined){
             val parameter = data.get.asInstanceOf[PluginManagerPluginParameters]
             applyPlugin(parameter.pluginName,parameter.parameters, parameter.context)
           }
-        case PluginManagerConstant.Action.pluginResult =>
+        case PluginManagerConstant.Action.PluginResult =>
           if(data.isDefined){
             val resultData = data.get.asInstanceOf[PluginResult]
             if(resultData.uniqueId.isDefined && resultData.result.isDefined){
@@ -54,17 +54,17 @@ trait PluginManager extends Actor {
 }
 
 object PluginManagerConstant {
-  val channel = "/pluginManager"
+  val Channel = "/pluginManager"
   object Action {
-    val buildPluginIndex = "buildPluginIndex"
-    val applyPlugin = "applyPlugin"
-    val pluginResult = "pluginResult"
+    val BuildPluginIndex = "buildPluginIndex"
+    val ApplyPlugin = "applyPlugin"
+    val PluginResult = "pluginResult"
   }
 
   object PluginErrorCodes {
-    val dependenciesNotSatisfied = 100
-    val dependenciesInChange = 101
-    val pluginNotFound = 102
+    val DependenciesNotSatisfied = 100
+    val DependenciesInChange = 101
+    val PluginNotFound = 102
   }
 }
 

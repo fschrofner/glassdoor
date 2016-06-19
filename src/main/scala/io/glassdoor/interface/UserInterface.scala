@@ -19,7 +19,7 @@ trait UserInterface extends Actor {
   def taskFailed(taskId: Long, error: Int, data:Option[Any]):Unit
 
   def terminate():Unit = {
-    EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.terminate, None)))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
   }
 
 
@@ -28,27 +28,27 @@ trait UserInterface extends Actor {
   override def receive = {
     case Message(action, data) =>
       action match {
-        case UserInterfaceConstant.Action.initialise =>
+        case UserInterfaceConstant.Action.Initialise =>
           if(data.isDefined){
             initialise(data.get.asInstanceOf[Context])
           }
-        case UserInterfaceConstant.Action.showPluginList =>
+        case UserInterfaceConstant.Action.ShowPluginList =>
           if(data.isDefined){
             showPluginList(data.get.asInstanceOf[Array[PluginInstance]])
           }
-        case UserInterfaceConstant.Action.showEndlessProgress =>
+        case UserInterfaceConstant.Action.ShowEndlessProgress =>
           if(data.isDefined){
             Log.debug("received show endless progress")
             val taskId = data.get.asInstanceOf[Long]
             showEndlessProgress(taskId)
           }
-        case UserInterfaceConstant.Action.taskCompleted =>
+        case UserInterfaceConstant.Action.TaskCompleted =>
           Log.debug("received task completed in user interface")
           if(data.isDefined){
             val taskId = data.get.asInstanceOf[Long]
             taskCompleted(taskId)
           }
-        case UserInterfaceConstant.Action.pluginError =>
+        case UserInterfaceConstant.Action.PluginError =>
           Log.debug("received task error in user interface")
           if(data.isDefined){
             val message = data.get.asInstanceOf[PluginErrorMessage]
@@ -60,13 +60,13 @@ trait UserInterface extends Actor {
 
 
 object UserInterfaceConstant {
-  val channel = "/interface"
+  val Channel = "/interface"
   object Action {
-    val initialise = "initialise"
-    val showPluginList = "showPluginList"
-    val showEndlessProgress = "showEndlessProgress"
-    val showProgress = "showProgress"
-    val taskCompleted = "taskCompleted"
-    val pluginError = "pluginError"
+    val Initialise = "initialise"
+    val ShowPluginList = "showPluginList"
+    val ShowEndlessProgress = "showEndlessProgress"
+    val ShowProgress = "showProgress"
+    val TaskCompleted = "taskCompleted"
+    val PluginError = "pluginError"
   }
 }

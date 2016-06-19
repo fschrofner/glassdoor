@@ -110,7 +110,7 @@ class DefaultPluginManager extends PluginManager{
       pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
       Log.debug("error: plugin not found!")
-      sendErrorMessage(-1, PluginErrorCodes.pluginNotFound, None)
+      sendErrorMessage(-1, PluginErrorCodes.PluginNotFound, None)
       //TODO: error, plugin not found
     }
 
@@ -131,7 +131,7 @@ class DefaultPluginManager extends PluginManager{
           if (mChangingValues.contains(dependency)) {
             Log.debug("dependency in change! can not safely launch plugin!")
             //TODO: there is no plugin id yet, so it can not be supplied with the message
-            sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.dependenciesInChange, Some(dependency))
+            sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.DependenciesInChange, Some(dependency))
             return
           } else {
             if (mWorkedOnDependencies.contains(dependency)) {
@@ -144,7 +144,7 @@ class DefaultPluginManager extends PluginManager{
           }
         } else {
           //there might be multiple dependencies, that are not satisfied, but it already stops at the first mismatch
-          sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.dependenciesNotSatisfied, Some(dependency))
+          sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.DependenciesNotSatisfied, Some(dependency))
           Log.debug("dependency: " + dependency + " not satisfied!")
           return
         }
@@ -167,13 +167,13 @@ class DefaultPluginManager extends PluginManager{
       }
 
       //provide configuration in context
-      val configKeymapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
+      val configKeymapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.Config)
 
       if(configKeymapOpt.isDefined){
         val configKeymap = configKeymapOpt.get
 
         for((key,value) <- configKeymap){
-          val fullKey = ContextConstant.Keymap.CONFIG + ContextConstant.DESCRIPTOR_SPLIT + key
+          val fullKey = ContextConstant.Keymap.Config + ContextConstant.DescriptorSplit + key
           mutableHashmap.put(fullKey,value)
         }
       }
@@ -186,7 +186,7 @@ class DefaultPluginManager extends PluginManager{
 
         Log.debug("starting plugin " + pluginData.name + " with id: " + id)
 
-        actor.get ! Message(PluginConstant.Action.setUniqueId, Some(id))
+        actor.get ! Message(PluginConstant.Action.SetUniqueId, Some(id))
 
         //create a new plugin instance with the data
         val pluginInstance = PluginInstance(id, pluginData.name, pluginData.kind, pluginData.dependencies, pluginData.changes, pluginData.commands, actor.get)
@@ -194,7 +194,7 @@ class DefaultPluginManager extends PluginManager{
         mRunningPlugins.put(pluginInstance.uniqueId, pluginInstance)
 
         //apply plugin
-        actor.get ! Message(PluginConstant.Action.apply, Some(new PluginParameters(mutableHashmap.toMap[String,String], parameters)))
+        actor.get ! Message(PluginConstant.Action.Apply, Some(new PluginParameters(mutableHashmap.toMap[String,String], parameters)))
       }
     }
   }
@@ -215,22 +215,22 @@ class DefaultPluginManager extends PluginManager{
   }
 
   def loadDefaultPlugins(context:Context):Unit = {
-    val pluginConfigPath = context.getResolvedValue(ContextConstant.FullKey.CONFIG_PLUGIN_CONFIG_PATH)
+    val pluginConfigPath = context.getResolvedValue(ContextConstant.FullKey.ConfigPluginConfigPath)
 
     if(pluginConfigPath.isDefined){
       val file = new File(pluginConfigPath.get)
       val config = ConfigFactory.parseFile(file)
 
-      val defaultPluginList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.DEFAULT_PLUGINS).asScala
+      val defaultPluginList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.DefaultPlugins).asScala
 
       for(pluginConfig:Config <- defaultPluginList){
         try {
-          val name = pluginConfig.getString(ConfigConstant.PluginKey.NAME)
-          val typ = pluginConfig.getString(ConfigConstant.PluginKey.TYPE)
-          val dependencies = pluginConfig.getStringList(ConfigConstant.PluginKey.DEPENDENCIES).asScala
-          val changes = pluginConfig.getStringList(ConfigConstant.PluginKey.CHANGES).asScala
-          val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.COMMANDS).asScala
-          val pluginClass = pluginConfig.getString(ConfigConstant.PluginKey.CLASSFILE)
+          val name = pluginConfig.getString(ConfigConstant.PluginKey.Name)
+          val typ = pluginConfig.getString(ConfigConstant.PluginKey.Type)
+          val dependencies = pluginConfig.getStringList(ConfigConstant.PluginKey.Dependencies).asScala
+          val changes = pluginConfig.getStringList(ConfigConstant.PluginKey.Changes).asScala
+          val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.Commands).asScala
+          val pluginClass = pluginConfig.getString(ConfigConstant.PluginKey.ClassFile)
           val pluginEnvironment = None
 
           val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass, pluginEnvironment)

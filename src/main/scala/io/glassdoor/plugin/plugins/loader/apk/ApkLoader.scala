@@ -26,7 +26,7 @@ class ApkLoader extends Plugin{
 
     val path = copyApkToWorkingDirectory(data, srcPath)
     if(path.isDefined){
-      val result = HashMap[String,String](ContextConstant.FullKey.ORIGINAL_BINARY_APK -> path.get)
+      val result = HashMap[String,String](ContextConstant.FullKey.OriginalBinaryApk -> path.get)
       mResult = Some(result)
     } else {
       //TODO: error handling
@@ -41,10 +41,10 @@ class ApkLoader extends Plugin{
   }
 
   def copyApkToWorkingDirectory(data:Map[String,String], srcPath:String): Option[String] ={
-    val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
     if(workingDir.isDefined){
       try {
-        val destPath = workingDir.get + "/" + ContextConstant.Key.APK + "/" + getFileName(srcPath)
+        val destPath = workingDir.get + "/" + ContextConstant.Key.Apk + "/" + getFileName(srcPath)
         createFolderStructure(destPath)
         Log.debug("copying apk to: " + destPath + "...")
         copy(get(srcPath),get(destPath), REPLACE_EXISTING)

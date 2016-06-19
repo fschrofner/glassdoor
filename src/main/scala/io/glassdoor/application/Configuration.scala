@@ -13,24 +13,24 @@ object Configuration {
   var mConfig:Option[Config] = None
 
   def loadConfig():Unit = {
-    val file = new File(ConfigConstant.Path.CONFIG_FILE)
-    mConfig = Some(ConfigFactory.parseFile(file));
+    val file = new File(ConfigConstant.Path.ConfigFile)
+    mConfig = Some(ConfigFactory.parseFile(file))
   }
 
   def loadConfigIntoContext(context:io.glassdoor.application.Context): Option[Context] ={
     var result:Option[Context] = None
-    val mapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.CONFIG)
+    val mapOpt = context.getKeymapMatchingString(ContextConstant.Keymap.Config)
 
     if(mapOpt.isDefined){
       var map = mapOpt.get
-      val conf = getConfigObject(ConfigConstant.ConfigKey.DEFAULT_KEY)
+      val conf = getConfigObject(ConfigConstant.ConfigKey.DefaultKey)
       val configSet = conf.get.entrySet().asScala
 
       for(entry:Entry[String,ConfigValue] <- configSet){
         map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
       }
 
-      context.setKeymapMatchingString(ContextConstant.Keymap.CONFIG, map)
+      context.setKeymapMatchingString(ContextConstant.Keymap.Config, map)
       result = Some(context)
     }
 
@@ -71,52 +71,52 @@ object Configuration {
 }
 
 object ConfigConstant {
-  val DESCRIPTOR_SPLIT = "."
+  val DescriptorSplit = "."
 
   object Path {
     //TODO: this needs to be adapted dynamically
-    val CONFIG_FILE = "/home/flosch/Projects/glassdoor/conf/glassdoor.conf"
+    val ConfigFile = "/home/flosch/Projects/glassdoor/conf/glassdoor.conf"
   }
 
   object ConfigKey {
-    val DEFAULT_KEY = "glassdoor"
+    val DefaultKey = "glassdoor"
 
     object Key {
-      val DEFAULT_PLUGINS = "defaultPlugins"
-      val ALIASES = "aliases"
-      val WORKING_DIRECTORY = "workingDirectory"
-      val RESOURCE_DIRECTORY = "resourceDirectory"
-      val PLUGIN_CONFIG_PATH = "pluginConfigPath"
-      val ALIAS_CONFIG_PATH ="aliasConfigPath"
-      val PLUGIN_REPOSITORY = "pluginRepository"
-      val RESOURCE_REPOSITORY = "resourceRepository"
+      val DefaultPlugins = "defaultPlugins"
+      val Aliases = "aliases"
+      val WorkingDirectory = "workingDirectory"
+      val ResourceDirectory = "resourceDirectory"
+      val PluginConfigPath = "pluginConfigPath"
+      val AliasConfigPath ="aliasConfigPath"
+      val PluginRepository = "pluginRepository"
+      val ResourceRepository = "resourceRepository"
     }
 
     object FullKey {
-      val DEFAULT_PLUGINS = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.DEFAULT_PLUGINS
-      val ALIASES = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.ALIASES
-      val WORKING_DIRECTORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.WORKING_DIRECTORY
-      val RESOURCE_DIRECTORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.RESOURCE_DIRECTORY
-      val PLUGIN_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_CONFIG_PATH
-      val ALIAS_CONFIG_PATH = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.ALIAS_CONFIG_PATH
-      val PLUGIN_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.PLUGIN_REPOSITORY
-      val RESOURCE_REPOSITORY = DEFAULT_KEY + DESCRIPTOR_SPLIT + Key.RESOURCE_REPOSITORY
+      val DefaultPlugins = DefaultKey + DescriptorSplit + Key.DefaultPlugins
+      val Aliases = DefaultKey + DescriptorSplit + Key.Aliases
+      val WorkingDirectory = DefaultKey + DescriptorSplit + Key.WorkingDirectory
+      val ResourceDirectory = DefaultKey + DescriptorSplit + Key.ResourceDirectory
+      val PluginConfigPath = DefaultKey + DescriptorSplit + Key.PluginConfigPath
+      val AliasConfigPath = DefaultKey + DescriptorSplit + Key.AliasConfigPath
+      val PluginRepository = DefaultKey + DescriptorSplit + Key.PluginRepository
+      val ResourceRepository = DefaultKey + DescriptorSplit + Key.ResourceRepository
     }
 
   }
 
   //values describing a certain plugin
   object PluginKey {
-    val NAME = "name"
-    val TYPE = "type"
-    val DEPENDENCIES = "dependencies"
-    val CHANGES = "changes"
-    val COMMANDS = "commands"
-    val CLASSFILE = "classFile"
+    val Name = "name"
+    val Type = "type"
+    val Dependencies = "dependencies"
+    val Changes = "changes"
+    val Commands = "commands"
+    val ClassFile = "classFile"
   }
 
   object AliasKey  {
-    val SHORTHAND = "shorthand"
-    val COMMANDS = "commands"
+    val Shorthand = "shorthand"
+    val Commands = "commands"
   }
 }

@@ -49,7 +49,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
       val line = console.readLine()
       //while({line = console.readLine();line} != "exit"){
         //send line to commandline interface
-      mCommandLineInterface ! CommandLineMessage(CommandLineInterfaceConstant.Action.handleLine, Some(line))
+      mCommandLineInterface ! CommandLineMessage(CommandLineInterfaceConstant.Action.HandleLine, Some(line))
       //}
 
       //terminate program

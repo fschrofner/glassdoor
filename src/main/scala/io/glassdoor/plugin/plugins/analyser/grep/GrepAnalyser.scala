@@ -34,10 +34,10 @@ class GrepAnalyser extends Plugin{
 
   def callGrep(regex:String, src:String, dest:String, data:Map[String,String]): Unit ={
     val srcPath = data.get(src)
-    val workingDirectory = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory.get + "/" + ContextConstant.Key.GREP + "/" + splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Grep + "/" + splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 
@@ -59,7 +59,7 @@ class GrepAnalyser extends Plugin{
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    descriptor.split(Constant.Regex.DESCRIPTOR_SPLIT_REGEX)
+    descriptor.split(Constant.Regex.DescriptorSplitRegex)
   }
 
   override def result: Option[Map[String,String]] = {

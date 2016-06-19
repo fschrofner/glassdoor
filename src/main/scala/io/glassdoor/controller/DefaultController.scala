@@ -54,19 +54,19 @@ class DefaultController extends Controller{
   }
 
   override def buildAliasIndex(context:Context):Unit = {
-    val aliasConfigPath = context.getResolvedValue(ContextConstant.FullKey.CONFIG_ALIAS_CONFIG_PATH)
+    val aliasConfigPath = context.getResolvedValue(ContextConstant.FullKey.ConfigAliasConfigPath)
 
     if(aliasConfigPath.isDefined){
       val file = new File(aliasConfigPath.get)
       val config = ConfigFactory.parseFile(file)
 
-      val aliasList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.ALIASES).asScala
+      val aliasList = config.getConfigList(ConfigConstant.ConfigKey.FullKey.Aliases).asScala
 
       for(aliasConfig:Config <- aliasList){
         try{
         //TODO: save aliases into hashmap
-        val shorthand = aliasConfig.getString(ConfigConstant.AliasKey.SHORTHAND)
-        val commands = aliasConfig.getStringList(ConfigConstant.AliasKey.COMMANDS).asScala
+        val shorthand = aliasConfig.getString(ConfigConstant.AliasKey.Shorthand)
+        val commands = aliasConfig.getStringList(ConfigConstant.AliasKey.Commands).asScala
           mAliasMap += ((shorthand,commands.toArray))
 
           Log.debug("alias detected: "  + shorthand)

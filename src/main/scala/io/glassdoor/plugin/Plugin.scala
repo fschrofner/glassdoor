@@ -19,8 +19,8 @@ trait Plugin extends Actor {
   //method should be called when the plugin is ready to return a result
   def ready():Unit = {
     val resultData = PluginResult(uniqueId, result)
-    EventBus.publish(new MessageEvent(PluginManagerConstant.channel, Message(PluginManagerConstant.Action.pluginResult, Some(resultData))))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.taskCompleted, uniqueId)))
+    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginResult, Some(resultData))))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, uniqueId)))
   }
 
   //updates the progress of this task to the specified value
@@ -31,18 +31,18 @@ trait Plugin extends Actor {
   def showEndlessProgress():Unit = {
     //TODO: get name of the plugin somehow?
     //val message = new PluginProgress(uniqueId, )
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.showEndlessProgress, Some(uniqueId.get))))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.ShowEndlessProgress, Some(uniqueId.get))))
   }
 
   override def receive: Receive = {
     case Message(action, data) =>
       action match {
-        case PluginConstant.Action.apply =>
+        case PluginConstant.Action.Apply =>
           if(data.isDefined){
             val pluginParameters = data.get.asInstanceOf[PluginParameters]
             apply(pluginParameters.data, pluginParameters.parameters)
           }
-        case PluginConstant.Action.setUniqueId =>
+        case PluginConstant.Action.SetUniqueId =>
           if(data.isDefined){
             val id = data.get.asInstanceOf[Long]
             uniqueId = Some(id)
@@ -53,9 +53,9 @@ trait Plugin extends Actor {
 
 object PluginConstant {
   object Action {
-    val apply = "apply"
-    val help = "help"
-    val setUniqueId = "id"
+    val Apply = "apply"
+    val Help = "help"
+    val SetUniqueId = "id"
   }
 }
 

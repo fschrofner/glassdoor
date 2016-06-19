@@ -37,7 +37,7 @@ class CommandLineInterface extends UserInterface {
     super.receive orElse {
       case CommandLineMessage(action, data) =>
         action match {
-          case CommandLineInterfaceConstant.Action.handleLine =>
+          case CommandLineInterfaceConstant.Action.HandleLine =>
             if(data.isDefined){
               val line = data.get.asInstanceOf[String]
               handleLine(line)
@@ -95,7 +95,7 @@ class CommandLineInterface extends UserInterface {
       //TODO: use list of system commands instead
       if(input.get.name == "install"){
         Log.debug("install called!")
-        EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.installResource, Some(input.get.parameters))))
+        EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.InstallResource, Some(input.get.parameters))))
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
         if(mConsole.isDefined){
@@ -104,7 +104,7 @@ class CommandLineInterface extends UserInterface {
         }
         terminate()
       } else {
-        EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
+        EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ApplyPlugin, input)))
       }
     }
 
@@ -144,24 +144,24 @@ class CommandLineInterface extends UserInterface {
     val console = mConsole.get
     val stringBuilder = new StringBuilder()
     stringBuilder.append(taskId + ": ")
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.startString)
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
 
-    for(i <- 1 to CommandLineInterfaceConstant.Progress.progressbarLength){
-      if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.endlessProgressLength)
-      || (i < (mCounter + CommandLineInterfaceConstant.Progress.endlessProgressLength) - CommandLineInterfaceConstant.Progress.progressbarLength)){
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarFilledString)
+    for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
+      if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
+      || (i < (mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
+        stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
       } else {
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarEmptyString)
+        stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
       }
     }
 
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.endString)
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
 
     console.resetPromptLine("",stringBuilder.toString(),-1)
 
     mCounter += 1
 
-    if(mCounter >= CommandLineInterfaceConstant.Progress.progressbarLength){
+    if(mCounter >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
       mCounter = 0
     }
   }
@@ -176,13 +176,13 @@ class CommandLineInterface extends UserInterface {
     //show completed task
     val stringBuilder = new StringBuilder()
     stringBuilder.append(taskId + ": ")
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.startString)
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
 
-    for(i <- 1 to CommandLineInterfaceConstant.Progress.progressbarLength){
-      stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarFilledString)
+    for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
     }
 
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.endString)
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
 
     if(mConsole.isDefined){
       val console = mConsole.get
@@ -212,15 +212,15 @@ class CommandLineInterface extends UserInterface {
       //TODO: print matching error
 
       error match {
-        case PluginErrorCodes.dependenciesNotSatisfied =>
+        case PluginErrorCodes.DependenciesNotSatisfied =>
           if(data.isDefined){
             mConsole.get.println("error: dependency not satisfied: " + data.get.asInstanceOf[String])
           }
-        case PluginErrorCodes.dependenciesInChange =>
+        case PluginErrorCodes.DependenciesInChange =>
           if(data.isDefined){
             mConsole.get.println("error: dependency in change: " + data.get.asInstanceOf[String])
           }
-        case PluginErrorCodes.pluginNotFound =>
+        case PluginErrorCodes.PluginNotFound =>
           mConsole.get.println("error: plugin not found!")
       }
     }
@@ -236,14 +236,14 @@ case class CommandLineMessage(action: String, data:Option[Any])
 
 object CommandLineInterfaceConstant {
   object Action {
-    val handleLine = "handleLine"
+    val HandleLine = "handleLine"
   }
   object Progress{
-    val startString = "["
-    val endString = "]"
-    val progressbarLength = 25
-    val progressbarEmptyString = " "
-    val progressbarFilledString = "#"
-    val endlessProgressLength = 20
+    val StartString = "["
+    val EndString = "]"
+    val ProgressbarLength = 25
+    val ProgressbarEmptyString = " "
+    val ProgressbarFilledString = "#"
+    val EndlessProgressLength = 20
   }
 }

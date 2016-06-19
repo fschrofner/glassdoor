@@ -20,16 +20,16 @@ class SmaliDisassembler extends Plugin{
     //baksmali.disassembleDexFile(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
     //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
 
-    val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+    val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(workingDir.isDefined){
-      val outputDirectory = workingDir.get + "/" + ContextConstant.Key.SMALI
+      val outputDirectory = workingDir.get + "/" + ContextConstant.Key.Smali
 
       val options = new baksmaliOptions
       options.jobs = 1
       options.outputDirectory = outputDirectory
 
-      val dexFilePath = data.get(ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_DEX)
+      val dexFilePath = data.get(ContextConstant.FullKey.IntermediateAssemblyDex)
 
       if(dexFilePath.isDefined){
         val dexFileFile = new File(dexFilePath.get + "/classes.dex")
@@ -39,7 +39,7 @@ class SmaliDisassembler extends Plugin{
           showEndlessProgress()
           baksmali.disassembleDexFile(dexFile, options)
           Log.debug("disassembling dex to: " + outputDirectory)
-          val result = HashMap[String,String](ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI -> outputDirectory)
+          val result = HashMap[String,String](ContextConstant.FullKey.IntermediateAssemblySmali -> outputDirectory)
           mResult = Some(result)
         } catch {
           case e:IllegalArgumentException =>

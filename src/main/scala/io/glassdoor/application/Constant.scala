@@ -7,8 +7,8 @@ package io.glassdoor.application
 object Constant {
   //predefined regexes
   object Regex {
-    val DESCRIPTOR_SPLIT_REGEX = """\."""
-    val REGEX_PATTERN_DEX = """^.*\.[Dd][Ee][Xx]$"""
-    val REGEX_PATTERN_EMAIL = """.+@.+\..{2,}"""
+    val DescriptorSplitRegex = """\."""
+    val RegexPatternDex = """^.*\.[Dd][Ee][Xx]$"""
+    val RegexPatternEmail = """.+@.+\..{2,}"""
   }
 }

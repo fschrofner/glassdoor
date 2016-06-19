@@ -18,19 +18,19 @@ class Context {
     var result:Option[Map[String,String]] = None
 
     keymapDescription match {
-      case ContextConstant.Keymap.ORIGINAL_BINARY =>
+      case ContextConstant.Keymap.OriginalBinary =>
         result = Some(originalBinary)
-      case ContextConstant.Keymap.INTERMEDIATE_ASSEMBLY =>
+      case ContextConstant.Keymap.IntermediateAssembly =>
         result = Some(intermediateAssembly)
-      case ContextConstant.Keymap.INTERMEDIATE_SOURCE =>
+      case ContextConstant.Keymap.IntermediateSource =>
         result = Some(intermediateSource)
-      case ContextConstant.Keymap.INTERMEDIATE_RESOURCES =>
+      case ContextConstant.Keymap.IntermediateResource =>
         result = Some(intermediateResource)
-      case ContextConstant.Keymap.RESULT_LOG =>
+      case ContextConstant.Keymap.ResultLog =>
         result = Some(resultLog)
-      case ContextConstant.Keymap.RESOURCE =>
+      case ContextConstant.Keymap.Resource =>
         result = Some(resource)
-      case ContextConstant.Keymap.CONFIG =>
+      case ContextConstant.Keymap.Config =>
         result = Some(configuration)
       case _ =>
         result = None
@@ -40,19 +40,19 @@ class Context {
 
   def setKeymapMatchingString(keymapDescription:String, keymap:Map[String,String]): Unit = {
     keymapDescription match {
-      case ContextConstant.Keymap.ORIGINAL_BINARY =>
+      case ContextConstant.Keymap.OriginalBinary =>
         originalBinary = keymap
-      case ContextConstant.Keymap.INTERMEDIATE_ASSEMBLY =>
+      case ContextConstant.Keymap.IntermediateAssembly =>
         intermediateAssembly = keymap
-      case ContextConstant.Keymap.INTERMEDIATE_SOURCE =>
+      case ContextConstant.Keymap.IntermediateSource =>
         intermediateSource = keymap
-      case ContextConstant.Keymap.INTERMEDIATE_RESOURCES =>
+      case ContextConstant.Keymap.IntermediateResource =>
         intermediateResource = keymap
-      case ContextConstant.Keymap.RESULT_LOG =>
+      case ContextConstant.Keymap.ResultLog =>
         resultLog = keymap
-      case ContextConstant.Keymap.RESOURCE =>
+      case ContextConstant.Keymap.Resource =>
         resource = keymap
-      case ContextConstant.Keymap.CONFIG =>
+      case ContextConstant.Keymap.Config =>
         configuration = keymap
       case _ =>
         //TODO: error!
@@ -60,7 +60,7 @@ class Context {
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    descriptor.split(Constant.Regex.DESCRIPTOR_SPLIT_REGEX)
+    descriptor.split(Constant.Regex.DescriptorSplitRegex)
   }
 
   def getResolvedValue(descriptor:String): Option[String] ={
@@ -107,39 +107,39 @@ class Context {
 }
 
 object ContextConstant {
-  val DESCRIPTOR_SPLIT = "."
+  val DescriptorSplit = "."
 
   //keymap names
   object Keymap {
-    val ORIGINAL_BINARY = "original-binary"
-    val INTERMEDIATE_ASSEMBLY = "intermediate-assembly"
-    val INTERMEDIATE_SOURCE = "intermediate-source"
-    val INTERMEDIATE_RESOURCES = "intermediate-resource"
-    val RESULT_LOG = "result-log"
-    val CONFIG = "config"
-    val RESOURCE = "resource"
+    val OriginalBinary = "original-binary"
+    val IntermediateAssembly = "intermediate-assembly"
+    val IntermediateSource = "intermediate-source"
+    val IntermediateResource = "intermediate-resource"
+    val ResultLog = "result-log"
+    val Config = "config"
+    val Resource = "resource"
   }
 
   //these are the key values used inside the keymaps
   object Key {
-    val APK = "apk"
-    val DEX = "dex"
-    val SMALI = "smali"
-    val JAVA = "java"
-    val GREP = "grep"
-    val GREP_LOGIN = "grep-login"
+    val Apk = "apk"
+    val Dex = "dex"
+    val Smali = "smali"
+    val Java = "java"
+    val Grep = "grep"
+    val GrepLogin = "grep-login"
   }
 
   //keys defining the keymap and the keys in one string
   object FullKey {
-    val ORIGINAL_BINARY_APK = Keymap.ORIGINAL_BINARY + DESCRIPTOR_SPLIT + Key.APK
-    val INTERMEDIATE_ASSEMBLY_DEX = Keymap.INTERMEDIATE_ASSEMBLY + DESCRIPTOR_SPLIT + Key.DEX
-    val INTERMEDIATE_ASSEMBLY_SMALI = Keymap.INTERMEDIATE_ASSEMBLY + DESCRIPTOR_SPLIT + Key.SMALI
-    val INTERMEDIATE_SOURCE_JAVA = Keymap.INTERMEDIATE_SOURCE + DESCRIPTOR_SPLIT + Key.JAVA
-    val RESULT_LOG_GREP_LOGIN = Keymap.RESULT_LOG + DESCRIPTOR_SPLIT + Key.GREP_LOGIN
-    val CONFIG_WORKING_DIRECTORY = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.WORKING_DIRECTORY
-    val CONFIG_PLUGIN_CONFIG_PATH = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.PLUGIN_CONFIG_PATH
-    val CONFIG_ALIAS_CONFIG_PATH = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.ALIAS_CONFIG_PATH
-    val CONFIG_RESOURCE_DIRECTORY = Keymap.CONFIG + DESCRIPTOR_SPLIT + ConfigConstant.ConfigKey.Key.RESOURCE_DIRECTORY
+    val OriginalBinaryApk = Keymap.OriginalBinary + DescriptorSplit + Key.Apk
+    val IntermediateAssemblyDex = Keymap.IntermediateAssembly + DescriptorSplit + Key.Dex
+    val IntermediateAssemblySmali = Keymap.IntermediateAssembly + DescriptorSplit + Key.Smali
+    val IntermediateSourceJava = Keymap.IntermediateSource + DescriptorSplit + Key.Java
+    val ResultLogGrepLogin = Keymap.ResultLog + DescriptorSplit + Key.GrepLogin
+    val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
+    val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
+    val ConfigAliasConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.AliasConfigPath
+    val ConfigResourceDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceDirectory
   }
 }

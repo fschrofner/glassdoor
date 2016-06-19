@@ -31,6 +31,7 @@ dependencies {
     //compile 'fr.inria.gforge.spoon:spoon-core:5.1.0'
     //compile 'com.github.fschrofner:jadx-jitpack:v0.6.1-dev'
     compile name: 'jadx-core-0.6.1-dev' //TODO: replace with url above
+    //compile 'com.github.INRIA:spoon:540b260d57' //TOD: replace with maven central build, when dependency issue is resolved
 }
 
 task wrapper(type: Wrapper) {

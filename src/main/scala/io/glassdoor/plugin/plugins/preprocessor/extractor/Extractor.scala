@@ -32,7 +32,7 @@ class Extractor extends Plugin{
       val keymapName = keymapSplitString(0)
       val keyValue = keymapSplitString(1)
 
-      val workingDir = data.get(ContextConstant.FullKey.CONFIG_WORKING_DIRECTORY)
+      val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
       if(srcPath.isDefined && workingDir.isDefined){
         val destination = workingDir.get + "/" + keyValue
@@ -97,7 +97,7 @@ class Extractor extends Plugin{
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    descriptor.split(Constant.Regex.DESCRIPTOR_SPLIT_REGEX)
+    descriptor.split(Constant.Regex.DescriptorSplitRegex)
   }
 
   override def result:Option[Map[String,String]] = {
