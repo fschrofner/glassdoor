@@ -2,10 +2,10 @@ package io.glassdoor.controller
 
 import akka.actor.Actor
 import akka.actor.Actor.Receive
-import io.glassdoor.application.{Configuration, Context, Command}
+import io.glassdoor.application.{Log, Configuration, Context, Command}
 import io.glassdoor.bus.{EventBus, MessageEvent, Message}
 import io.glassdoor.interface.UserInterfaceConstant
-import io.glassdoor.plugin.manager.{PluginManagerPluginParameters, PluginManagerConstant}
+import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerPluginParameters, PluginManagerConstant}
 import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerResourceParameters}
 
 /**
@@ -13,6 +13,12 @@ import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerRes
   */
 trait Controller extends Actor {
   protected var mContext:Context = null
+
+  def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
+  def handleChangedValues(changedValues:Map[String,String]):Unit
+  def handleInstallResource(names:Array[String])
+  def handlePluginError(pluginId:Long, errorCode:Integer, data:Option[Any])
+  def buildAliasIndex(context:Context):Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     val message = new PluginManagerPluginParameters(pluginName, parameters, mContext)
@@ -24,10 +30,11 @@ trait Controller extends Actor {
     EventBus.publish(MessageEvent(ResourceManagerConstant.channel, Message(ResourceManagerConstant.Action.installResource, Some(message))))
   }
 
-  def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
-  def handleChangedValues(changedValues:Map[String,String]):Unit
-  def handleInstallResource(names:Array[String])
-  def buildAliasIndex(context:Context):Unit
+  def forwardErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]): Unit ={
+    val messageData = new PluginErrorMessage(pluginId, errorCode, data)
+    val message = new Message(UserInterfaceConstant.Action.pluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, message))
+  }
 
   def setup():Unit = {
     Configuration.loadConfig()
@@ -49,6 +56,7 @@ trait Controller extends Actor {
   }
 
   def terminate():Unit = {
+    Log.debug("controller terminating application..")
     context.system.terminate()
   }
 
@@ -73,11 +81,15 @@ trait Controller extends Actor {
             val changedValues = data.get.asInstanceOf[Map[String,String]]
             handleChangedValues(changedValues)
           }
-
         case ControllerConstant.Action.installResource =>
           if(data.isDefined){
             val name = data.get.asInstanceOf[Array[String]]
             handleInstallResource(name)
+          }
+        case ControllerConstant.Action.pluginError =>
+          if(data.isDefined){
+            val messageData = data.get.asInstanceOf[PluginErrorMessage]
+            handlePluginError(messageData.pluginId, messageData.errorCode, messageData.data)
           }
       }
   }
@@ -93,5 +105,6 @@ object ControllerConstant {
     val applyPlugin = "applyPlugin"
     val installResource = "installResource"
     val applyChangedValues = "applyChangedValues"
+    val pluginError = "pluginError"
   }
 }

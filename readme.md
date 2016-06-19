@@ -12,8 +12,8 @@ Git
 
 ##Build Instructions
 Glassdoor uses the wonderful [Gradle](https://gradle.org/) build system to realise its builds.  
-In order to build glassdoor yourself, it should be sufficient to open a terminal window in the root directory and call `gradle build` there. You will find a ready-to-use version of glassdoor, compressed as tar and zip file, inside `build/distributions` after the build process. Just take either one, extract it and call `bin/glassdoor`.  
-If you want to run glassdoor directly (for development purposes, for example) just call `gradle run` in the root directory.  
+In order to build glassdoor yourself, it should be sufficient to open a terminal window in the root directory and call `./gradlew build` there. You will find a ready-to-use version of glassdoor, compressed as tar and zip file, inside `build/distributions` after the build process. Just take either one, extract it and call `bin/glassdoor`.  
+If you want to run glassdoor directly (for development purposes, for example) just call `./gradlew run` in the root directory.  
 Here you go, your self-compiled version of glassdoor is up and running (hopefully)!
 
 ###Ensime

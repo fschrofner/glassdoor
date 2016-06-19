@@ -36,6 +36,7 @@ class SmaliDisassembler extends Plugin{
         val dexFile = DexFileFactory.loadDexFile(dexFileFile, options.dexEntry, options.apiLevel, options.experimental);
 
         try {
+          showEndlessProgress()
           baksmali.disassembleDexFile(dexFile, options)
           Log.debug("disassembling dex to: " + outputDirectory)
           val result = HashMap[String,String](ContextConstant.FullKey.INTERMEDIATE_ASSEMBLY_SMALI -> outputDirectory)

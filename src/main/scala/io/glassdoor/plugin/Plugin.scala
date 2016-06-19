@@ -29,9 +29,9 @@ trait Plugin extends Actor {
   }
 
   def showEndlessProgress():Unit = {
-    if(uniqueId.isDefined){
-      EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.showEndlessProgress, Some(uniqueId.get))))
-    }
+    //TODO: get name of the plugin somehow?
+    //val message = new PluginProgress(uniqueId, )
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.channel, Message(UserInterfaceConstant.Action.showEndlessProgress, Some(uniqueId.get))))
   }
 
   override def receive: Receive = {
@@ -61,3 +61,4 @@ object PluginConstant {
 
 case class PluginParameters(data:Map[String, String], parameters:Array[String])
 case class PluginResult(uniqueId:Option[Long], result:Option[Map[String,String]])
+case class PluginProgress(uniqueId:Option[Long], pluginName:String, progress:Option[Integer])

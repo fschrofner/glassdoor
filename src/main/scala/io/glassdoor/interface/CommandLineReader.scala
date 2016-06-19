@@ -43,6 +43,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
   def readLine(): Unit = {
     if(mConsole.isDefined){
       val console = mConsole.get
+      mConsole.get.resetPromptLine("","",-1)
       mConsole.get.setPrompt(">")
 
       val line = console.readLine()

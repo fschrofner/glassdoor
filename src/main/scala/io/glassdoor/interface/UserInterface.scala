@@ -6,6 +6,7 @@ import io.glassdoor.application.{Log, Context}
 import io.glassdoor.bus.{MessageEvent, EventBus, Message}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
+import io.glassdoor.plugin.manager.PluginErrorMessage
 
 /**
   * Created by Florian Schrofner on 3/15/16.
@@ -15,6 +16,7 @@ trait UserInterface extends Actor {
   def showProgress(taskId:Long, progress: Float):Unit
   def showEndlessProgress(taskId:Long):Unit
   def taskCompleted(taskId: Long):Unit
+  def taskFailed(taskId: Long, error: Int, data:Option[Any]):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.terminate, None)))
@@ -46,6 +48,12 @@ trait UserInterface extends Actor {
             val taskId = data.get.asInstanceOf[Long]
             taskCompleted(taskId)
           }
+        case UserInterfaceConstant.Action.pluginError =>
+          Log.debug("received task error in user interface")
+          if(data.isDefined){
+            val message = data.get.asInstanceOf[PluginErrorMessage]
+            taskFailed(message.pluginId, message.errorCode, message.data)
+          }
     }
   }
 }
@@ -59,5 +67,6 @@ object UserInterfaceConstant {
     val showEndlessProgress = "showEndlessProgress"
     val showProgress = "showProgress"
     val taskCompleted = "taskCompleted"
+    val pluginError = "pluginError"
   }
 }

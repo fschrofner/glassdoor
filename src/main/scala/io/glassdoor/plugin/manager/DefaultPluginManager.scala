@@ -8,6 +8,7 @@ import groovy.lang.GroovyClassLoader
 import io.glassdoor.application._
 import io.glassdoor.bus.Message
 import io.glassdoor.plugin.language.GroovyPlugin
+import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCodes
 import io.glassdoor.plugin.{PluginParameters, PluginConstant, Plugin, PluginInstance, PluginResult, PluginData}
 
 import scala.collection.JavaConverters._
@@ -99,11 +100,17 @@ class DefaultPluginManager extends PluginManager{
 
   override def applyPlugin(pluginName: String, parameters: Array[String], context: Context): Unit = {
     //TODO: only send the data the plugin needs
+    //TODO: split up into different methods (checkDependencies, createContext)
+
+    Log.debug("plugin manager: apply plugin called!")
+
     var pluginDataOpt:Option[PluginData] = None
 
     if(mLoadedPlugins.contains(pluginName)){
       pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
+      Log.debug("error: plugin not found!")
+      sendErrorMessage(-1, PluginErrorCodes.pluginNotFound, None)
       //TODO: error, plugin not found
     }
 
@@ -119,21 +126,27 @@ class DefaultPluginManager extends PluginManager{
 
       //provide access to the dependencies and add them to the current dependencies
       for(dependency <- dependencies){
-        if(mChangingValues.contains(dependency)){
-          //TODO: can not launch plugin! values in change, schedule plugin
-          Log.debug("dependency in change! can not safely launch plugin!")
-        } else {
-          if(mWorkedOnDependencies.contains(dependency)){
-            val prevVal = mWorkedOnDependencies.get(dependency).get
-            mWorkedOnDependencies.put(dependency, prevVal+1)
+        val value = context.getResolvedValue(dependency)
+        if(value.isDefined) {
+          if (mChangingValues.contains(dependency)) {
+            Log.debug("dependency in change! can not safely launch plugin!")
+            //TODO: there is no plugin id yet, so it can not be supplied with the message
+            sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.dependenciesInChange, Some(dependency))
+            return
           } else {
-            mWorkedOnDependencies.put(dependency, 1)
-          }
-
-          val value = context.getResolvedValue(dependency)
-          if(value.isDefined){
+            if (mWorkedOnDependencies.contains(dependency)) {
+              val prevVal = mWorkedOnDependencies.get(dependency).get
+              mWorkedOnDependencies.put(dependency, prevVal + 1)
+            } else {
+              mWorkedOnDependencies.put(dependency, 1)
+            }
             mutableHashmap.put(dependency, value.get)
           }
+        } else {
+          //there might be multiple dependencies, that are not satisfied, but it already stops at the first mismatch
+          sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.dependenciesNotSatisfied, Some(dependency))
+          Log.debug("dependency: " + dependency + " not satisfied!")
+          return
         }
       }
 

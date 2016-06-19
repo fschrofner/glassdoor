@@ -1,16 +1,21 @@
 package io.glassdoor.interface
 
 import java.io.PrintWriter
+import java.util.concurrent.TimeUnit
 import javax.smartcardio.TerminalFactory
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{Cancellable, ActorRef, Props}
 import io.glassdoor.application.{Log, Context, CommandInterpreter, Command}
 import io.glassdoor.bus.{Message, MessageEvent, EventBus}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
+import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCodes
 import jline.{UnixTerminal, Terminal}
 import jline.console.ConsoleReader
 import jline.console.completer.StringsCompleter
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.duration.Duration
 
 /**
   * Created by Florian Schrofner on 3/15/16.
@@ -20,6 +25,10 @@ class CommandLineInterface extends UserInterface {
   var mConsole:Option[ConsoleReader] = None
   var mCompleter:Option[StringsCompleter] = None
   var mCommandLineReader:Option[ActorRef] = None
+  var mCounter = 0
+
+  //TODO: there can be mutliple animations going on!
+  var mAnimationTask:Option[Cancellable] = None
 
 
   override def receive: PartialFunction[Any, Unit] = {
@@ -75,6 +84,7 @@ class CommandLineInterface extends UserInterface {
 
   def handleLine(line:String):Unit = {
     Log.debug("handle line called!")
+    Log.debug("line: " + line)
     //TODO: handle "exit"!
     val input = CommandInterpreter.interpret(line)
 
@@ -84,8 +94,14 @@ class CommandLineInterface extends UserInterface {
 
       //TODO: use list of system commands instead
       if(input.get.name == "install"){
+        Log.debug("install called!")
         EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.installResource, Some(input.get.parameters))))
       } else if(input.get.name == "exit"){
+        Log.debug("exit called!")
+        if(mConsole.isDefined){
+          mConsole.get.shutdown()
+          mConsole = None
+        }
         terminate()
       } else {
         EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.applyPlugin, input)))
@@ -115,17 +131,38 @@ class CommandLineInterface extends UserInterface {
     Log.debug("commandline interface: showing endless progress")
     if(mConsole.isDefined){
       Log.debug("console defined")
-      val console = mConsole.get
-
-      for(i <- 1 to 20){
-        //TODO: find out how to update the line
-        console.killLine()
-        console.flush()
-        console.print("" + i)
-        console.flush()
-      }
+      //val console = mConsole.get
+      val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateEndlessProgress(taskId))
+      mAnimationTask = Some(handle)
     } else {
       Log.debug("error: console not defined!")
+    }
+  }
+
+  def updateEndlessProgress(taskId: Long):Unit = {
+    //TODO: check isDefined
+    val console = mConsole.get
+    val stringBuilder = new StringBuilder()
+    stringBuilder.append(taskId + ": ")
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.startString)
+
+    for(i <- 1 to CommandLineInterfaceConstant.Progress.progressbarLength){
+      if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.endlessProgressLength)
+      || (i < (mCounter + CommandLineInterfaceConstant.Progress.endlessProgressLength) - CommandLineInterfaceConstant.Progress.progressbarLength)){
+        stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarFilledString)
+      } else {
+        stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarEmptyString)
+      }
+    }
+
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.endString)
+
+    console.resetPromptLine("",stringBuilder.toString(),-1)
+
+    mCounter += 1
+
+    if(mCounter >= CommandLineInterfaceConstant.Progress.progressbarLength){
+      mCounter = 0
     }
   }
 
@@ -134,7 +171,60 @@ class CommandLineInterface extends UserInterface {
     //TODO: can't handle this
     Log.debug("interface received task completed")
 
+    stopAnimation(taskId)
+
+    //show completed task
+    val stringBuilder = new StringBuilder()
+    stringBuilder.append(taskId + ": ")
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.startString)
+
+    for(i <- 1 to CommandLineInterfaceConstant.Progress.progressbarLength){
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.progressbarFilledString)
+    }
+
+    stringBuilder.append(CommandLineInterfaceConstant.Progress.endString)
+
+    if(mConsole.isDefined){
+      val console = mConsole.get
+      console.resetPromptLine("",stringBuilder.toString(),-1)
+      console.println()
+    }
+
     //wait for new commands
+    if(mCommandLineReader.isDefined){
+      val commandLineReader = mCommandLineReader.get
+      commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
+    }
+  }
+
+  def stopAnimation(taskId: Long):Unit = {
+    //TODO: stop correct animation
+    if(mAnimationTask.isDefined){
+      mAnimationTask.get.cancel()
+      mAnimationTask = None
+    }
+  }
+
+  override def taskFailed(taskId: Long, error: Int, data:Option[Any]): Unit = {
+    stopAnimation(taskId)
+
+    if(mConsole.isDefined){
+      //TODO: print matching error
+
+      error match {
+        case PluginErrorCodes.dependenciesNotSatisfied =>
+          if(data.isDefined){
+            mConsole.get.println("error: dependency not satisfied: " + data.get.asInstanceOf[String])
+          }
+        case PluginErrorCodes.dependenciesInChange =>
+          if(data.isDefined){
+            mConsole.get.println("error: dependency in change: " + data.get.asInstanceOf[String])
+          }
+        case PluginErrorCodes.pluginNotFound =>
+          mConsole.get.println("error: plugin not found!")
+      }
+    }
+
     if(mCommandLineReader.isDefined){
       val commandLineReader = mCommandLineReader.get
       commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
@@ -147,5 +237,13 @@ case class CommandLineMessage(action: String, data:Option[Any])
 object CommandLineInterfaceConstant {
   object Action {
     val handleLine = "handleLine"
+  }
+  object Progress{
+    val startString = "["
+    val endString = "]"
+    val progressbarLength = 25
+    val progressbarEmptyString = " "
+    val progressbarFilledString = "#"
+    val endlessProgressLength = 20
   }
 }

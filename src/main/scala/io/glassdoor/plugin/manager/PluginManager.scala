@@ -24,6 +24,12 @@ trait PluginManager extends Actor {
     EventBus.publish(new MessageEvent(ControllerConstant.channel, message))
   }
 
+  def sendErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]):Unit = {
+    val messageData = new PluginErrorMessage(pluginId, errorCode, data)
+    val message = new Message(ControllerConstant.Action.pluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(ControllerConstant.channel, message))
+  }
+
   override def receive = {
     case Message(action, data) =>
       action match {
@@ -54,6 +60,13 @@ object PluginManagerConstant {
     val applyPlugin = "applyPlugin"
     val pluginResult = "pluginResult"
   }
+
+  object PluginErrorCodes {
+    val dependenciesNotSatisfied = 100
+    val dependenciesInChange = 101
+    val pluginNotFound = 102
+  }
 }
 
 case class PluginManagerPluginParameters(pluginName:String, parameters:Array[String], context:Context)
+case class PluginErrorMessage(pluginId: Long, errorCode: Integer, data:Option[Any])

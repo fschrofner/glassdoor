@@ -79,6 +79,10 @@ class DefaultController extends Controller{
     }
   }
 
+  override def handlePluginError(pluginId: Long, errorCode: Integer, data: Option[Any]): Unit = {
+    forwardErrorMessage(pluginId,errorCode,data)
+  }
+
   //  def launchPluginTest(): Unit ={
   //    val pluginManager = new DefaultPluginManager
   //    pluginManager.loadDefaultPlugins(context)
