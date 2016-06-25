@@ -3,9 +3,10 @@ package io.glassdoor.plugin.manager
 import java.util.Map.Entry
 
 import akka.actor.{Actor, ActorRef}
-import io.glassdoor.application.Context
-import io.glassdoor.bus.{Message,EventBus, MessageEvent}
+import io.glassdoor.application.{Context, Log}
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
+import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.{PluginInstance, PluginResult}
 
 /**
@@ -18,17 +19,20 @@ trait PluginManager extends Actor {
   def initialise(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
+  def getPluginInstance(pluginId:Long):Option[PluginInstance]
 
   def applyChangedValues(changedValues:Map[String,String]):Unit = {
     val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
-  def sendErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]):Unit = {
-    val messageData = new PluginErrorMessage(pluginId, errorCode, data)
+  def sendErrorMessage(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any]):Unit = {
+    val messageData = new PluginErrorMessage(pluginInstance, errorCode, data)
     val message = new Message(ControllerConstant.Action.PluginError, Some(messageData))
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
+
+
 
   override def receive = {
     case Message(action, data) =>
@@ -49,6 +53,25 @@ trait PluginManager extends Actor {
               handlePluginResult(resultData.uniqueId.get, resultData.result.get)
             }
           }
+        case PluginManagerConstant.Action.PluginShowEndlessProgress =>
+          if(data.isDefined){
+            val uniqueId = data.get.asInstanceOf[Long]
+            val instance = getPluginInstance(uniqueId)
+            if(instance.isDefined){
+              EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.ShowEndlessProgress, instance)))
+            }
+          }
+        case PluginManagerConstant.Action.PluginTaskCompleted =>
+          if(data.isDefined){
+            val uniqueId = data.get.asInstanceOf[Long]
+            val instance = getPluginInstance(uniqueId)
+            if(instance.isDefined){
+              Log.debug("plugin instance found, forwarding!")
+              EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, instance)))
+            } else {
+              Log.debug("plugin instance not found!")
+            }
+          }
       }
   }
 }
@@ -59,6 +82,9 @@ object PluginManagerConstant {
     val Initialise = "initialise"
     val ApplyPlugin = "applyPlugin"
     val PluginResult = "pluginResult"
+    val PluginShowEndlessProgress = "pluginShowEndlessProgress"
+    val PluginShowProgress = "pluginShowProgress"
+    val PluginTaskCompleted = "pluginTaskCompleted"
   }
 
   object PluginErrorCodes {
@@ -69,4 +95,4 @@ object PluginManagerConstant {
 }
 
 case class PluginManagerPluginParameters(pluginName:String, parameters:Array[String], context:Context)
-case class PluginErrorMessage(pluginId: Long, errorCode: Integer, data:Option[Any])
+case class PluginErrorMessage(pluginInstance: Option[PluginInstance], errorCode: Integer, data:Option[Any])

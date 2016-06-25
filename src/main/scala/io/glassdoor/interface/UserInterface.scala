@@ -13,10 +13,10 @@ import io.glassdoor.plugin.manager.PluginErrorMessage
   */
 trait UserInterface extends Actor {
   def initialise(context:Context):Unit
-  def showProgress(taskId:Long, progress: Float):Unit
-  def showEndlessProgress(taskId:Long):Unit
-  def taskCompleted(taskId: Long):Unit
-  def taskFailed(taskId: Long, error: Int, data:Option[Any]):Unit
+  def showProgress(taskInstace: PluginInstance, progress: Float):Unit
+  def showEndlessProgress(task: PluginInstance):Unit
+  def taskCompleted(taskInstance: PluginInstance):Unit
+  def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -39,20 +39,20 @@ trait UserInterface extends Actor {
         case UserInterfaceConstant.Action.ShowEndlessProgress =>
           if(data.isDefined){
             Log.debug("received show endless progress")
-            val taskId = data.get.asInstanceOf[Long]
-            showEndlessProgress(taskId)
+            val taskInstance = data.get.asInstanceOf[PluginInstance]
+            showEndlessProgress(taskInstance)
           }
         case UserInterfaceConstant.Action.TaskCompleted =>
           Log.debug("received task completed in user interface")
           if(data.isDefined){
-            val taskId = data.get.asInstanceOf[Long]
-            taskCompleted(taskId)
+            val taskInstance = data.get.asInstanceOf[PluginInstance]
+            taskCompleted(taskInstance)
           }
         case UserInterfaceConstant.Action.PluginError =>
           Log.debug("received task error in user interface")
           if(data.isDefined){
             val message = data.get.asInstanceOf[PluginErrorMessage]
-            taskFailed(message.pluginId, message.errorCode, message.data)
+            taskFailed(message.pluginInstance, message.errorCode, message.data)
           }
     }
   }

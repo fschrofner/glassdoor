@@ -110,7 +110,7 @@ class DefaultPluginManager extends PluginManager{
       pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
       Log.debug("error: plugin not found!")
-      sendErrorMessage(-1, PluginErrorCodes.PluginNotFound, None)
+      sendErrorMessage(None, PluginErrorCodes.PluginNotFound, None)
       //TODO: error, plugin not found
     }
 
@@ -131,7 +131,7 @@ class DefaultPluginManager extends PluginManager{
           if (mChangingValues.contains(dependency)) {
             Log.debug("dependency in change! can not safely launch plugin!")
             //TODO: there is no plugin id yet, so it can not be supplied with the message
-            sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.DependenciesInChange, Some(dependency))
+            sendErrorMessage(None, PluginManagerConstant.PluginErrorCodes.DependenciesInChange, Some(dependency))
             return
           } else {
             if (mWorkedOnDependencies.contains(dependency)) {
@@ -144,7 +144,7 @@ class DefaultPluginManager extends PluginManager{
           }
         } else {
           //there might be multiple dependencies, that are not satisfied, but it already stops at the first mismatch
-          sendErrorMessage(-1, PluginManagerConstant.PluginErrorCodes.DependenciesNotSatisfied, Some(dependency))
+          sendErrorMessage(None, PluginManagerConstant.PluginErrorCodes.DependenciesNotSatisfied, Some(dependency))
           Log.debug("dependency: " + dependency + " not satisfied!")
           return
         }
@@ -251,5 +251,9 @@ class DefaultPluginManager extends PluginManager{
   def instantiateDefaultPlugin(className:String):ActorRef = {
     val pluginClass = Class.forName(className)
     context.system.actorOf(Props(pluginClass))
+  }
+
+  override def getPluginInstance(pluginId: Long): Option[PluginInstance] = {
+    mRunningPlugins.get(pluginId)
   }
 }

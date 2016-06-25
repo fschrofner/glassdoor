@@ -2,9 +2,9 @@ package io.glassdoor.plugin
 
 import akka.actor.Actor
 import io.glassdoor.application.Context
-import io.glassdoor.bus.{MessageEvent, EventBus, Message}
-import io.glassdoor.interface.{UserInterfaceConstant}
-import io.glassdoor.plugin.manager.PluginManagerConstant
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
+import io.glassdoor.interface.UserInterfaceConstant
+import io.glassdoor.plugin.manager.{PluginManagerConstant}
 
 /**
   * Created by Florian Schrofner on 3/16/16.
@@ -19,8 +19,10 @@ trait Plugin extends Actor {
   //method should be called when the plugin is ready to return a result
   def ready():Unit = {
     val resultData = PluginResult(uniqueId, result)
+    //tell the UI first, that the plugin has completed, before removing it from the running plugins
+    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginTaskCompleted, uniqueId)))
     EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginResult, Some(resultData))))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, uniqueId)))
+    //EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, uniqueId)))
   }
 
   //updates the progress of this task to the specified value
@@ -29,9 +31,9 @@ trait Plugin extends Actor {
   }
 
   def showEndlessProgress():Unit = {
-    //TODO: get name of the plugin somehow?
     //val message = new PluginProgress(uniqueId, )
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.ShowEndlessProgress, Some(uniqueId.get))))
+    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginShowEndlessProgress, uniqueId)))
+    //EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.ShowEndlessProgress, Some(uniqueId.get))))
   }
 
   override def receive: Receive = {

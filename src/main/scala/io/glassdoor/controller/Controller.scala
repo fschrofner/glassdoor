@@ -2,10 +2,11 @@ package io.glassdoor.controller
 
 import akka.actor.Actor
 import akka.actor.Actor.Receive
-import io.glassdoor.application.{Log, Configuration, Context, Command}
-import io.glassdoor.bus.{EventBus, MessageEvent, Message}
+import io.glassdoor.application.{Command, Configuration, Context, Log}
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.interface.UserInterfaceConstant
-import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerPluginParameters, PluginManagerConstant}
+import io.glassdoor.plugin.PluginInstance
+import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerConstant, PluginManagerPluginParameters}
 import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerResourceParameters}
 
 /**
@@ -17,7 +18,7 @@ trait Controller extends Actor {
   def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
   def handleChangedValues(changedValues:Map[String,String]):Unit
   def handleInstallResource(names:Array[String])
-  def handlePluginError(pluginId:Long, errorCode:Integer, data:Option[Any])
+  def handlePluginError(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any])
   def buildAliasIndex(context:Context):Unit
   def handleUpdateAvailableResources():Unit
 
@@ -39,8 +40,8 @@ trait Controller extends Actor {
     }
   }
 
-  def forwardErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]): Unit ={
-    val messageData = new PluginErrorMessage(pluginId, errorCode, data)
+  def forwardErrorMessage(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any]): Unit ={
+    val messageData = new PluginErrorMessage(pluginInstance, errorCode, data)
     val message = new Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
     EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
   }
@@ -98,7 +99,7 @@ trait Controller extends Actor {
         case ControllerConstant.Action.PluginError =>
           if(data.isDefined){
             val messageData = data.get.asInstanceOf[PluginErrorMessage]
-            handlePluginError(messageData.pluginId, messageData.errorCode, messageData.data)
+            handlePluginError(messageData.pluginInstance, messageData.errorCode, messageData.data)
           }
         case ControllerConstant.Action.UpdateAvailableResources =>
           handleUpdateAvailableResources()

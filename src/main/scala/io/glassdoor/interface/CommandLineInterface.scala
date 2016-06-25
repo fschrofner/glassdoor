@@ -127,79 +127,98 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
-  override def showProgress(taskId: Long, progress: Float): Unit = ???
+  override def showProgress(taskInstance: PluginInstance, progress: Float): Unit = ???
 
-  override def showEndlessProgress(taskId: Long): Unit = {
+  override def showEndlessProgress(taskInstance: PluginInstance): Unit = {
     Log.debug("commandline interface: showing endless progress")
     if(mConsole.isDefined){
       Log.debug("console defined")
       //val console = mConsole.get
-      val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateEndlessProgress(taskId))
+      val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateEndlessProgress(taskInstance))
       mAnimationTask = Some(handle)
     } else {
       Log.debug("error: console not defined!")
     }
   }
 
-  def updateEndlessProgress(taskId: Long):Unit = {
-    //TODO: check isDefined
-    val console = mConsole.get
-    val stringBuilder = new StringBuilder()
-    stringBuilder.append(taskId + ": ")
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
+  def updateEndlessProgress(taskInstance: PluginInstance):Unit = {
+    if(mConsole.isDefined){
+      val console = mConsole.get
+      val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
 
-    for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
-      if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
-      || (i < (mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
-      } else {
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
+      val stringBuilder = new StringBuilder()
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
+
+      for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
+          || (i < (mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
+          stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
+        } else {
+          stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
+        }
       }
-    }
 
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
 
-    console.resetPromptLine("",stringBuilder.toString(),-1)
+      val terminalWidth = console.getTerminal.getWidth
+      val spacing = terminalWidth - infoString.length - stringBuilder.length
 
-    mCounter += 1
+      for(i <- 1 to spacing){
+        stringBuilder.insert(0, " ")
+      }
 
-    if(mCounter >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
-      mCounter = 0
+      console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
+
+      mCounter += 1
+
+      if(mCounter >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        mCounter = 0
+      }
     }
   }
 
-  override def taskCompleted(taskId: Long): Unit = {
+  override def taskCompleted(taskInstance: PluginInstance): Unit = {
     //TODO: only if no more tasks are executing
     //TODO: can't handle this
     Log.debug("interface received task completed")
 
-    stopAnimation(taskId)
-
-    //show completed task
-    val stringBuilder = new StringBuilder()
-    stringBuilder.append(taskId + ": ")
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
-
-    for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
-      stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
-    }
-
-    stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
-
     if(mConsole.isDefined){
-      val console = mConsole.get
-      console.resetPromptLine("",stringBuilder.toString(),-1)
-      console.println()
-    }
+      stopAnimation(taskInstance)
+      mCounter = 0
 
-    //wait for new commands
-    if(mCommandLineReader.isDefined){
-      val commandLineReader = mCommandLineReader.get
-      commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
+      //show completed task
+      val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
+
+      val stringBuilder = new StringBuilder()
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
+
+      for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
+      }
+
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
+
+      val console = mConsole.get
+
+      val terminalWidth = console.getTerminal.getWidth
+      val spacing = terminalWidth - infoString.length - stringBuilder.length
+
+      for(i <- 1 to spacing){
+        stringBuilder.insert(0, " ")
+      }
+
+      console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
+      console.println()
+
+      //wait for new commands
+      if(mCommandLineReader.isDefined){
+        val commandLineReader = mCommandLineReader.get
+        commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
+      }
     }
   }
 
-  def stopAnimation(taskId: Long):Unit = {
+  def stopAnimation(taskInstance: PluginInstance):Unit = {
     //TODO: stop correct animation
     if(mAnimationTask.isDefined){
       mAnimationTask.get.cancel()
@@ -207,8 +226,10 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
-  override def taskFailed(taskId: Long, error: Int, data:Option[Any]): Unit = {
-    stopAnimation(taskId)
+  override def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]): Unit = {
+    if(taskInstance.isDefined){
+      stopAnimation(taskInstance.get)
+    }
 
     if(mConsole.isDefined){
       //TODO: print matching error
@@ -244,7 +265,7 @@ object CommandLineInterfaceConstant {
     val StartString = "["
     val EndString = "]"
     val ProgressbarLength = 25
-    val ProgressbarEmptyString = " "
+    val ProgressbarEmptyString = "-"
     val ProgressbarFilledString = "#"
     val EndlessProgressLength = 20
   }

@@ -5,6 +5,8 @@ import java.io.File
 import scala.collection.immutable.HashMap
 import io.glassdoor.application._
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
+import io.glassdoor.plugin.PluginInstance
+
 import scala.collection.JavaConverters._
 
 /**
@@ -81,8 +83,8 @@ class DefaultController extends Controller{
     }
   }
 
-  override def handlePluginError(pluginId: Long, errorCode: Integer, data: Option[Any]): Unit = {
-    forwardErrorMessage(pluginId,errorCode,data)
+  override def handlePluginError(pluginInstance: Option[PluginInstance], errorCode: Integer, data: Option[Any]): Unit = {
+    forwardErrorMessage(pluginInstance,errorCode,data)
   }
 
   override def handleUpdateAvailableResources(): Unit = {
