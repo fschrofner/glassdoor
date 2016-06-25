@@ -15,12 +15,14 @@ class DefaultController extends Controller{
   var mAliasMap:Map[String,Array[String]] = new HashMap[String,Array[String]]
 
   override def handleChangedValues(changedValues:Map[String,String]){
-    //update context with values given in changed values
-    for((key,value) <- changedValues){
-      Log.debug("changing value for key: " + key)
-      Log.debug("changed value: " + value)
+    if(mContext.isDefined){
+      //update context with values given in changed values
+      for((key,value) <- changedValues){
+        Log.debug("changing value for key: " + key)
+        Log.debug("changed value: " + value)
 
-      mContext.setResolvedValue(key,value)
+        mContext.get.setResolvedValue(key,value)
+      }
     }
   }
 
@@ -81,6 +83,10 @@ class DefaultController extends Controller{
 
   override def handlePluginError(pluginId: Long, errorCode: Integer, data: Option[Any]): Unit = {
     forwardErrorMessage(pluginId,errorCode,data)
+  }
+
+  override def handleUpdateAvailableResources(): Unit = {
+    updateAvailableResources()
   }
 
   //  def launchPluginTest(): Unit ={

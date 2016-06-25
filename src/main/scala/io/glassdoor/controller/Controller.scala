@@ -12,22 +12,31 @@ import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerRes
   * Created by Florian Schrofner on 4/17/16.
   */
 trait Controller extends Actor {
-  protected var mContext:Context = null
+  protected var mContext:Option[Context] = None
 
   def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
   def handleChangedValues(changedValues:Map[String,String]):Unit
   def handleInstallResource(names:Array[String])
   def handlePluginError(pluginId:Long, errorCode:Integer, data:Option[Any])
   def buildAliasIndex(context:Context):Unit
+  def handleUpdateAvailableResources():Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
-    val message = new PluginManagerPluginParameters(pluginName, parameters, mContext)
-    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
+    if(mContext.isDefined){
+      val message = new PluginManagerPluginParameters(pluginName, parameters, mContext.get)
+      EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
+    }
+  }
+
+  def updateAvailableResources(): Unit ={
+    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.UpdateAvailableResourceIndex,mContext)))
   }
 
   def installResource(resourceName:String):Unit = {
-    val message = new ResourceManagerResourceParameters(resourceName, mContext)
-    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.InstallResource, Some(message))))
+    if(mContext.isDefined){
+      val message = new ResourceManagerResourceParameters(resourceName, mContext.get)
+      EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.InstallResource, Some(message))))
+    }
   }
 
   def forwardErrorMessage(pluginId:Long, errorCode:Integer, data:Option[Any]): Unit ={
@@ -38,22 +47,21 @@ trait Controller extends Actor {
 
   def setup():Unit = {
     Configuration.loadConfig()
-    mContext = new Context
+    mContext = Some(new Context)
 
-    val contextOpt = Configuration.loadConfigIntoContext(mContext)
+    val contextOpt = Configuration.loadConfigIntoContext(mContext.get)
 
     if(contextOpt.isDefined){
-      mContext = contextOpt.get
+      mContext = contextOpt
+      buildAliasIndex(mContext.get)
     } else {
       //TODO: error handling
     }
 
-    buildAliasIndex(mContext)
-
     //setup other components
-    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Initialise , Some(mContext))))
-    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.Initialise, Some(mContext))))
-    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.Initialise, Some(mContext))))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Initialise , mContext)))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.Initialise, mContext)))
+    EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.Initialise, mContext)))
   }
 
   def terminate():Unit = {
@@ -68,7 +76,7 @@ trait Controller extends Actor {
           setup()
         case ControllerConstant.Action.Context =>
           if(data.isDefined){
-            mContext = data.get.asInstanceOf[Context]
+            mContext = Some(data.get.asInstanceOf[Context])
           }
         case ControllerConstant.Action.Terminate =>
           terminate()
@@ -92,6 +100,8 @@ trait Controller extends Actor {
             val messageData = data.get.asInstanceOf[PluginErrorMessage]
             handlePluginError(messageData.pluginId, messageData.errorCode, messageData.data)
           }
+        case ControllerConstant.Action.UpdateAvailableResources =>
+          handleUpdateAvailableResources()
       }
   }
 
@@ -107,5 +117,6 @@ object ControllerConstant {
     val InstallResource = "installResource"
     val ApplyChangedValues = "applyChangedValues"
     val PluginError = "pluginError"
+    val UpdateAvailableResources = "updateAvailableResources"
   }
 }

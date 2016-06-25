@@ -82,8 +82,25 @@ class Context {
       case e:ArrayIndexOutOfBoundsException =>
         None
     }
-
   }
+
+  def getResolvedArray(descriptor:String):Option[Array[String]] ={
+    val string = getResolvedValue(descriptor)
+    if(string.isDefined){
+      Some(stringToArray(string.get))
+    } else {
+      None
+    }
+  }
+
+  def arrayToString(array:Array[String]):String={
+    array.mkString(ContextConstant.StringArraySplit)
+  }
+
+  def stringToArray(string:String):Array[String]={
+    string.split(ContextConstant.StringArraySplit)
+  }
+
 
   def setResolvedValue(descriptor:String, value:String):Option[Context] = {
     val descriptorSplitString = splitDescriptor(descriptor)
@@ -108,6 +125,7 @@ class Context {
 
 object ContextConstant {
   val DescriptorSplit = "."
+  val StringArraySplit = ","
 
   //keymap names
   object Keymap {
@@ -141,5 +159,6 @@ object ContextConstant {
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
     val ConfigAliasConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.AliasConfigPath
     val ConfigResourceDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceDirectory
+    val ConfigResourceRepository = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceRepository
   }
 }

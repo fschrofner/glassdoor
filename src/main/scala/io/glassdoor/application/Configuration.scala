@@ -1,10 +1,11 @@
 package io.glassdoor.application
 
 import java.io.File
+import java.util
 import java.util.Map.Entry
 import scala.collection.JavaConverters._
 
-import com.typesafe.config.{ConfigValue, ConfigException, Config, ConfigFactory}
+import com.typesafe.config._
 
 /**
   * Created by Florian Schrofner on 3/31/16.
@@ -27,7 +28,16 @@ object Configuration {
       val configSet = conf.get.entrySet().asScala
 
       for(entry:Entry[String,ConfigValue] <- configSet){
-        map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
+        if(entry.getValue.valueType() == ConfigValueType.STRING){
+          map += ((entry.getKey, String.valueOf(entry.getValue.unwrapped())))
+        } else if(entry.getValue.valueType() == ConfigValueType.LIST){
+          Log.debug("config value: " + String.valueOf(entry.getValue.unwrapped()))
+          Log.debug("type: " + String.valueOf(entry.getValue.valueType()))
+          val list = entry.getValue.unwrapped().asInstanceOf[util.ArrayList[String]].asScala
+          val resolvedValue = context.arrayToString(list.toArray)
+          Log.debug("resolved value: " + resolvedValue)
+          map += ((entry.getKey, resolvedValue))
+        }
       }
 
       context.setKeymapMatchingString(ContextConstant.Keymap.Config, map)

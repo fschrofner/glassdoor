@@ -12,6 +12,7 @@ trait ResourceManager extends Actor {
   def installResource(name:String, context:Context):Unit
   def getResource(name:String):Option[Resource]
   def initialise(context:Context):Unit
+  def updateAvailableResourceIndex(context:Context):Unit
 
   override def receive = {
     case Message(action, data) =>
@@ -25,6 +26,10 @@ trait ResourceManager extends Actor {
             val parameters = data.get.asInstanceOf[ResourceManagerResourceParameters]
             installResource(parameters.resourceName, parameters.context)
           }
+        case ResourceManagerConstant.Action.UpdateAvailableResourceIndex =>
+          if(data.isDefined){
+            updateAvailableResourceIndex(data.get.asInstanceOf[Context])
+          }
       }
   }
 }
@@ -35,6 +40,7 @@ object ResourceManagerConstant {
   object Action {
     val Initialise = "initialise"
     val InstallResource = "installResource"
+    val UpdateAvailableResourceIndex = "updateAvailableResourceIndex"
   }
 }
 

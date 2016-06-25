@@ -93,9 +93,11 @@ class CommandLineInterface extends UserInterface {
       mConsole.get.resetPromptLine("","",0)
 
       //TODO: use list of system commands instead
-      if(input.get.name == "install"){
+      if(input.get.name == "install") {
         Log.debug("install called!")
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.InstallResource, Some(input.get.parameters))))
+      } else if(input.get.name == "update"){
+        EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.UpdateAvailableResources,None)))
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
         if(mConsole.isDefined){

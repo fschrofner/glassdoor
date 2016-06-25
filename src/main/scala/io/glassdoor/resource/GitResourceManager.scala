@@ -98,7 +98,7 @@ class GitResourceManager extends ResourceManager{
                     val repository = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceRepository)
                     val resource = new Resource(name, typ, Some(repository))
                     availableResources.put(name, resource)
-                    Log.debug("added resource: " + name + "[" + typ + "]")
+                    Log.debug("added available resource: " + name + "[" + typ + "]")
                   }
                 }
               }
@@ -149,6 +149,23 @@ class GitResourceManager extends ResourceManager{
   override def initialise(context: Context): Unit = {
     buildAvailableResourceIndex(context)
     //buildResourceIndex(context)
+  }
+
+  override def updateAvailableResourceIndex(context: Context): Unit = {
+    val repositoriesOpt = context.getResolvedArray(ContextConstant.FullKey.ConfigResourceRepository)
+    val resourceDirOpt = context.getResolvedValue(ContextConstant.FullKey.ConfigResourceDirectory)
+
+    if(resourceDirOpt.isDefined && repositoriesOpt.isDefined) {
+      val repositories = repositoriesOpt.get
+      val resourceDir = resourceDirOpt.get
+      val resourceRepositoryPath = resourceDir + "/" + GitResourceManagerConstant.Path.ResourceRepositoryDirectory
+
+      for(repository <- repositories){
+        //TODO: download the repositories to the resource repository path, if they do not exist, pull otherwise
+        //TODO: make sure that the command line does not think that it's ready again, although there is still a download ongoing
+        //EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ApplyPlugin, Plugi))
+      }
+    }
   }
 }
 
