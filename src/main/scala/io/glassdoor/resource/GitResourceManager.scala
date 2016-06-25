@@ -3,7 +3,7 @@ package io.glassdoor.plugin.resource
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import io.glassdoor.bus.{MessageEvent, EventBus, Message}
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginParameters
 import io.glassdoor.plugin.manager.PluginManagerConstant
@@ -11,6 +11,8 @@ import io.glassdoor.plugin.manager.PluginManagerConstant
 import scala.collection.immutable.HashMap
 import io.glassdoor.resource.Resource
 import io.glassdoor.application._
+import io.glassdoor.plugin.resource.ResourceManagerConstant.ResourceErrorCode
+
 import scala.collection.JavaConverters._
 
 /**
@@ -20,8 +22,7 @@ class GitResourceManager extends ResourceManager{
   var mResources:Map[String,Resource] =  new HashMap[String,Resource]
   var mAvailableResources:Map[String,Resource] = new HashMap[String, Resource]
 
-  //TODO: manage list of resource instances with type
-  //TODO: somehow allow installation of new resources
+  //TODO: load resources into context!
 
   override def installResource(name: String, context:Context):Unit = {
     if(!mResources.contains(name)){
@@ -32,11 +33,11 @@ class GitResourceManager extends ResourceManager{
         val destinationPath = context.getResolvedValue(ContextConstant.FullKey.ConfigResourceDirectory)
 
         if(resource.isDefined && destinationPath.isDefined && resource.get.repository.isDefined){
-          val parameterArray = Array(resource.get.repository.get, destinationPath.get + "/" + resource.get.name)
+          val keymap = ContextConstant.FullKey.ResourceDictionary + ContextConstant.DescriptorSplit + resource.get.name
+          val parameterArray = Array(keymap, resource.get.repository.get, destinationPath.get + "/" + GitResourceManagerConstant.Path.ResourceDirectory + "/" + resource.get.name)
           val parameters = new Command(GitResourceManagerConstant.Repository.PluginCommand, parameterArray)
           val message = new Message(ControllerConstant.Action.ApplyPlugin, Some(parameters))
           EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
-
           //TODO: retrieve result and save into mResources!
         }
       } else {
@@ -44,7 +45,30 @@ class GitResourceManager extends ResourceManager{
       }
     } else {
       Log.debug("error: resource already installed")
+      sendErrorMessage(mAvailableResources.get(name), ResourceErrorCode.ResourceAlreadyInstalled, None)
     }
+  }
+
+
+  override def handleResourceInstallCallback(keymap: Map[String, String]): Unit = {
+    val resources:scala.collection.mutable.HashMap[String,Resource] = new scala.collection.mutable.HashMap[String,Resource]
+
+    for(resourceDescriptor <- keymap){
+      val resourceName = resourceDescriptor._1.substring(resourceDescriptor._1.lastIndexOf(ContextConstant.DescriptorSplit) + 1, resourceDescriptor._1.length)
+
+      val availableResourceOpt = mAvailableResources.get(resourceName)
+
+      if(availableResourceOpt.isDefined){
+        val availableResource = availableResourceOpt.get
+        val directory = resourceDescriptor._2
+        val resource = Resource(availableResource.name, availableResource.kind, Some(directory), availableResource.repository)
+        Log.debug("successfully installed resource: " + resourceName)
+        Log.debug("adding path to resource: " + directory)
+        resources.put(resource.name, resource)
+      }
+    }
+
+    mResources = mResources ++ resources
   }
 
   override def getResource(name:String):Option[Resource] = {
@@ -96,7 +120,7 @@ class GitResourceManager extends ResourceManager{
                     val name = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceName)
                     val typ = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceType)
                     val repository = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceRepository)
-                    val resource = new Resource(name, typ, Some(repository))
+                    val resource = new Resource(name, typ, None, Some(repository))
                     availableResources.put(name, resource)
                     Log.debug("added available resource: " + name + "[" + typ + "]")
                   }
@@ -124,7 +148,7 @@ class GitResourceManager extends ResourceManager{
 
     if(resourceDirOpt.isDefined){
       val resourceDir = resourceDirOpt.get
-      val resourceRepositoryPath = resourceDir + "/" + GitResourceManagerConstant.Path.ResourceRepositoryDirectory
+      val resourceRepositoryPath = resourceDir + "/" + GitResourceManagerConstant.Path.ResourceDirectory
       //TODO: find resource repositories in repository directory
 
       val resourceRepositoryDir = new File(resourceRepositoryPath)
@@ -136,6 +160,21 @@ class GitResourceManager extends ResourceManager{
         Log.debug("number of subdirs: " + subdirPaths.length)
         if(subdirPaths.length > 0){
           //TODO: check if repositories subdir exists
+          val resources:scala.collection.mutable.HashMap[String,Resource] = new scala.collection.mutable.HashMap[String,Resource]
+
+          for(name <- subdirPaths){
+            val availableResourceOpt = mAvailableResources.get(name)
+            if(availableResourceOpt.isDefined){
+              val availableResource = availableResourceOpt.get
+              val directory = resourceRepositoryDir.getAbsolutePath + "/" + name
+              val resource = Resource(availableResource.name, availableResource.kind, Some(directory), availableResource.repository)
+              Log.debug("detected resource: " + name)
+              Log.debug("adding path to resource: " + directory)
+              resources.put(resource.name, resource)
+            }
+          }
+
+          mResources = resources.toMap
         }
       } else {
         //directory might not exist!
@@ -148,7 +187,7 @@ class GitResourceManager extends ResourceManager{
 
   override def initialise(context: Context): Unit = {
     buildAvailableResourceIndex(context)
-    //buildResourceIndex(context)
+    buildResourceIndex(context)
   }
 
   override def updateAvailableResourceIndex(context: Context): Unit = {
@@ -174,13 +213,16 @@ object GitResourceManagerConstant {
     val FileExtension = "conf"
     val PluginCommand = "git"
   }
+
   object Key {
     val Resources = "resources"
     val ResourceName = "name"
     val ResourceType = "type"
     val ResourceRepository = "repository"
   }
+
   object Path {
     val ResourceRepositoryDirectory = "repositories"
+    val ResourceDirectory = "resources"
   }
 }

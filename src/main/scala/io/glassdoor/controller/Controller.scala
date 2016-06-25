@@ -7,7 +7,8 @@ import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerConstant, PluginManagerPluginParameters}
-import io.glassdoor.plugin.resource.{ResourceManagerConstant, ResourceManagerResourceParameters}
+import io.glassdoor.plugin.resource.{ResourceErrorMessage, ResourceManagerConstant, ResourceManagerResourceParameters}
+import io.glassdoor.resource.Resource
 
 /**
   * Created by Florian Schrofner on 4/17/16.
@@ -19,6 +20,7 @@ trait Controller extends Actor {
   def handleChangedValues(changedValues:Map[String,String]):Unit
   def handleInstallResource(names:Array[String])
   def handlePluginError(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any])
+  def handleResourceError(resource:Option[Resource], errorCode:Integer, data:Option[Any])
   def buildAliasIndex(context:Context):Unit
   def handleUpdateAvailableResources():Unit
 
@@ -40,9 +42,15 @@ trait Controller extends Actor {
     }
   }
 
-  def forwardErrorMessage(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any]): Unit ={
-    val messageData = new PluginErrorMessage(pluginInstance, errorCode, data)
+  def forwardPluginErrorMessage(pluginInstance:Option[PluginInstance], error:Int, data:Option[Any]): Unit ={
+    val messageData = new PluginErrorMessage(pluginInstance, error, data)
     val message = new Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+  }
+
+  def forwardResourceErrorMessage(resource:Option[Resource], errorCode:Integer, data:Option[Any]): Unit = {
+    val messageData = new ResourceErrorMessage(resource, errorCode, data)
+    val message = new Message(UserInterfaceConstant.Action.ResourceError, Some(messageData))
     EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
@@ -101,6 +109,11 @@ trait Controller extends Actor {
             val messageData = data.get.asInstanceOf[PluginErrorMessage]
             handlePluginError(messageData.pluginInstance, messageData.errorCode, messageData.data)
           }
+        case ControllerConstant.Action.ResourceError =>
+          if(data.isDefined){
+            val messageData = data.get.asInstanceOf[ResourceErrorMessage]
+            handleResourceError(messageData.resource, messageData.errorCode, messageData.data)
+          }
         case ControllerConstant.Action.UpdateAvailableResources =>
           handleUpdateAvailableResources()
       }
@@ -118,6 +131,7 @@ object ControllerConstant {
     val InstallResource = "installResource"
     val ApplyChangedValues = "applyChangedValues"
     val PluginError = "pluginError"
+    val ResourceError = "resourceError"
     val UpdateAvailableResources = "updateAvailableResources"
   }
 }

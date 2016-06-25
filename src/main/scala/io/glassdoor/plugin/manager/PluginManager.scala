@@ -3,10 +3,11 @@ package io.glassdoor.plugin.manager
 import java.util.Map.Entry
 
 import akka.actor.{Actor, ActorRef}
-import io.glassdoor.application.{Context, Log}
+import io.glassdoor.application.{Context, ContextConstant, Log}
 import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.interface.UserInterfaceConstant
+import io.glassdoor.plugin.resource.ResourceManagerConstant
 import io.glassdoor.plugin.{PluginInstance, PluginResult}
 
 /**
@@ -22,6 +23,22 @@ trait PluginManager extends Actor {
   def getPluginInstance(pluginId:Long):Option[PluginInstance]
 
   def applyChangedValues(changedValues:Map[String,String]):Unit = {
+    val changedResources:scala.collection.mutable.Map[String, String] = new scala.collection.mutable.HashMap[String, String]
+
+    for(changedValue <- changedValues){
+      val prefix = changedValue._1.substring(0, changedValue._1.indexOf(ContextConstant.DescriptorSplit))
+      if(prefix == ContextConstant.Keymap.Resource){
+        changedResources.put(changedValue._1, changedValue._2)
+      }
+    }
+
+    //additionally notify resource manager of changed resources
+    if(changedResources.size > 0){
+      Log.debug("changed values containing resources! notifying resource manager..")
+      val message = new Message(ResourceManagerConstant.Action.ResourceInstallComplete, Some(changedResources.toMap))
+      EventBus.publish(new MessageEvent(ResourceManagerConstant.Channel, message))
+    }
+
     val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
@@ -87,7 +104,7 @@ object PluginManagerConstant {
     val PluginTaskCompleted = "pluginTaskCompleted"
   }
 
-  object PluginErrorCodes {
+  object PluginErrorCode {
     val DependenciesNotSatisfied = 100
     val DependenciesInChange = 101
     val PluginNotFound = 102

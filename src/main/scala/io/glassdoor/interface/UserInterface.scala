@@ -2,11 +2,13 @@ package io.glassdoor.interface
 
 import akka.actor.Actor
 import akka.actor.Actor.Receive
-import io.glassdoor.application.{Log, Context}
-import io.glassdoor.bus.{MessageEvent, EventBus, Message}
+import io.glassdoor.application.{Context, Log}
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.plugin.manager.PluginErrorMessage
+import io.glassdoor.plugin.resource.ResourceErrorMessage
+import io.glassdoor.resource.Resource
 
 /**
   * Created by Florian Schrofner on 3/15/16.
@@ -17,6 +19,7 @@ trait UserInterface extends Actor {
   def showEndlessProgress(task: PluginInstance):Unit
   def taskCompleted(taskInstance: PluginInstance):Unit
   def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]):Unit
+  def resourceFailed(resource:Option[Resource], error:Int, data:Option[Any]):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -54,6 +57,12 @@ trait UserInterface extends Actor {
             val message = data.get.asInstanceOf[PluginErrorMessage]
             taskFailed(message.pluginInstance, message.errorCode, message.data)
           }
+        case UserInterfaceConstant.Action.ResourceError =>
+          Log.debug("received resource error in user interface")
+          if(data.isDefined){
+            val message = data.get.asInstanceOf[ResourceErrorMessage]
+            resourceFailed(message.resource, message.errorCode, message.data)
+          }
     }
   }
 }
@@ -68,5 +77,6 @@ object UserInterfaceConstant {
     val ShowProgress = "showProgress"
     val TaskCompleted = "taskCompleted"
     val PluginError = "pluginError"
+    val ResourceError = "resourceError"
   }
 }

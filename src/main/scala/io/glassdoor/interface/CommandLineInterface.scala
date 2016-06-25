@@ -4,17 +4,19 @@ import java.io.PrintWriter
 import java.util.concurrent.TimeUnit
 import javax.smartcardio.TerminalFactory
 
-import akka.actor.{Cancellable, ActorRef, Props}
-import io.glassdoor.application.{Log, Context, CommandInterpreter, Command}
-import io.glassdoor.bus.{Message, MessageEvent, EventBus}
+import akka.actor.{ActorRef, Cancellable, Props}
+import io.glassdoor.application.{Command, CommandInterpreter, Context, Log}
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
-import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCodes
-import jline.{UnixTerminal, Terminal}
+import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCode
+import io.glassdoor.plugin.resource.ResourceManagerConstant.ResourceErrorCode
+import io.glassdoor.resource.Resource
+import jline.{Terminal, UnixTerminal}
 import jline.console.ConsoleReader
 import jline.console.completer.StringsCompleter
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
 /**
@@ -235,24 +237,42 @@ class CommandLineInterface extends UserInterface {
       //TODO: print matching error
 
       error match {
-        case PluginErrorCodes.DependenciesNotSatisfied =>
+        case PluginErrorCode.DependenciesNotSatisfied =>
           if(data.isDefined){
             mConsole.get.println("error: dependency not satisfied: " + data.get.asInstanceOf[String])
           }
-        case PluginErrorCodes.DependenciesInChange =>
+        case PluginErrorCode.DependenciesInChange =>
           if(data.isDefined){
             mConsole.get.println("error: dependency in change: " + data.get.asInstanceOf[String])
           }
-        case PluginErrorCodes.PluginNotFound =>
+        case PluginErrorCode.PluginNotFound =>
           mConsole.get.println("error: plugin not found!")
       }
     }
 
+    listenToCommandLine()
+  }
+
+  override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {
+    if(mConsole.isDefined){
+      error match {
+        case ResourceErrorCode.ResourceAlreadyInstalled =>
+          if(resource.isDefined){
+            mConsole.get.println("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
+          }
+      }
+    }
+
+    listenToCommandLine()
+  }
+
+  def listenToCommandLine():Unit = {
     if(mCommandLineReader.isDefined){
       val commandLineReader = mCommandLineReader.get
       commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
     }
   }
+
 }
 
 case class CommandLineMessage(action: String, data:Option[Any])

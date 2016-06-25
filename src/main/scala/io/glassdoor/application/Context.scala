@@ -146,6 +146,7 @@ object ContextConstant {
     val Java = "java"
     val Grep = "grep"
     val GrepLogin = "grep-login"
+    val Dictionary = "dictionary"
   }
 
   //keys defining the keymap and the keys in one string
@@ -160,5 +161,6 @@ object ContextConstant {
     val ConfigAliasConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.AliasConfigPath
     val ConfigResourceDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceDirectory
     val ConfigResourceRepository = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceRepository
+    val ResourceDictionary = Keymap.Resource + DescriptorSplit + Key.Dictionary
   }
 }

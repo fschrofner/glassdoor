@@ -8,7 +8,7 @@ import groovy.lang.GroovyClassLoader
 import io.glassdoor.application._
 import io.glassdoor.bus.Message
 import io.glassdoor.plugin.language.GroovyPlugin
-import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCodes
+import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCode
 import io.glassdoor.plugin.{PluginParameters, PluginConstant, Plugin, PluginInstance, PluginResult, PluginData}
 
 import scala.collection.JavaConverters._
@@ -47,6 +47,8 @@ class DefaultPluginManager extends PluginManager{
     //TODO: check if permissions are met
     //TODO: remove keymaps in change and reduce dependency counter
 
+    Log.debug("plugin manager received plugin result!")
+
     var matchingPlugin:Option[PluginInstance] = None
 
     if(mRunningPlugins.contains(pluginId)){
@@ -62,7 +64,7 @@ class DefaultPluginManager extends PluginManager{
         if(pluginInstance.changes.contains(key)){
           Log.debug("correctly changing key: " + key)
         } else {
-          Log.debug("error: change not specified in manifest!")
+          Log.debug("error: change not specified in manifest! " + key)
         }
       }
 
@@ -110,7 +112,7 @@ class DefaultPluginManager extends PluginManager{
       pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
       Log.debug("error: plugin not found!")
-      sendErrorMessage(None, PluginErrorCodes.PluginNotFound, None)
+      sendErrorMessage(None, PluginErrorCode.PluginNotFound, None)
       //TODO: error, plugin not found
     }
 
@@ -131,7 +133,7 @@ class DefaultPluginManager extends PluginManager{
           if (mChangingValues.contains(dependency)) {
             Log.debug("dependency in change! can not safely launch plugin!")
             //TODO: there is no plugin id yet, so it can not be supplied with the message
-            sendErrorMessage(None, PluginManagerConstant.PluginErrorCodes.DependenciesInChange, Some(dependency))
+            sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesInChange, Some(dependency))
             return
           } else {
             if (mWorkedOnDependencies.contains(dependency)) {
@@ -144,7 +146,7 @@ class DefaultPluginManager extends PluginManager{
           }
         } else {
           //there might be multiple dependencies, that are not satisfied, but it already stops at the first mismatch
-          sendErrorMessage(None, PluginManagerConstant.PluginErrorCodes.DependenciesNotSatisfied, Some(dependency))
+          sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesNotSatisfied, Some(dependency))
           Log.debug("dependency: " + dependency + " not satisfied!")
           return
         }
