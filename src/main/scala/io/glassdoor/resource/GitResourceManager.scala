@@ -22,8 +22,6 @@ class GitResourceManager extends ResourceManager{
   var mResources:Map[String,Resource] =  new HashMap[String,Resource]
   var mAvailableResources:Map[String,Resource] = new HashMap[String, Resource]
 
-  //TODO: load resources into context!
-
   override def installResource(name: String, context:Context):Unit = {
     if(!mResources.contains(name)){
       if(mAvailableResources.contains(name)){
@@ -188,6 +186,21 @@ class GitResourceManager extends ResourceManager{
   override def initialise(context: Context): Unit = {
     buildAvailableResourceIndex(context)
     buildResourceIndex(context)
+
+    if(mResources.size > 0){
+      //add resources to context
+      val changedResources:scala.collection.mutable.Map[String, String] = new scala.collection.mutable.HashMap[String, String]
+
+      for(resource <- mResources){
+        if(resource._2.directory.isDefined){
+          val descriptor = ContextConstant.Keymap.Resource + ContextConstant.DescriptorSplit + resource._2.kind + ContextConstant.DescriptorSplit + resource._2.name
+          val directory = resource._2.directory.get
+          changedResources.put(descriptor, directory)
+        }
+      }
+
+      addResourcesToContext(changedResources.toMap)
+    }
   }
 
   override def updateAvailableResourceIndex(context: Context): Unit = {

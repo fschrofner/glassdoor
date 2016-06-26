@@ -67,6 +67,8 @@ trait Controller extends Actor {
       //TODO: error handling
     }
 
+    //TODO: now load the resources into context!
+
     //setup other components
     EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Initialise , mContext)))
     EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.Initialise, mContext)))

@@ -22,6 +22,11 @@ trait ResourceManager extends Actor {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
+  def addResourcesToContext(changedValues:Map[String,String]):Unit = {
+    val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+  }
+
   override def receive = {
     case Message(action, data) =>
       action match {

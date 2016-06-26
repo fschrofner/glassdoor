@@ -60,7 +60,10 @@ class Context {
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    descriptor.split(Constant.Regex.DescriptorSplitRegex)
+    val prefix = descriptor.substring(0, descriptor.indexOf(ContextConstant.DescriptorSplit))
+    val name = descriptor.substring(descriptor.indexOf(ContextConstant.DescriptorSplit) + 1, descriptor.length)
+    //descriptor.split(Constant.Regex.DescriptorSplitRegex)
+    Array(prefix, name)
   }
 
   def getResolvedValue(descriptor:String): Option[String] ={
