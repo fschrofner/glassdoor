@@ -29,6 +29,17 @@ class DefaultController extends Controller{
     }
   }
 
+
+  override def handleRemovedValues(removedValues: Array[String]): Unit = {
+    if(mContext.isDefined){
+      //update context with removed values
+      for(key <- removedValues){
+        Log.debug("removing value with key: " + key)
+        mContext.get.removeResolvedValue(key)
+      }
+    }
+  }
+
   override def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit = {
 
     if(mAliasMap.contains(pluginName)){
@@ -55,6 +66,13 @@ class DefaultController extends Controller{
   override def handleInstallResource(names:Array[String]):Unit = {
     for(name <- names){
       installResource(name)
+    }
+  }
+
+
+  override def handleRemoveResource(names: Array[String]): Unit = {
+    for(name <- names){
+      removeResource(name)
     }
   }
 
@@ -91,6 +109,11 @@ class DefaultController extends Controller{
 
   override def handleResourceError(resource: Option[Resource], errorCode: Integer, data: Option[Any]): Unit = {
     forwardResourceErrorMessage(resource, errorCode, data)
+  }
+
+
+  override def handleResourceSuccess(resource: Option[Resource], code: Integer): Unit = {
+    forwardResourceSuccessMessage(resource, code)
   }
 
   override def handleUpdateAvailableResources(): Unit = {

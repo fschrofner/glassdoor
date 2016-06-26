@@ -120,7 +120,23 @@ class Context {
     } else {
       None
     }
+  }
 
+  def removeResolvedValue(descriptor:String):Option[Context] = {
+    val descriptorSplitString = splitDescriptor(descriptor)
+    val keymapDescriptor = descriptorSplitString(0)
+    val keyDescriptor = descriptorSplitString(1)
+
+    val keymapOpt = getKeymapMatchingString(keymapDescriptor)
+
+    if(keymapOpt.isDefined){
+      var keymap = keymapOpt.get
+      keymap = keymap - keyDescriptor
+      setKeymapMatchingString(keymapDescriptor,keymap)
+      Some(this)
+    } else {
+      None
+    }
   }
 
   //TODO: abstract keymaps behind more, provide context interface

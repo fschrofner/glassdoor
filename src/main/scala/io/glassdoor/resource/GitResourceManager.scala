@@ -11,7 +11,8 @@ import io.glassdoor.plugin.manager.PluginManagerConstant
 import scala.collection.immutable.HashMap
 import io.glassdoor.resource.Resource
 import io.glassdoor.application._
-import io.glassdoor.plugin.resource.ResourceManagerConstant.ResourceErrorCode
+import io.glassdoor.plugin.resource.ResourceManagerConstant.{ResourceErrorCode, ResourceSuccessCode}
+import org.apache.commons.io.FileUtils
 
 import scala.collection.JavaConverters._
 
@@ -48,6 +49,26 @@ class GitResourceManager extends ResourceManager{
   }
 
 
+  override def removeResource(name: String, context: Context): Unit = {
+    if(mResources.contains(name)){
+      val resource = mResources.get(name).get
+
+      if(resource.directory.isDefined){
+        val file = new File(resource.directory.get)
+        FileUtils.deleteDirectory(file)
+        mResources = mResources - name
+
+        val fullName = ContextConstant.Keymap.Resource + ContextConstant.DescriptorSplit + resource.kind + ContextConstant.DescriptorSplit + resource.name
+        removeResourcesFromContext(Array(fullName))
+
+        sendSuccessMessage(Some(resource), ResourceSuccessCode.ResourceSuccessfullyRemoved)
+      }
+    } else {
+      Log.debug("error: resource not found!")
+      sendErrorMessage(None, ResourceErrorCode.ResourceNotFound, None)
+    }
+  }
+
   override def handleResourceInstallCallback(keymap: Map[String, String]): Unit = {
     val resources:scala.collection.mutable.HashMap[String,Resource] = new scala.collection.mutable.HashMap[String,Resource]
 
@@ -67,6 +88,11 @@ class GitResourceManager extends ResourceManager{
     }
 
     mResources = mResources ++ resources
+
+    //send success messages
+    for(resource <- resources){
+      sendSuccessMessage(Some(resource._2), ResourceSuccessCode.ResourceSuccessfullyInstalled)
+    }
   }
 
   override def getResource(name:String):Option[Resource] = {

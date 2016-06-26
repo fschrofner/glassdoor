@@ -10,6 +10,7 @@ import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCode
+import io.glassdoor.plugin.resource.ResourceManagerConstant
 import io.glassdoor.plugin.resource.ResourceManagerConstant.ResourceErrorCode
 import io.glassdoor.resource.Resource
 import jline.{Terminal, UnixTerminal}
@@ -95,9 +96,13 @@ class CommandLineInterface extends UserInterface {
       mConsole.get.resetPromptLine("","",0)
 
       //TODO: use list of system commands instead
+      //TODO: this should be moved out of the interface and be interpreted somewhere else
       if(input.get.name == "install") {
         Log.debug("install called!")
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.InstallResource, Some(input.get.parameters))))
+      } else if(input.get.name == "remove"){
+        Log.debug("remove called!")
+        EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.RemoveResource, Some(input.get.parameters))))
       } else if(input.get.name == "update"){
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.UpdateAvailableResources,None)))
       } else if(input.get.name == "exit"){
@@ -213,11 +218,24 @@ class CommandLineInterface extends UserInterface {
       console.println()
 
       //wait for new commands
-      if(mCommandLineReader.isDefined){
-        val commandLineReader = mCommandLineReader.get
-        commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
-      }
+      listenToCommandLine()
     }
+  }
+
+
+  override def resourceCompleted(resource: Option[Resource], code: Int): Unit = {
+    code match {
+      case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyInstalled =>
+        if(resource.isDefined){
+          Console.println("successfully installed resource: " + resource.get.name + "[" + resource.get.kind + "]")
+        }
+      case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyRemoved =>
+        if(resource.isDefined){
+          Console.println("successfully removed resource: " + resource.get.name + "[" + resource.get.kind + "]")
+        }
+    }
+
+    listenToCommandLine()
   }
 
   def stopAnimation(taskInstance: PluginInstance):Unit = {

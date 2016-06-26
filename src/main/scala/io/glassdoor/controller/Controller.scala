@@ -7,7 +7,7 @@ import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerConstant, PluginManagerPluginParameters}
-import io.glassdoor.plugin.resource.{ResourceErrorMessage, ResourceManagerConstant, ResourceManagerResourceParameters}
+import io.glassdoor.plugin.resource.{ResourceErrorMessage, ResourceManagerConstant, ResourceManagerResourceParameters, ResourceSuccessMessage}
 import io.glassdoor.resource.Resource
 
 /**
@@ -18,9 +18,12 @@ trait Controller extends Actor {
 
   def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit
   def handleChangedValues(changedValues:Map[String,String]):Unit
+  def handleRemovedValues(removedValues:Array[String]):Unit
   def handleInstallResource(names:Array[String])
+  def handleRemoveResource(names:Array[String])
   def handlePluginError(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any])
   def handleResourceError(resource:Option[Resource], errorCode:Integer, data:Option[Any])
+  def handleResourceSuccess(resource:Option[Resource], code:Integer)
   def buildAliasIndex(context:Context):Unit
   def handleUpdateAvailableResources():Unit
 
@@ -42,9 +45,22 @@ trait Controller extends Actor {
     }
   }
 
+  def removeResource(resourceName:String):Unit = {
+    if(mContext.isDefined){
+      val message = new ResourceManagerResourceParameters(resourceName, mContext.get)
+      EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.RemoveResource, Some(message))))
+    }
+  }
+
   def forwardPluginErrorMessage(pluginInstance:Option[PluginInstance], error:Int, data:Option[Any]): Unit ={
     val messageData = new PluginErrorMessage(pluginInstance, error, data)
     val message = new Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+  }
+
+  def forwardResourceSuccessMessage(resource:Option[Resource], code:Integer): Unit = {
+    val messageData = new ResourceSuccessMessage(resource,code)
+    val message = new Message(UserInterfaceConstant.Action.ResourceSuccess, Some(messageData))
     EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
@@ -101,15 +117,30 @@ trait Controller extends Actor {
             val changedValues = data.get.asInstanceOf[Map[String,String]]
             handleChangedValues(changedValues)
           }
+        case ControllerConstant.Action.ApplyRemovedValues =>
+          if(data.isDefined){
+            val removedValues = data.get.asInstanceOf[Array[String]]
+            handleRemovedValues(removedValues)
+          }
         case ControllerConstant.Action.InstallResource =>
           if(data.isDefined){
             val name = data.get.asInstanceOf[Array[String]]
             handleInstallResource(name)
           }
+        case ControllerConstant.Action.RemoveResource =>
+          if(data.isDefined){
+            val name = data.get.asInstanceOf[Array[String]]
+            handleRemoveResource(name)
+          }
         case ControllerConstant.Action.PluginError =>
           if(data.isDefined){
             val messageData = data.get.asInstanceOf[PluginErrorMessage]
             handlePluginError(messageData.pluginInstance, messageData.errorCode, messageData.data)
+          }
+        case ControllerConstant.Action.ResourceSuccess =>
+          if(data.isDefined){
+            val messageData = data.get.asInstanceOf[ResourceSuccessMessage]
+            handleResourceSuccess(messageData.resource, messageData.code)
           }
         case ControllerConstant.Action.ResourceError =>
           if(data.isDefined){
@@ -131,9 +162,12 @@ object ControllerConstant {
     val Terminate = "terminate"
     val ApplyPlugin = "applyPlugin"
     val InstallResource = "installResource"
+    val RemoveResource = "removeResource"
     val ApplyChangedValues = "applyChangedValues"
+    val ApplyRemovedValues = "applyRemovedValues"
     val PluginError = "pluginError"
     val ResourceError = "resourceError"
+    val ResourceSuccess = "resourceSuccess"
     val UpdateAvailableResources = "updateAvailableResources"
   }
 }

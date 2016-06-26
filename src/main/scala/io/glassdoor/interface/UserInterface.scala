@@ -7,7 +7,7 @@ import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.plugin.manager.PluginErrorMessage
-import io.glassdoor.plugin.resource.ResourceErrorMessage
+import io.glassdoor.plugin.resource.{ResourceErrorMessage, ResourceSuccessMessage}
 import io.glassdoor.resource.Resource
 
 /**
@@ -19,6 +19,7 @@ trait UserInterface extends Actor {
   def showEndlessProgress(task: PluginInstance):Unit
   def taskCompleted(taskInstance: PluginInstance):Unit
   def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]):Unit
+  def resourceCompleted(resource:Option[Resource], code:Int)
   def resourceFailed(resource:Option[Resource], error:Int, data:Option[Any]):Unit
 
   def terminate():Unit = {
@@ -51,6 +52,12 @@ trait UserInterface extends Actor {
             val taskInstance = data.get.asInstanceOf[PluginInstance]
             taskCompleted(taskInstance)
           }
+        case UserInterfaceConstant.Action.ResourceSuccess =>
+          Log.debug("received resource completed in user itnerface")
+          if(data.isDefined){
+            val message = data.get.asInstanceOf[ResourceSuccessMessage]
+            resourceCompleted(message.resource, message.code)
+          }
         case UserInterfaceConstant.Action.PluginError =>
           Log.debug("received task error in user interface")
           if(data.isDefined){
@@ -77,6 +84,7 @@ object UserInterfaceConstant {
     val ShowProgress = "showProgress"
     val TaskCompleted = "taskCompleted"
     val PluginError = "pluginError"
+    val ResourceSuccess = "resourceCompleted"
     val ResourceError = "resourceError"
   }
 }
