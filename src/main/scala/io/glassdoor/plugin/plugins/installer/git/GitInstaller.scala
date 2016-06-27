@@ -37,16 +37,11 @@ class GitInstaller extends Plugin {
 
       var resultCode = 1
 
-      //TODO: if the gitupdater is used to install a plugin, it might be needed to save it somewhere
-      //TODO: it is needed to return the result to the correct manager (resource or plugin)
-
-      val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
-
-      if(workingDir.isDefined && repoUrl.isDefined && path.isDefined){
+      if(repoUrl.isDefined && path.isDefined){
         showEndlessProgress()
 
         //TODO: if repository exists, just merge the newest commit from master
-        val destinationDirectory = new File(workingDir.get + "/" + path.get)
+        val destinationDirectory = new File(path.get)
 
         if(destinationDirectory.exists && destinationDirectory.isDirectory && !isDirEmpty(destinationDirectory.toPath)){
           //TODO: just update the repository
@@ -58,7 +53,7 @@ class GitInstaller extends Plugin {
           val stdout = new StringBuilder
           val stderr = new StringBuilder
 
-          val command = "git -C " + workingDir.get + " clone " + repoUrl.get + " " +  path.get
+          val command = "git clone " + repoUrl.get + " " +  path.get
           resultCode = command ! ProcessLogger(stdout append _, stderr append _)
         }
 

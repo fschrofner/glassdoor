@@ -60,10 +60,16 @@ class Context {
   }
 
   def splitDescriptor(descriptor:String):Array[String] = {
-    val prefix = descriptor.substring(0, descriptor.indexOf(ContextConstant.DescriptorSplit))
-    val name = descriptor.substring(descriptor.indexOf(ContextConstant.DescriptorSplit) + 1, descriptor.length)
-    //descriptor.split(Constant.Regex.DescriptorSplitRegex)
-    Array(prefix, name)
+    Log.debug("splitting: " + descriptor)
+    if(descriptor.contains(ContextConstant.DescriptorSplit)){
+      val prefix = descriptor.substring(0, descriptor.indexOf(ContextConstant.DescriptorSplit))
+      val name = descriptor.substring(descriptor.indexOf(ContextConstant.DescriptorSplit) + 1, descriptor.length)
+      //descriptor.split(Constant.Regex.DescriptorSplitRegex)
+      Array(prefix, name)
+    } else {
+      Array(descriptor)
+    }
+
   }
 
   def getResolvedValue(descriptor:String): Option[String] ={
