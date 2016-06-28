@@ -18,9 +18,6 @@ In order to build glassdoor yourself, it should be sufficient to open a terminal
 If you want to run glassdoor directly (for development purposes, for example) just call `./gradlew run` in the root directory.  
 Here you go, your self-compiled version of glassdoor is up and running (hopefully)!
 
-###Ensime
-TODO
-
 ###IntelliJ IDEA
 To start hacking and slashing on glassdoor yourself using the terrific [IntelliJ IDEA](https://www.jetbrains.com/idea/), you need to take further steps.  
 First you should install the Scala plugin for IntelliJ. After that you can generate the project files needed by issuing `./gradlew idea` in the root directory.
