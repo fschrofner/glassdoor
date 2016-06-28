@@ -1,5 +1,7 @@
 #glassdoor
-Glassdoor is a modern, autonomous security framework for Android APKs written in [Scala](http://scala-lang.org/).  
+*Please note that this framework is still work in progress and might not be usable at all at the moment!*  
+
+glassdoor is a modern, autonomous security framework for Android APKs written in [Scala](http://scala-lang.org/).  
 Its purpose is to automatically find backdoors, security flaws and other data leakages in applications running on the Android system, without having any actual access to the code itself.
 
 ##Dependencies
@@ -21,14 +23,14 @@ TODO
 
 ###IntelliJ IDEA
 To start hacking and slashing on glassdoor yourself using the terrific [IntelliJ IDEA](https://www.jetbrains.com/idea/), you need to take further steps.  
-First you should install the Scala plugin for IntelliJ. After that you can generate the project files needed by issuing `gradle idea` in the root directory.
+First you should install the Scala plugin for IntelliJ. After that you can generate the project files needed by issuing `./gradlew idea` in the root directory.
 The next step is to import the project into IntelliJ, by selecting "File" > "Open". Just select the outermost folder (yeah you want all modules to be checked).
 It should load the project correctly; now to simplify development you should setup the run configuration. To do so, select "Edit Configurations" next to the run button.
 Add a new Gradle configuration, select the outermost glassdoor Gradle project and use the task "run" (without quotes). Give your configuration a name and click "OK".
 Then select your newly created configuration from the dropdown menu next to the run button. You should now be able to run and debug glassdoor using IntelliJ.
 
 ##Libraries
-Credit, where credit is due. Glassdoor makes extensive use of libraries, see the following list to find out which libraries where used.
+Credit, where credit is due. Glassdoor makes extensive use of libraries, see the following list to find out which libraries were used.
 
 [JLine2](https://github.com/jline/jline2) - [BSD](https://opensource.org/licenses/bsd-license)  
 [Smali](https://github.com/JesusFreke/smali) - [Custom Licence](https://github.com/JesusFreke/smali/blob/master/NOTICE)  
