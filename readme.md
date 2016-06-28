@@ -9,6 +9,7 @@ Its purpose is to automatically find backdoors, security flaws and other data le
 Scala
 
 ###Runtime Dependencies
+Java  
 Grep  
 Git 
 

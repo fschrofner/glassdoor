@@ -278,6 +278,8 @@ class CommandLineInterface extends UserInterface {
           if(resource.isDefined){
             mConsole.get.println("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
           }
+        case ResourceErrorCode.ResourceNotFound =>
+          mConsole.get.print("error: resource not found!")
       }
     }
 
