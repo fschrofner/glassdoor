@@ -33,6 +33,10 @@ Credit, where credit is due. Glassdoor makes extensive use of libraries, see the
 [JLine2](https://github.com/jline/jline2) - [BSD](https://opensource.org/licenses/bsd-license)  
 [Smali](https://github.com/JesusFreke/smali) - [Custom Licence](https://github.com/JesusFreke/smali/blob/master/NOTICE)  
 [Config](https://github.com/typesafehub/config) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)
+[Akka](https://github.com/akka/akka) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)
+[Scala-Logging](https://github.com/typesafehub/scala-logging) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)
+[Logback](https://github.com/qos-ch/logback) - [EPL 1.0](https://opensource.org/licenses/EPL-1.0)
+[Spoon](https://github.com/INRIA/spoon) - [CECILL](https://opensource.org/licenses/CECILL-2.1)
 
 ##Licence
 //TODO

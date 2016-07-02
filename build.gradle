@@ -9,7 +9,7 @@ allprojects {
       maven {
           url 'http://spoon.gforge.inria.fr/repositories/releases/'
       }
-    //maven { url 'https://jitpack.io' }
+    maven { url 'https://jitpack.io' }
     flatDir {
       dirs 'libs'
     }
@@ -28,8 +28,7 @@ dependencies {
     compile 'org.smali:baksmali:2.1.1'
     compile 'jline:jline:2.12'
     compile 'fr.inria.gforge.spoon:spoon-core:5.1.1'
-    //compile 'com.github.fschrofner:jadx-jitpack:v0.6.1-dev'
-    compile name: 'jadx-core-0.6.1-dev' //TODO: replace with url above
+    compile 'com.github.fschrofner:jadx-jitpack:v0.6.1-dev2'
 }
 
 task wrapper(type: Wrapper) {
