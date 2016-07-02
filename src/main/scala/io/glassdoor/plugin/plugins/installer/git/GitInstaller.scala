@@ -1,10 +1,11 @@
 package io.glassdoor.plugin.plugins.installer.git
 
-import java.io.{IOException, File}
+import java.io.{File, IOException}
 import java.nio.file.{Files, Path}
 
-import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
+import io.glassdoor.application._
 import io.glassdoor.plugin.Plugin
+
 import scala.collection.immutable.HashMap
 import scala.sys.process._
 
@@ -35,7 +36,7 @@ class GitInstaller extends Plugin {
         Log.debug("incorrect number of parameters!")
       }
 
-      var resultCode = 1
+      val executor = new SystemCommandExecutor
 
       if(repoUrl.isDefined && path.isDefined){
         showEndlessProgress()
@@ -50,14 +51,11 @@ class GitInstaller extends Plugin {
           Log.debug("directory does not exist, initialising download..")
           destinationDirectory.mkdirs()
 
-          val stdout = new StringBuilder
-          val stderr = new StringBuilder
-
           val command = "git clone " + repoUrl.get + " " +  path.get
-          resultCode = command ! ProcessLogger(stdout append _, stderr append _)
+          executor.executeSystemCommand(command)
         }
 
-        if(resultCode == 0){
+        if(executor.lastCommandSuccessful){
           if(keymapDescription.isDefined){
             val result = HashMap[String,String](keymapDescription.get -> path.get)
             mResult = Some(result)
