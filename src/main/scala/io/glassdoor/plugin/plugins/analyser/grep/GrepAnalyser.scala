@@ -3,10 +3,11 @@ package io.glassdoor.plugin.plugins.analyser.grep
 import java.io.{BufferedWriter, File, FileWriter}
 
 import io.glassdoor.application._
-import io.glassdoor.plugin.Plugin
+import io.glassdoor.plugin.{DynamicValues, Plugin}
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
@@ -20,6 +21,58 @@ class GrepAnalyser extends Plugin{
   var mAdditionalParameters = new StringBuilder
   var mPatternMatcher = PatternMatcher.Extended
   var mPrintHeaders = false
+
+
+  /**
+    * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
+    * This method will then be called with the given parameters, before the plugin can be scheduled.
+    * The result should contain the values requested. Specify None, if you did not specify this value as dynamic.
+    * None values will be ignored, to change your dynamic dependency to an empty dependency wrap an empty string array in Some = Some(Array[String]()).
+    */
+  override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
+    if(parameters.length == 3){
+      return DynamicValues(uniqueId, Some(Array[String](parameters(1))), Some(Array[String](parameters(2))))
+    } else {
+      val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
+
+      var source:Option[String] = None
+      var destination:Option[String] = None
+      val dependencyBuffer = ArrayBuffer[String]()
+
+      if(parameterArray.isDefined) {
+        for(parameter <- parameterArray.get){
+          if(parameter.paramType == ParameterType.Parameter){
+            if(source.isEmpty){
+              source = Some(parameter.name)
+            } else if(destination.isEmpty){
+              destination = Some(parameter.name)
+            }
+          }
+          if(parameter.paramType == ParameterType.NamedParameter){
+            if(parameter.name == "input" | parameter.name == "i"){
+              if(parameter.value.isDefined){
+                dependencyBuffer.append(parameter.value.get)
+              }
+            }
+          }
+        }
+      }
+
+      var changes:Option[Array[String]] = None
+
+      if(source.isDefined){
+        dependencyBuffer.append(source.get)
+      }
+
+      val dependencies = Some(dependencyBuffer.toArray)
+
+      if(destination.isDefined){
+        changes = Some(Array[String](destination.get))
+      }
+
+      DynamicValues(uniqueId, dependencies, changes)
+    }
+  }
 
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
     try {

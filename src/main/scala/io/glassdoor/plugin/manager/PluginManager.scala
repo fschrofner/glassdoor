@@ -8,7 +8,7 @@ import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.resource.ResourceManagerConstant
-import io.glassdoor.plugin.{PluginInstance, PluginResult}
+import io.glassdoor.plugin.{DynamicValues, PluginInstance, PluginResult}
 
 /**
   * Created by Florian Schrofner on 3/16/16.
@@ -21,6 +21,8 @@ trait PluginManager extends Actor {
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
   def getPluginInstance(pluginId:Long):Option[PluginInstance]
+  def handleContextUpdate(context:Context):Unit
+  def handleResolvedDynamicValues(dynamicValues:DynamicValues):Unit
 
   def applyChangedValues(changedValues:Map[String,String]):Unit = {
     val changedResources:scala.collection.mutable.Map[String, String] = new scala.collection.mutable.HashMap[String, String]
@@ -50,6 +52,9 @@ trait PluginManager extends Actor {
   }
 
 
+  def requestContextUpdate():Unit = {
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ContextUpdateRequestPluginManager,None)))
+  }
 
   override def receive = {
     case Message(action, data) =>
@@ -84,10 +89,20 @@ trait PluginManager extends Actor {
             val instance = getPluginInstance(uniqueId)
             if(instance.isDefined){
               Log.debug("plugin instance found, forwarding!")
-              EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, instance)))
+              //EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, instance)))
+              EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.TaskCompleted, instance)))
             } else {
               Log.debug("plugin instance not found!")
             }
+          }
+        case PluginManagerConstant.Action.ContextUpdate =>
+          if(data.isDefined){
+            handleContextUpdate(data.get.asInstanceOf[Context])
+          }
+        case PluginManagerConstant.Action.DynamicValueUpdate =>
+          if(data.isDefined){
+            val resolvedValues = data.get.asInstanceOf[DynamicValues]
+            handleResolvedDynamicValues(resolvedValues)
           }
       }
   }
@@ -104,6 +119,8 @@ object PluginManagerConstant {
     val PluginShowEndlessProgress = "pluginShowEndlessProgress"
     val PluginShowProgress = "pluginShowProgress"
     val PluginTaskCompleted = "pluginTaskCompleted"
+    val ContextUpdate = "contextUpdate"
+    val DynamicValueUpdate = "dynamicValueUpdate"
   }
 
   object PluginErrorCode {

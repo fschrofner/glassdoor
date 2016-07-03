@@ -30,6 +30,10 @@ class DefaultController extends Controller{
   }
 
 
+  override def handleContextUpdateRequestByPluginManager(): Unit = {
+    sendContextUpdateToPluginManager()
+  }
+
   override def handleRemovedValues(removedValues: Array[String]): Unit = {
     if(mContext.isDefined){
       //update context with removed values
@@ -61,6 +65,11 @@ class DefaultController extends Controller{
       //directly launch plugin
       applyPlugin(pluginName, parameters)
     }
+  }
+
+
+  override def handlePluginTaskCompleted(pluginInstance: PluginInstance): Unit = {
+    forwardTaskCompletedMessage(pluginInstance)
   }
 
   override def handleInstallResource(names:Array[String]):Unit = {

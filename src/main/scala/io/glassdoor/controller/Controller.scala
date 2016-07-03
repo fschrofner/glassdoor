@@ -26,12 +26,18 @@ trait Controller extends Actor {
   def handleResourceSuccess(resource:Option[Resource], code:Integer)
   def buildAliasIndex(context:Context):Unit
   def handleUpdateAvailableResources():Unit
+  def handlePluginTaskCompleted(pluginInstance:PluginInstance):Unit
+  def handleContextUpdateRequestByPluginManager():Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     if(mContext.isDefined){
       val message = new PluginManagerPluginParameters(pluginName, parameters, mContext.get)
       EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
     }
+  }
+
+  def sendContextUpdateToPluginManager(): Unit ={
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ContextUpdate, mContext)))
   }
 
   def updateAvailableResources(): Unit ={
@@ -68,6 +74,10 @@ trait Controller extends Actor {
     val messageData = new ResourceErrorMessage(resource, errorCode, data)
     val message = new Message(UserInterfaceConstant.Action.ResourceError, Some(messageData))
     EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+  }
+
+  def forwardTaskCompletedMessage(pluginInstance:PluginInstance): Unit = {
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, Some(pluginInstance))))
   }
 
   def setup():Unit = {
@@ -149,6 +159,13 @@ trait Controller extends Actor {
           }
         case ControllerConstant.Action.UpdateAvailableResources =>
           handleUpdateAvailableResources()
+        case ControllerConstant.Action.TaskCompleted =>
+          if(data.isDefined){
+            val taskInstance = data.get.asInstanceOf[PluginInstance]
+            handlePluginTaskCompleted(taskInstance)
+          }
+        case ControllerConstant.Action.ContextUpdateRequestPluginManager =>
+          handleContextUpdateRequestByPluginManager()
       }
   }
 
@@ -169,5 +186,7 @@ object ControllerConstant {
     val ResourceError = "resourceError"
     val ResourceSuccess = "resourceSuccess"
     val UpdateAvailableResources = "updateAvailableResources"
+    val TaskCompleted = "pluginTaskCompleted"
+    val ContextUpdateRequestPluginManager = "contextUpdateRequestPluginManger"
   }
 }
