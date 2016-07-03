@@ -62,6 +62,7 @@ class DefaultPluginManager extends PluginManager{
           Log.debug("correctly changing key: " + key)
         } else {
           Log.debug("error: change not specified in manifest! " + key)
+          return
         }
       }
 
@@ -191,9 +192,9 @@ class DefaultPluginManager extends PluginManager{
     for(change <- changes){
 
       //dynamic changes need to be resolved first
-      //if(change == PluginManagerConstant.DynamicDependency){
-      //  return ChangeResult(ChangeStatus.Dynamic, None)
-      //}
+      if(change == PluginManagerConstant.DynamicDependency){
+        return ChangeResult(ChangeStatus.Dynamic, None)
+      }
 
       if(mWorkedOnDependencies.contains(change) || mChangingValues.contains(change)){
         Log.debug("value is depended on or already changing! can not safely launch plugin!")
@@ -329,6 +330,10 @@ class DefaultPluginManager extends PluginManager{
         }
       case ChangeStatus.InUse =>
         mPluginQueue.append(ScheduledPlugin(pluginData, parameters))
+        return
+      case ChangeStatus.Dynamic =>
+        Log.debug("change is dynamic, need to wait for resolved change!")
+        resolveDynamicValues(pluginData, parameters)
         return
     }
 

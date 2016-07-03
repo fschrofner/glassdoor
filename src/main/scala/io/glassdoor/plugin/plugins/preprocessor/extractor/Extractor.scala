@@ -1,11 +1,11 @@
 package io.glassdoor.plugin.plugins.preprocessor.extractor
 
-import java.io.{OutputStream, FileOutputStream, InputStream, File}
+import java.io.{File, FileOutputStream, InputStream, OutputStream}
 import java.util.zip.{ZipEntry, ZipFile}
-import scala.collection.JavaConversions._
 
-import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
-import io.glassdoor.plugin.Plugin
+import scala.collection.JavaConversions._
+import io.glassdoor.application.{Constant, Context, ContextConstant, Log}
+import io.glassdoor.plugin.{DynamicValues, Plugin}
 
 import scala.collection.immutable.HashMap
 import scala.util.matching.Regex
@@ -17,6 +17,17 @@ class Extractor extends Plugin{
   var mResult:Option[Map[String,String]] = None
   val BUFSIZE = 4096
   val buffer = new Array[Byte](BUFSIZE)
+
+
+  /**
+    * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
+    * This method will then be called with the given parameters, before the plugin can be scheduled.
+    * The result should contain the values requested. Specify None, if you did not specify this value as dynamic.
+    * None values will be ignored, to change your dynamic dependency to an empty dependency wrap an empty string array in Some = Some(Array[String]()).
+    */
+  override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
+    DynamicValues(uniqueId, Some(Array[String](parameters(1))), Some(Array[String](parameters(2))))
+  }
 
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
 

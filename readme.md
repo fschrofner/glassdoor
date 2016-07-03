@@ -1,4 +1,4 @@
-#glassdoor
+#glassdoor [![Build Status](https://travis-ci.org/fschrofner/glassdoor.svg?branch=master)](https://travis-ci.org/fschrofner/glassdoor)
 *Please note that this framework is still work in progress and might not be usable at all at the moment!*  
 
 glassdoor is a modern, autonomous security framework for Android APKs written in [Scala](http://scala-lang.org/).  
