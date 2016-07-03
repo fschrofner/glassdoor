@@ -95,6 +95,8 @@ trait PluginManager extends Actor {
 
 object PluginManagerConstant {
   val Channel = "/pluginManager"
+  val DynamicDependency = "dynamic"
+
   object Action {
     val Initialise = "initialise"
     val ApplyPlugin = "applyPlugin"
