@@ -21,6 +21,7 @@ trait UserInterface extends Actor {
   def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]):Unit
   def resourceCompleted(resource:Option[Resource], code:Int)
   def resourceFailed(resource:Option[Resource], error:Int, data:Option[Any]):Unit
+  def waitForInput():Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -70,6 +71,8 @@ trait UserInterface extends Actor {
             val message = data.get.asInstanceOf[ResourceErrorMessage]
             resourceFailed(message.resource, message.errorCode, message.data)
           }
+        case UserInterfaceConstant.Action.WaitForInput =>
+          waitForInput()
     }
   }
 }
@@ -86,5 +89,6 @@ object UserInterfaceConstant {
     val PluginError = "pluginError"
     val ResourceSuccess = "resourceCompleted"
     val ResourceError = "resourceError"
+    val WaitForInput = "waitForInput"
   }
 }

@@ -185,8 +185,6 @@ class CommandLineInterface extends UserInterface {
   }
 
   override def taskCompleted(taskInstance: PluginInstance): Unit = {
-    //TODO: only if no more tasks are executing
-    //TODO: can't handle this
     Log.debug("interface received task completed")
 
     if(mConsole.isDefined){
@@ -216,9 +214,6 @@ class CommandLineInterface extends UserInterface {
 
       console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
       console.println()
-
-      //wait for new commands
-      listenToCommandLine()
     }
   }
 
@@ -235,7 +230,7 @@ class CommandLineInterface extends UserInterface {
         }
     }
 
-    listenToCommandLine()
+    waitForInput()
   }
 
   def stopAnimation(taskInstance: PluginInstance):Unit = {
@@ -267,8 +262,6 @@ class CommandLineInterface extends UserInterface {
           mConsole.get.println("error: plugin not found!")
       }
     }
-
-    listenToCommandLine()
   }
 
   override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {
@@ -283,10 +276,13 @@ class CommandLineInterface extends UserInterface {
       }
     }
 
-    listenToCommandLine()
+    //TODO: probably send waitForInput from resource manager
+    waitForInput()
   }
 
-  def listenToCommandLine():Unit = {
+
+  override def waitForInput(): Unit = {
+    Log.debug("wait for input called!")
     if(mCommandLineReader.isDefined){
       val commandLineReader = mCommandLineReader.get
       commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)

@@ -28,12 +28,17 @@ trait Controller extends Actor {
   def handleUpdateAvailableResources():Unit
   def handlePluginTaskCompleted(pluginInstance:PluginInstance):Unit
   def handleContextUpdateRequestByPluginManager():Unit
+  def handleWaitForInput():Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     if(mContext.isDefined){
       val message = new PluginManagerPluginParameters(pluginName, parameters, mContext.get)
       EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
     }
+  }
+
+  def forwardWaitForInput():Unit = {
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.WaitForInput, None)))
   }
 
   def sendContextUpdateToPluginManager(): Unit ={
@@ -166,6 +171,8 @@ trait Controller extends Actor {
           }
         case ControllerConstant.Action.ContextUpdateRequestPluginManager =>
           handleContextUpdateRequestByPluginManager()
+        case ControllerConstant.Action.WaitForInput =>
+          handleWaitForInput()
       }
   }
 
@@ -188,5 +195,6 @@ object ControllerConstant {
     val UpdateAvailableResources = "updateAvailableResources"
     val TaskCompleted = "pluginTaskCompleted"
     val ContextUpdateRequestPluginManager = "contextUpdateRequestPluginManger"
+    val WaitForInput = "waitForInput"
   }
 }

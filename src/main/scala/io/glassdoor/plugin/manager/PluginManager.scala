@@ -45,12 +45,15 @@ trait PluginManager extends Actor {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
+  def readyForNewInput(): Unit ={
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.WaitForInput, None)))
+  }
+
   def sendErrorMessage(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any]):Unit = {
     val messageData = new PluginErrorMessage(pluginInstance, errorCode, data)
     val message = new Message(ControllerConstant.Action.PluginError, Some(messageData))
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
-
 
   def requestContextUpdate():Unit = {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ContextUpdateRequestPluginManager,None)))

@@ -72,8 +72,17 @@ class DefaultPluginManager extends PluginManager{
       mRunningPlugins.remove(pluginId)
 
       //start next (launchable) plugin in queue
-      if(!mPluginQueue.isEmpty){
+      if(mPluginQueue.nonEmpty){
+        Log.debug("plugin queue not empty! requesting context update")
         requestContextUpdate()
+      } else {
+        Log.debug("plugin queue empty, not requesting context update")
+        if(mRunningPlugins.isEmpty){
+          Log.debug("also no running plugins: ready for new input")
+          readyForNewInput()
+        } else {
+          Log.debug("but still running plugins, not ready for new input")
+        }
       }
 
     } else {
@@ -112,9 +121,9 @@ class DefaultPluginManager extends PluginManager{
   }
 
   /*
-      * Executes the next launchable plugins from the plugin queue.
-      * This method should be called after another plugin completed or dynamic plugins dependencies/changes were resolved.
-      */
+        * Executes the next launchable plugins from the plugin queue.
+        * This method should be called after another plugin completed or dynamic plugins dependencies/changes were resolved.
+        */
   def executeNextFromPluginQueue(context:Context):Unit = {
     if(!mPluginQueue.isEmpty){
       for(plugin <- mPluginQueue){
@@ -130,13 +139,10 @@ class DefaultPluginManager extends PluginManager{
             valueHashMap ++= changeResult.data.get.asInstanceOf[Map[String,String]]
             valueHashMap ++= getConfigValues(context)
 
-            mPluginQueue.remove(mPluginQueue.indexOf(plugin))
+            mPluginQueue = mPluginQueue.filterNot(_ == plugin)
 
             applyPlugin(plugin.asPluginData(), valueHashMap.toMap, plugin.dependencies, plugin.changes, plugin.parameters)
           }
-        } else if(dependencyResult.status == DependencyStatus.Unsatisfied){
-          //unsatisfied might not change ever, therefor remove from scheduled plugins
-          mPluginQueue.remove(mPluginQueue.indexOf(plugin))
         }
       }
     } else {
@@ -304,12 +310,25 @@ class DefaultPluginManager extends PluginManager{
       case DependencyStatus.Unsatisfied =>
         if(dependencyResult.data.isDefined){
           val dependency = dependencyResult.data.get.asInstanceOf[String]
-          sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesNotSatisfied,Some(dependency))
+
+          Log.debug("dependency unsatisfied, checking plugin queue..")
+
+          //send error when there are no other scheduled plugins to change the value
+          if(mPluginQueue.isEmpty){
+            //TODO: this can happen, if the next plugin is called with an old context and the plugin providing the dependency stops
+            //TODO: try the complete-java command to test for that
+            Log.debug("plugin queue empty! error!")
+            sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesNotSatisfied,Some(dependency))
+          } else {
+            Log.debug("plugin queue not empty. adding plugin to queue")
+            mPluginQueue.append(ScheduledPlugin(pluginData, parameters))
+          }
           return
         }
       case DependencyStatus.InUse =>
         if(dependencyResult.data.isDefined){
           val dependency = dependencyResult.data.get.asInstanceOf[String]
+          //TODO: why send an error message here?
           sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesInChange, Some(dependency))
           mPluginQueue.append(ScheduledPlugin(pluginData, parameters))
           return

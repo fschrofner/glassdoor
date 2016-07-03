@@ -55,7 +55,9 @@ class DefaultController extends Controller{
         val command = CommandInterpreter.interpret(commandString)
 
         if(command.isDefined){
-          applyPlugin(command.get.name,command.get.parameters)
+          //applyPlugin(command.get.name,command.get.parameters)
+          //recursively call method in order to interpret other aliases
+          handleApplyPlugin(command.get.name, command.get.parameters)
         } else {
           //TODO: could not interpret command!
         }
@@ -70,6 +72,10 @@ class DefaultController extends Controller{
 
   override def handlePluginTaskCompleted(pluginInstance: PluginInstance): Unit = {
     forwardTaskCompletedMessage(pluginInstance)
+  }
+
+  override def handleWaitForInput(): Unit = {
+    forwardWaitForInput()
   }
 
   override def handleInstallResource(names:Array[String]):Unit = {
