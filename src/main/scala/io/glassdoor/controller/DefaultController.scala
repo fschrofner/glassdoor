@@ -57,6 +57,11 @@ class DefaultController extends Controller{
     }
   }
 
+
+  override def handleUiPrint(message: String): Unit = {
+    forwardUiPrint(message)
+  }
+
   def resolveAlias(name:String, parameters:Array[String]):Array[Command] = {
     if(mAliasMap.contains(name)){
       val commandBuffer = ArrayBuffer[Command]()

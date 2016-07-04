@@ -109,7 +109,6 @@ trait PluginManager extends Actor {
             val instance = getPluginInstance(uniqueId)
             if(instance.isDefined){
               Log.debug("plugin instance found, forwarding!")
-              //EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, instance)))
               EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.TaskCompleted, instance)))
             } else {
               Log.debug("plugin instance not found!")

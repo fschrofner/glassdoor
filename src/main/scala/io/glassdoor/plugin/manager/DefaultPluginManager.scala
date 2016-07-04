@@ -143,6 +143,13 @@ class DefaultPluginManager extends PluginManager{
 
             applyPlugin(plugin.asPluginData(), valueHashMap.toMap, plugin.dependencies, plugin.changes, plugin.parameters)
           }
+        } else if(dependencyResult.status == DependencyStatus.Unsatisfied && mRunningPlugins.isEmpty && mPluginQueue.length == 1){
+          //dependency will not become available, as the plugin itself is the only scheduled plugin
+          mPluginQueue = mPluginQueue.filterNot(_ == plugin)
+          if(dependencyResult.data.isDefined){
+            sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesNotSatisfied,Some(dependencyResult.data.get.asInstanceOf[String]))
+          }
+          readyForNewInput()
         }
       }
     } else {
@@ -315,10 +322,9 @@ class DefaultPluginManager extends PluginManager{
 
           //send error when there are no other scheduled plugins to change the value
           if(mPluginQueue.isEmpty){
-            //TODO: this can happen, if the next plugin is called with an old context and the plugin providing the dependency stops
-            //TODO: try the complete-java command to test for that
             Log.debug("plugin queue empty! error!")
             sendErrorMessage(None, PluginManagerConstant.PluginErrorCode.DependenciesNotSatisfied,Some(dependency))
+            readyForNewInput()
           } else {
             Log.debug("plugin queue not empty. adding plugin to queue")
             mPluginQueue.append(ScheduledPlugin(pluginData, parameters))

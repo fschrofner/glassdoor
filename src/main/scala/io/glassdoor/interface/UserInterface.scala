@@ -22,6 +22,7 @@ trait UserInterface extends Actor {
   def resourceCompleted(resource:Option[Resource], code:Int)
   def resourceFailed(resource:Option[Resource], error:Int, data:Option[Any]):Unit
   def waitForInput():Unit
+  def print(message:String):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -73,6 +74,11 @@ trait UserInterface extends Actor {
           }
         case UserInterfaceConstant.Action.WaitForInput =>
           waitForInput()
+        case UserInterfaceConstant.Action.Print =>
+          if(data.isDefined){
+            val message = data.get.asInstanceOf[String]
+            print(message)
+          }
     }
   }
 }
@@ -90,5 +96,6 @@ object UserInterfaceConstant {
     val ResourceSuccess = "resourceCompleted"
     val ResourceError = "resourceError"
     val WaitForInput = "waitForInput"
+    val Print = "print"
   }
 }

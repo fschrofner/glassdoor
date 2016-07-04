@@ -116,14 +116,21 @@ class CommandLineInterface extends UserInterface {
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ApplyPlugin, input)))
       }
     }
-
   }
+
+
 
 //  def setupAutoComplete():Unit = {
 //    //TODO: handover all possible commands (system commands + plugins + aliases)
 //    val completer = new StringsCompleter()
 //    mCompleter = Some(completer)
 //  }
+
+  override def print(message: String): Unit = {
+    if(mConsole.isDefined){
+      mConsole.get.println(message)
+    }
+  }
 
   override def showPluginList(plugins: Array[PluginInstance]): Unit = {
     if(mConsole.isDefined){

@@ -31,6 +31,7 @@ trait Controller extends Actor {
   def handlePluginTaskCompleted(pluginInstance:PluginInstance):Unit
   def handleContextUpdateRequestByPluginManager():Unit
   def handleWaitForInput():Unit
+  def handleUiPrint(message:String):Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     if(mContext.isDefined){
@@ -99,6 +100,10 @@ trait Controller extends Actor {
 
   def forwardTaskCompletedMessage(pluginInstance:PluginInstance): Unit = {
     EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, Some(pluginInstance))))
+  }
+
+  def forwardUiPrint(message:String):Unit = {
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Print, Some(message))))
   }
 
   def setup():Unit = {
@@ -189,6 +194,11 @@ trait Controller extends Actor {
           handleContextUpdateRequestByPluginManager()
         case ControllerConstant.Action.WaitForInput =>
           handleWaitForInput()
+        case ControllerConstant.Action.PrintInUi =>
+          if(data.isDefined){
+            val message = data.get.asInstanceOf[String]
+            handleUiPrint(message)
+          }
       }
   }
 
@@ -212,5 +222,6 @@ object ControllerConstant {
     val TaskCompleted = "pluginTaskCompleted"
     val ContextUpdateRequestPluginManager = "contextUpdateRequestPluginManger"
     val WaitForInput = "waitForInput"
+    val PrintInUi = "printInUi"
   }
 }

@@ -227,7 +227,7 @@ class GitResourceManager extends ResourceManager{
           val name = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceName)
           val typ = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceType)
           val repository = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceRepository)
-          val resource = new Resource(name, typ, None, Some(repository))
+          val resource = Resource(name, typ, Some(path), Some(repository))
           Log.debug("found local conf for: " + name + "[" + typ + "]")
           return Some(resource)
         }

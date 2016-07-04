@@ -83,6 +83,8 @@ class GrepAnalyser extends Plugin{
         val regex = parameters(0)
         val src = parameters(1)
         val dest = parameters(2)
+
+        showEndlessProgress()
         callGrepWithRegex(regex,src,dest, data)
       } else {
         Log.debug("additional parameters specified, need to parse..")
@@ -91,6 +93,8 @@ class GrepAnalyser extends Plugin{
         val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
 
         if(parameterArray.isDefined){
+
+          showEndlessProgress()
           Log.debug("successfully parsed parameter array, size: " + parameterArray.get.length)
 
           var inputOpt:Option[Array[String]] = None
@@ -245,6 +249,11 @@ class GrepAnalyser extends Plugin{
         val error = executor.getErrorOutput
         if(resultCode.isDefined){
           Log.debug("result code: " + resultCode.get)
+          if(resultCode.get == 1){
+            //result code of 1 means, that no lines were selected
+            val result = HashMap[String,String](dest -> outputFile.getParent)
+            mResult = Some(result)
+          }
         } else {
           Log.debug("no result code")
         }
