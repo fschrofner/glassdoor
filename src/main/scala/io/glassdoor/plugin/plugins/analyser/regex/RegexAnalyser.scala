@@ -1,8 +1,9 @@
-package io.glassdoor.plugin.plugins.analyser.grep
+package io.glassdoor.plugin.plugins.analyser.regex
 
 import java.io.{BufferedWriter, File, FileWriter}
 
 import io.glassdoor.application._
+import io.glassdoor.plugin.plugins.analyser.regex.RegexSearchBackend.RegexSearchBackend
 import io.glassdoor.plugin.{DynamicValues, Plugin}
 
 import scala.collection.immutable.HashMap
@@ -11,16 +12,17 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
-  * Runs grep with the specified regex or input files over the files inside the specified location.
+  * Runs a regex search with the specified regex or input files over the files inside the specified location.
+  * The backend for the search can be selected via flags.
   * Stores the matching lines in a log file in the specified destination.
   * Created by Florian Schrofner on 3/30/16.
   */
-class GrepAnalyser extends Plugin{
+class RegexAnalyser extends Plugin{
 
   var mResult:Option[Map[String,String]] = None
   var mAdditionalParameters = new StringBuilder
-  var mPatternMatcher = PatternMatcher.Extended
-  var mPrintHeaders = false
+  var mBackend:RegexSearchBackend = RegexSearchBackend.Grep
+  val mRegexOptions:RegexOptions = new RegexOptions
 
 
   /**
@@ -77,7 +79,7 @@ class GrepAnalyser extends Plugin{
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
     try {
       if(parameters.length == 3){
-        Log.debug("no additional parameters, calling grep")
+        Log.debug("no additional parameters, calling regex search")
 
         //shortest possible call
         val regex = parameters(0)
@@ -85,7 +87,7 @@ class GrepAnalyser extends Plugin{
         val dest = parameters(2)
 
         showEndlessProgress()
-        callGrepWithRegex(regex,src,dest, data)
+        callSearchWithRegex(regex,src,dest, data)
       } else {
         Log.debug("additional parameters specified, need to parse..")
 
@@ -125,21 +127,23 @@ class GrepAnalyser extends Plugin{
             } else if(parameter.paramType == ParameterType.Flag){
               parameter.name match {
                 case "only-matching" | "o" =>
-                  mAdditionalParameters.append("o")
+                  //mAdditionalParameters.append("o")
+                  mRegexOptions.onlyMatching = true
                 case "no-filename" | "h" =>
-                  mAdditionalParameters.append("h")
+                  mRegexOptions.noFileName = true
+                  //mAdditionalParameters.append("h")
                 case "line-number" | "n" =>
-                  mAdditionalParameters.append("n")
+                  mRegexOptions.showLineNumber = true
+                  //mAdditionalParameters.append("n")
                 case "ignore-case" | "i" =>
-                  mAdditionalParameters.append("i")
+                  mRegexOptions.ignoreCase = true
+                  //mAdditionalParameters.append("i")
                 case "print-headers" | "j" =>
-                  mPrintHeaders = true
+                  mRegexOptions.printHeaders = true
                 case "fixed-strings" | "F" =>
-                  mPatternMatcher = PatternMatcher.Strings
-                case "basic-regexp" | "G" =>
-                  mPatternMatcher = PatternMatcher.Basic
-                case "perl-regexp" | "P" =>
-                  mPatternMatcher = PatternMatcher.Perl
+                  mRegexOptions.patternMatcher = PatternMatcher.Strings
+                case "silver-searcher" | "S" =>
+                  mBackend = RegexSearchBackend.TheSilverSearcher
                 case _ =>
                   Log.debug("error: unrecognised flag!")
               }
@@ -166,7 +170,7 @@ class GrepAnalyser extends Plugin{
           }
 
           if(srcOpt.isDefined && destOpt.isDefined && inputOpt.isDefined){
-            callGrepWithInputArray(inputOpt.get,inputSubFilesOpt,srcOpt.get,destOpt.get,data)
+            callSearchWithInputArray(inputOpt.get,inputSubFilesOpt,srcOpt.get,destOpt.get,data)
           } else {
             Log.debug("error: either src, dest or input not defined!")
           }
@@ -187,33 +191,82 @@ class GrepAnalyser extends Plugin{
 
   }
 
-  def getPatternMatcherString():String = {
-    mPatternMatcher match {
-      case PatternMatcher.Basic =>
-        "G"
-      case PatternMatcher.Perl =>
-        "P"
-      case PatternMatcher.Strings =>
-        "F"
-      case _ =>
-        "E"
+  def buildCommand(regex:String, srcPath:String): Seq[String] ={
+    if(mBackend == RegexSearchBackend.Grep){
+      buildGrepCommand(regex, srcPath)
+    } else {
+      buildSilverSearcherCommand(regex,srcPath)
     }
   }
 
-  def callGrepWithRegex(regex:String, src:String, dest:String, data:Map[String,String]): Unit ={
-    Log.debug("calling grep with regex..")
+  def buildGrepCommand(regex:String, srcPath:String): Seq[String] ={
+    val command = ArrayBuffer[String]()
+    command.append("grep")
+    command.append("-a")
+    command.append("-r")
+
+    mRegexOptions.patternMatcher match {
+      case PatternMatcher.Basic =>
+        command.append("-G")
+      case PatternMatcher.Perl =>
+        command.append("-P")
+      case PatternMatcher.Strings =>
+        command.append("-F")
+      case _ =>
+        command.append("E")
+    }
+
+    if(mRegexOptions.onlyMatching) command.append("-o")
+    if(mRegexOptions.noFileName) command.append("-h")
+    if(mRegexOptions.showLineNumber) command.append("-n")
+    if(mRegexOptions.ignoreCase) command.append("-i")
+
+    command.append(regex)
+    command.append(srcPath)
+    command
+  }
+
+  def buildSilverSearcherCommand(regex:String, srcPath:String):Seq[String] = {
+    val command = ArrayBuffer[String]()
+    command.append("ag")
+    command.append("--search-binary")
+    command.append("-a")
+
+    mRegexOptions.patternMatcher match {
+      case PatternMatcher.Strings =>
+        command.append("-F")
+      case _ =>
+        //do nothing
+    }
+
+    if(mRegexOptions.onlyMatching) command.append("-o")
+    if(mRegexOptions.ignoreCase) command.append("-i")
+
+
+    command.append(if(mRegexOptions.showLineNumber) "--numbers" else "--nonumbers")
+
+    if(!mRegexOptions.noFileName)command.append("--nogroup")
+    command.append(if(mRegexOptions.noFileName)"--nofilename" else "--filename")
+
+    command.append(regex)
+    command.append(srcPath)
+    command
+  }
+
+  def callSearchWithRegex(regex:String, src:String, dest:String, data:Map[String,String]): Unit ={
+    Log.debug("calling regex search with regex..")
 
     val srcPath = data.get(src)
     val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Grep + "/" + splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Regex + "/" + splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 
-      val command = "grep -ar" + getPatternMatcherString() + mAdditionalParameters.toString() + " \"" + regex + "\" " + srcPath.get
+      val command = buildCommand(regex, srcPath.get)
 
-      Log.debug("issuing command: " + command)
+      Log.debug("issuing command: " + command.toString())
 
       val executor = new SystemCommandExecutor
       val commandResult = executor.executeSystemCommand(command)
@@ -224,33 +277,33 @@ class GrepAnalyser extends Plugin{
         //write the resulting log
         val bw = new BufferedWriter(new FileWriter(outputFile, true))
 
-        if(mPrintHeaders){
-          bw.write(GrepAnalyserConstant.HeaderLine.format(regex, src))
-          bw.write(GrepAnalyserConstant.NewLine)
+        if(mRegexOptions.printHeaders){
+          bw.write(RegexAnalyserConstant.HeaderLine.format(regex, src))
+          bw.write(RegexAnalyserConstant.NewLine)
         }
 
         bw.write(output)
 
-        if(mPrintHeaders){
-          bw.write(GrepAnalyserConstant.NewLine)
+        if(mRegexOptions.printHeaders){
+          bw.write(RegexAnalyserConstant.NewLine)
         }
 
         bw.close()
 
-        Log.debug("grep finished, saved log to: " + outputFile.getAbsolutePath)
+        Log.debug("regex finished, saved log to: " + outputFile.getAbsolutePath)
 
         //only save parent directory, not the exact file
         val result = HashMap[String,String](dest -> outputFile.getParent)
         mResult = Some(result)
       } else {
-        //result code of 1 just means that no lines were selected (see grep documentation)
-        Log.debug("error: when issuing grep (result code of 1 is fine)")
+        Log.debug("error: when issuing regex search")
         val resultCode = executor.getResultCode
         val error = executor.getErrorOutput
         if(resultCode.isDefined){
           Log.debug("result code: " + resultCode.get)
-          if(resultCode.get == 1){
-            //result code of 1 means, that no lines were selected
+          if(resultCode.get == 1 && mBackend == RegexSearchBackend.Grep){
+            //with grep result code of 1 means, that no lines were selected (see documentation)
+            //TODO: check for other backends
             val result = HashMap[String,String](dest -> outputFile.getParent)
             mResult = Some(result)
           }
@@ -268,8 +321,8 @@ class GrepAnalyser extends Plugin{
     }
   }
 
-  def callGrepWithInputFile(inputFilePath:String, src:String, dest:String, data:Map[String,String]):Unit = {
-    Log.debug("calling grep with input file: " + inputFilePath)
+  def callSearchWithInputFile(inputFilePath:String, src:String, dest:String, data:Map[String,String]):Unit = {
+    Log.debug("calling regex with input file: " + inputFilePath)
     val inputFile = new File(inputFilePath)
 
     if(inputFile.exists() && inputFile.isDirectory){
@@ -278,22 +331,22 @@ class GrepAnalyser extends Plugin{
 
       if(subFiles.length > 0){
         for(file <- subFiles){
-          callGrepWithInputFile(file, src, dest, data)
+          callSearchWithInputFile(file, src, dest, data)
         }
       } else {
         Log.debug("directory " + inputFilePath + " is empty!")
       }
     } else if(inputFile.exists()){
       for (line <- Source.fromFile(inputFile).getLines()) {
-        callGrepWithRegex(line, src, dest, data)
+        callSearchWithRegex(line, src, dest, data)
       }
     } else {
       Log.debug("error: input file not found!")
     }
   }
 
-  def callGrepWithInputArray(inputs:Array[String], inputSubFiles:Option[mutable.MultiMap[String,String]], src:String, dest:String, data:Map[String,String]):Unit = {
-    Log.debug("calling grep with input array..")
+  def callSearchWithInputArray(inputs:Array[String], inputSubFiles:Option[mutable.MultiMap[String,String]], src:String, dest:String, data:Map[String,String]):Unit = {
+    Log.debug("calling regex with input array..")
 
     for(input <- inputs){
       val path = data.get(input)
@@ -307,12 +360,12 @@ class GrepAnalyser extends Plugin{
           for(subFile <- subFilePaths){
             val inputFilePath = path.get + File.separator + subFile
             //TODO: maybe split destinations up to differentiate inputs?
-            callGrepWithInputFile(inputFilePath, src, dest, data)
+            callSearchWithInputFile(inputFilePath, src, dest, data)
           }
 
         } else {
           Log.debug("no subfiles specified for: " + input)
-          callGrepWithInputFile(path.get, src, dest, data)
+          callSearchWithInputFile(path.get, src, dest, data)
         }
       } else {
         Log.debug("input path is not defined in data")
@@ -331,12 +384,12 @@ class GrepAnalyser extends Plugin{
   override def help(parameters: Array[String]): Unit = ???
 }
 
-object PatternMatcher extends Enumeration {
-  type PatternMatcher= Value
-  val  Extended, Strings, Basic, Perl = Value
+object RegexSearchBackend extends Enumeration {
+  type RegexSearchBackend = Value
+  val  Grep, TheSilverSearcher = Value
 }
 
-object GrepAnalyserConstant {
+object RegexAnalyserConstant {
   val NewLine = sys.props("line.separator")
   val HeaderPrefix = "####################"
   val HeaderPostfix = "####################"

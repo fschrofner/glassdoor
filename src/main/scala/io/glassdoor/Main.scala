@@ -8,7 +8,7 @@ import io.glassdoor.interface.{UserInterfaceConstant, UserInterface, CommandLine
 import io.glassdoor.plugin.manager.{PluginManagerConstant, DefaultPluginManager}
 import io.glassdoor.plugin.resource.{GitResourceManager, ResourceManagerConstant}
 import io.glassdoor.plugin.Plugin
-import io.glassdoor.plugin.plugins.analyser.grep.GrepAnalyser
+import io.glassdoor.plugin.plugins.analyser.regex.RegexAnalyser
 import io.glassdoor.plugin.plugins.loader.apk.ApkLoader
 import io.glassdoor.plugin.plugins.preprocessor.extractor.Extractor
 import io.glassdoor.plugin.plugins.preprocessor.smali.SmaliDisassembler

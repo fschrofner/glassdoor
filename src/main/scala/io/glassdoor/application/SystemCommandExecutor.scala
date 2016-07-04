@@ -12,7 +12,7 @@ class SystemCommandExecutor {
   private var mStdErr:Option[StringBuilder] = None
   private var mResultCode:Option[Int] = None
 
-  def executeSystemCommand(command:String): Option[String] = {
+  def executeSystemCommand(command:Seq[String]): Option[String] = {
     try {
       var result:Option[String] = None
 

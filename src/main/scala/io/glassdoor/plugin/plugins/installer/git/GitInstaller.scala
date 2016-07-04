@@ -7,6 +7,7 @@ import io.glassdoor.application._
 import io.glassdoor.plugin.Plugin
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 import scala.sys.process._
 
 /**
@@ -51,7 +52,8 @@ class GitInstaller extends Plugin {
           Log.debug("directory does not exist, initialising download..")
           destinationDirectory.mkdirs()
 
-          val command = "git clone " + repoUrl.get + " " +  path.get
+          val command = Seq("git","clone",repoUrl.get,path.get)
+
           executor.executeSystemCommand(command)
         }
 
