@@ -10,6 +10,8 @@ import io.glassdoor.interface.UserInterfaceConstant
 import io.glassdoor.plugin.resource.ResourceManagerConstant
 import io.glassdoor.plugin.{DynamicValues, PluginInstance, PluginResult}
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * Created by Florian Schrofner on 3/16/16.
   */
@@ -19,6 +21,7 @@ trait PluginManager extends Actor {
   def findPlugin(pluginName:String):Array[String]
   def initialise(context:Context):Unit
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
+  def applyPlugins(pluginNames:Array[String], parameters:Array[Array[String]], context:Context):Unit
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
   def getPluginInstance(pluginId:Long):Option[PluginInstance]
   def handleContextUpdate(context:Context):Unit
@@ -71,6 +74,20 @@ trait PluginManager extends Actor {
             val parameter = data.get.asInstanceOf[PluginManagerPluginParameters]
             applyPlugin(parameter.pluginName,parameter.parameters, parameter.context)
           }
+        case PluginManagerConstant.Action.ApplyPlugins =>
+          if(data.isDefined){
+            val parameters = data.get.asInstanceOf[Array[PluginManagerPluginParameters]]
+
+            val pluginNames = ArrayBuffer[String]()
+            val pluginParameters = ArrayBuffer[Array[String]]()
+
+            for(parameter <- parameters){
+              pluginNames.append(parameter.pluginName)
+              pluginParameters.append(parameter.parameters)
+            }
+
+            applyPlugins(pluginNames.toArray, pluginParameters.toArray, parameters(0).context)
+          }
         case PluginManagerConstant.Action.PluginResult =>
           if(data.isDefined){
             val resultData = data.get.asInstanceOf[PluginResult]
@@ -118,6 +135,7 @@ object PluginManagerConstant {
   object Action {
     val Initialise = "initialise"
     val ApplyPlugin = "applyPlugin"
+    val ApplyPlugins = "applyPlugins"
     val PluginResult = "pluginResult"
     val PluginShowEndlessProgress = "pluginShowEndlessProgress"
     val PluginShowProgress = "pluginShowProgress"

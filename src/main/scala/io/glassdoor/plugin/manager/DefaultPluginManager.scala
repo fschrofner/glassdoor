@@ -121,9 +121,9 @@ class DefaultPluginManager extends PluginManager{
   }
 
   /*
-        * Executes the next launchable plugins from the plugin queue.
-        * This method should be called after another plugin completed or dynamic plugins dependencies/changes were resolved.
-        */
+   * Executes the next launchable plugins from the plugin queue.
+   * This method should be called after another plugin completed or dynamic plugins dependencies/changes were resolved.
+   */
   def executeNextFromPluginQueue(context:Context):Unit = {
     if(!mPluginQueue.isEmpty){
       for(plugin <- mPluginQueue){
@@ -398,18 +398,26 @@ class DefaultPluginManager extends PluginManager{
   override def applyPlugin(pluginName: String, parameters: Array[String], context: Context): Unit = {
     Log.debug("plugin manager: apply plugin by name called! name: " + pluginName)
 
+    val pluginDataOpt = getPluginDataForName(pluginName)
+
+    if(pluginDataOpt.isDefined){
+      applyPlugin(pluginDataOpt.get, parameters, context)
+    } else {
+      Log.debug("error: plugin not found!")
+      sendErrorMessage(None, PluginErrorCode.PluginNotFound, None)
+    }
+  }
+
+  def getPluginDataForName(pluginName:String):Option[PluginData] = {
     var pluginDataOpt:Option[PluginData] = None
 
     if(mLoadedPlugins.contains(pluginName)){
       pluginDataOpt = mLoadedPlugins.get(pluginName)
     } else {
-      Log.debug("error: plugin not found!")
-      sendErrorMessage(None, PluginErrorCode.PluginNotFound, None)
+      pluginDataOpt = None
     }
 
-    if(pluginDataOpt.isDefined){
-      applyPlugin(pluginDataOpt.get, parameters, context)
-    }
+    pluginDataOpt
   }
 
   def instantiatePlugin(pluginClass:String, pluginEnvironment:Option[Map[String, String]] = None):Option[ActorRef] = {
@@ -421,6 +429,32 @@ class DefaultPluginManager extends PluginManager{
     }
 
     Some(actor)
+  }
+
+  override def applyPlugins(pluginNames: Array[String], parameters: Array[Array[String]], context: Context): Unit = {
+    //check if all plugins have parameters provided
+    if(pluginNames.length == parameters.length){
+      //TODO: add all to scheduled plugins, but also check for dynamic dependencies
+      //generate plugin data
+      for(i <- pluginNames.indices){
+        val pluginDataOpt = getPluginDataForName(pluginNames(i))
+
+        if(pluginDataOpt.isDefined){
+          val dependencyResult = checkAndGetDependencies(pluginDataOpt.get.dependencies, context)
+          val changeResult = checkAndGetChangedValues(pluginDataOpt.get.changes, context)
+
+          if(dependencyResult.status == DependencyStatus.Dynamic){
+            resolveDynamicValues(pluginDataOpt.get, parameters(i))
+          } else {
+            mPluginQueue.append(ScheduledPlugin(pluginDataOpt.get,parameters(i)))
+          }
+        }
+      }
+
+      executeNextFromPluginQueue(context)
+    } else {
+      Log.debug("error: some plugins are missing parameters!")
+    }
   }
 
   override def initialise(context:Context): Unit = {

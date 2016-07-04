@@ -9,6 +9,7 @@ import io.glassdoor.plugin.PluginInstance
 import io.glassdoor.resource.Resource
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by Florian Schrofner on 4/17/16.
@@ -45,30 +46,43 @@ class DefaultController extends Controller{
   }
 
   override def handleApplyPlugin(pluginName:String, parameters:Array[String]):Unit = {
+    val commands = resolveAlias(pluginName, parameters)
 
-    if(mAliasMap.contains(pluginName)){
-      //load commands behind alias and execute them
-      Log.debug("alias map contains command! replacing..")
-      val commandStrings = mAliasMap.get(pluginName).get
+    if(commands.length > 1){
+      val names = commands.map(x => x.name)
+      val parameters = commands.map(x => x.parameters)
+      applyPlugins(names, parameters)
+    } else if(commands.length == 1){
+      applyPlugin(commands(0).name, commands(0).parameters)
+    }
+  }
+
+  def resolveAlias(name:String, parameters:Array[String]):Array[Command] = {
+    if(mAliasMap.contains(name)){
+      val commandBuffer = ArrayBuffer[Command]()
+
+      //load commands behind alias
+      Log.debug("alias map contains command: " + name + ". replacing..")
+      val commandStrings = mAliasMap.get(name).get
 
       for(commandString <- commandStrings){
         val command = CommandInterpreter.interpret(commandString)
 
         if(command.isDefined){
+          commandBuffer ++= resolveAlias(command.get.name, command.get.parameters)
           //applyPlugin(command.get.name,command.get.parameters)
           //recursively call method in order to interpret other aliases
-          handleApplyPlugin(command.get.name, command.get.parameters)
+          //handleApplyPlugin(command.get.name, command.get.parameters)
         } else {
           //TODO: could not interpret command!
+          Log.debug("error: could not interpret command: " + name)
         }
-
       }
+      return commandBuffer.toArray
     } else {
-      //directly launch plugin
-      applyPlugin(pluginName, parameters)
+      return Array(Command(name, parameters))
     }
   }
-
 
   override def handlePluginTaskCompleted(pluginInstance: PluginInstance): Unit = {
     forwardTaskCompletedMessage(pluginInstance)

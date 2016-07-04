@@ -10,6 +10,8 @@ import io.glassdoor.plugin.manager.{PluginErrorMessage, PluginManagerConstant, P
 import io.glassdoor.plugin.resource.{ResourceErrorMessage, ResourceManagerConstant, ResourceManagerResourceParameters, ResourceSuccessMessage}
 import io.glassdoor.resource.Resource
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * Created by Florian Schrofner on 4/17/16.
   */
@@ -34,6 +36,20 @@ trait Controller extends Actor {
     if(mContext.isDefined){
       val message = new PluginManagerPluginParameters(pluginName, parameters, mContext.get)
       EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugin, Some(message))))
+    }
+  }
+
+  def applyPlugins(pluginNames: Array[String], parameters: Array[Array[String]]):Unit = {
+    if(mContext.isDefined && pluginNames.length == parameters.length){
+      val pluginParameterArray = ArrayBuffer[PluginManagerPluginParameters]()
+
+      for(i <- pluginNames.indices){
+        pluginParameterArray.append(PluginManagerPluginParameters(pluginNames(i), parameters(i),mContext.get))
+      }
+
+      val message = pluginParameterArray.toArray
+
+      EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ApplyPlugins, Some(message))))
     }
   }
 
