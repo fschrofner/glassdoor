@@ -166,15 +166,11 @@ class GitResourceManager extends ResourceManager{
     }
   }
   def buildResourceIndex(context:Context):Unit = {
-
-    //TODO: load resources from resource directory
     val resourceDirOpt = context.getResolvedValue(ContextConstant.FullKey.ConfigResourceDirectory)
 
     if(resourceDirOpt.isDefined){
       val resourceDir = resourceDirOpt.get
       val resourceRepositoryPath = resourceDir + "/" + GitResourceManagerConstant.Path.ResourceDirectory
-      //TODO: find resource repositories in repository directory
-
       val resourceRepositoryDir = new File(resourceRepositoryPath)
 
       //get all subdirs, look up resource name in the files found in the subdirs
@@ -182,19 +178,24 @@ class GitResourceManager extends ResourceManager{
 
       if(subdirPaths != null){
         Log.debug("number of subdirs: " + subdirPaths.length)
+
+        //checking subdirs
         if(subdirPaths.length > 0){
-          //TODO: check if repositories subdir exists
           val resources:scala.collection.mutable.HashMap[String,Resource] = new scala.collection.mutable.HashMap[String,Resource]
 
           for(name <- subdirPaths){
-            val availableResourceOpt = mAvailableResources.get(name)
-            if(availableResourceOpt.isDefined){
-              val availableResource = availableResourceOpt.get
-              val directory = resourceRepositoryDir.getAbsolutePath + "/" + name
-              val resource = Resource(availableResource.name, availableResource.kind, Some(directory), availableResource.repository)
-              Log.debug("detected resource: " + name)
-              Log.debug("adding path to resource: " + directory)
-              resources.put(resource.name, resource)
+            //first look into folder, if there is a .conf file
+            val directoryPath = resourceRepositoryDir.getAbsolutePath + "/" + name
+
+            var resource = readResourceFromLocalConfFile(directoryPath)
+
+            if(resource.isEmpty){
+              Log.debug("no local conf file provided for: " + name + ", getting information from repository")
+              resource = readResourceFromResourceRepository(name, directoryPath)
+            }
+
+            if(resource.isDefined){
+              resources.put(resource.get.name, resource.get)
             }
           }
 
@@ -206,6 +207,46 @@ class GitResourceManager extends ResourceManager{
       }
     } else {
       Log.debug("resource directory is not defined!")
+    }
+  }
+
+  def readResourceFromLocalConfFile(path:String):Option[Resource] = {
+    val directory = new File(path)
+    val files = directory.listFiles()
+
+    if(files != null && files.nonEmpty){
+      for(file <- files){
+        //only handle .conf files
+        val fileName = file.getName
+        val extension = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length())
+
+        if(extension == GitResourceManagerConstant.Repository.FileExtension) {
+          val repositoryConfig = ConfigFactory.parseFile(file)
+          val resourceConfig = repositoryConfig.getConfig(GitResourceManagerConstant.Repository.ConfigResourceRootElement)
+
+          val name = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceName)
+          val typ = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceType)
+          val repository = resourceConfig.getString(GitResourceManagerConstant.Key.ResourceRepository)
+          val resource = new Resource(name, typ, None, Some(repository))
+          Log.debug("found local conf for: " + name + "[" + typ + "]")
+          return Some(resource)
+        }
+      }
+    }
+    None
+  }
+
+  def readResourceFromResourceRepository(name:String, path:String):Option[Resource] = {
+    val availableResourceOpt = mAvailableResources.get(name)
+    if(availableResourceOpt.isDefined){
+      val availableResource = availableResourceOpt.get
+      val directory = path
+      val resource = Resource(availableResource.name, availableResource.kind, Some(directory), availableResource.repository)
+      Log.debug("found resource in repository: " + name)
+      Log.debug("adding path to resource: " + directory)
+      Some(resource)
+    } else {
+      None
     }
   }
 
@@ -250,6 +291,7 @@ class GitResourceManager extends ResourceManager{
 object GitResourceManagerConstant {
   object Repository {
     val FileExtension = "conf"
+    val ConfigResourceRootElement = "resource"
     val PluginCommand = "git"
   }
 
