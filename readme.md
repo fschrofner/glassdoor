@@ -11,7 +11,8 @@ Scala
 ###Runtime Dependencies
 Java  
 Grep  
-Git 
+Git
+the_silver_searcher [optional]
 
 ##Build Instructions
 Glassdoor uses the wonderful [Gradle](https://gradle.org/) build system to realise its builds.  

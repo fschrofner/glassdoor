@@ -127,17 +127,13 @@ class RegexAnalyser extends Plugin{
             } else if(parameter.paramType == ParameterType.Flag){
               parameter.name match {
                 case "only-matching" | "o" =>
-                  //mAdditionalParameters.append("o")
                   mRegexOptions.onlyMatching = true
                 case "no-filename" | "h" =>
                   mRegexOptions.noFileName = true
-                  //mAdditionalParameters.append("h")
                 case "line-number" | "n" =>
                   mRegexOptions.showLineNumber = true
-                  //mAdditionalParameters.append("n")
                 case "ignore-case" | "i" =>
                   mRegexOptions.ignoreCase = true
-                  //mAdditionalParameters.append("i")
                 case "print-headers" | "j" =>
                   mRegexOptions.printHeaders = true
                 case "fixed-strings" | "F" =>
@@ -213,7 +209,7 @@ class RegexAnalyser extends Plugin{
       case PatternMatcher.Strings =>
         command.append("-F")
       case _ =>
-        command.append("E")
+        command.append("-E")
     }
 
     if(mRegexOptions.onlyMatching) command.append("-o")

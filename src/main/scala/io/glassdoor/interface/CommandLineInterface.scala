@@ -181,6 +181,8 @@ class CommandLineInterface extends UserInterface {
         stringBuilder.insert(0, " ")
       }
 
+      //TODO: need to do something here
+      //TODO: multithreading will not work here
       console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
 
       mCounter += 1
