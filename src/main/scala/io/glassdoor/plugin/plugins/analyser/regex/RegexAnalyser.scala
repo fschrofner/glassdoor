@@ -20,8 +20,6 @@ import scala.io.Source
 class RegexAnalyser extends Plugin{
 
   var mResult:Option[Map[String,String]] = None
-  var mAdditionalParameters = new StringBuilder
-  var mBackend:RegexSearchBackend = RegexSearchBackend.Grep
   val mRegexOptions:RegexOptions = new RegexOptions
 
 
@@ -139,7 +137,7 @@ class RegexAnalyser extends Plugin{
                 case "fixed-strings" | "F" =>
                   mRegexOptions.patternMatcher = PatternMatcher.Strings
                 case "silver-searcher" | "S" =>
-                  mBackend = RegexSearchBackend.TheSilverSearcher
+                  mRegexOptions.searchBackend = RegexSearchBackend.TheSilverSearcher
                 case _ =>
                   Log.debug("error: unrecognised flag!")
               }
@@ -188,7 +186,7 @@ class RegexAnalyser extends Plugin{
   }
 
   def buildCommand(regex:String, srcPath:String): Seq[String] ={
-    if(mBackend == RegexSearchBackend.Grep){
+    if(mRegexOptions.searchBackend == RegexSearchBackend.Grep){
       buildGrepCommand(regex, srcPath)
     } else {
       buildSilverSearcherCommand(regex,srcPath)
@@ -297,7 +295,7 @@ class RegexAnalyser extends Plugin{
         val error = executor.getErrorOutput
         if(resultCode.isDefined){
           Log.debug("result code: " + resultCode.get)
-          if(resultCode.get == 1 && mBackend == RegexSearchBackend.Grep){
+          if(resultCode.get == 1 && mRegexOptions.searchBackend == RegexSearchBackend.Grep){
             //with grep result code of 1 means, that no lines were selected (see documentation)
             //TODO: check for other backends
             val result = HashMap[String,String](dest -> outputFile.getParent)
@@ -380,10 +378,7 @@ class RegexAnalyser extends Plugin{
   override def help(parameters: Array[String]): Unit = ???
 }
 
-object RegexSearchBackend extends Enumeration {
-  type RegexSearchBackend = Value
-  val  Grep, TheSilverSearcher = Value
-}
+
 
 object RegexAnalyserConstant {
   val NewLine = sys.props("line.separator")

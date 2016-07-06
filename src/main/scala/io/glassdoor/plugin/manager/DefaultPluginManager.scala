@@ -385,11 +385,17 @@ class DefaultPluginManager extends PluginManager{
     for(plugin <- mPluginQueue){
       if(plugin.id.isDefined && dynamicValues.uniqueId.isDefined && plugin.id.get == dynamicValues.uniqueId.get){
         if(dynamicValues.dependencies.isDefined){
-          plugin.dependencies = dynamicValues.dependencies.get
+          //delete the dynamic dependency
+          plugin.dependencies = plugin.dependencies.filterNot(_ == PluginManagerConstant.DynamicDependency)
+          //append the resolved dependencies
+          plugin.dependencies ++= dynamicValues.dependencies.get
         }
 
         if(dynamicValues.changes.isDefined){
-          plugin.changes = dynamicValues.changes.get
+          //delete dynamic changes
+          plugin.changes = plugin.changes.filterNot(_ == PluginManagerConstant.DynamicDependency)
+          //append the resolved changes
+          plugin.changes ++= dynamicValues.changes.get
         }
       }
     }

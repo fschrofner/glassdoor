@@ -170,6 +170,7 @@ object ContextConstant {
     val Smali = "smali"
     val Java = "java"
     val Regex = "regex"
+    val HashCrack = "hashcrack"
     val RegexLogin = "regex-login"
     val Dictionary = "dictionary"
   }
@@ -181,6 +182,7 @@ object ContextConstant {
     val IntermediateAssemblySmali = Keymap.IntermediateAssembly + DescriptorSplit + Key.Smali
     val IntermediateSourceJava = Keymap.IntermediateSource + DescriptorSplit + Key.Java
     val ResultLogRegexLogin = Keymap.ResultLog + DescriptorSplit + Key.RegexLogin
+    val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
     val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
     val ConfigAliasConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.AliasConfigPath
