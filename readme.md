@@ -12,6 +12,7 @@ Scala
 Java  
 Grep  
 Git
+John The Ripper
 the_silver_searcher [optional]
 
 ##Build Instructions
