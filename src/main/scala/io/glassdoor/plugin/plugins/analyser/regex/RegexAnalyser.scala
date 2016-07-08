@@ -21,6 +21,7 @@ class RegexAnalyser extends Plugin{
 
   var mResult:Option[Map[String,String]] = None
   val mRegexOptions:RegexOptions = new RegexOptions
+  var mBufferedWriter:Option[BufferedWriter] = None
 
 
   /**
@@ -119,6 +120,11 @@ class RegexAnalyser extends Plugin{
                   if(parameter.value.isDefined){
                     inputSubFiles.addBinding(inputFiles.last, parameter.value.get)
                   }
+                case "regex" | "r" =>
+                  Log.debug("found regex tag")
+                  if(parameter.value.isDefined){
+                    mRegexOptions.singleRegex = parameter.value
+                  }
                 case _ =>
                   Log.debug("error: unrecognised parameter!")
               }
@@ -138,6 +144,8 @@ class RegexAnalyser extends Plugin{
                   mRegexOptions.patternMatcher = PatternMatcher.Strings
                 case "silver-searcher" | "S" =>
                   mRegexOptions.searchBackend = RegexSearchBackend.TheSilverSearcher
+                case "overwrite" | "w" =>
+                  mRegexOptions.overwrite = true
                 case _ =>
                   Log.debug("error: unrecognised flag!")
               }
@@ -165,6 +173,8 @@ class RegexAnalyser extends Plugin{
 
           if(srcOpt.isDefined && destOpt.isDefined && inputOpt.isDefined){
             callSearchWithInputArray(inputOpt.get,inputSubFilesOpt,srcOpt.get,destOpt.get,data)
+          } else if(srcOpt.isDefined && destOpt.isDefined && mRegexOptions.singleRegex.isDefined){
+            callSearchWithRegex(mRegexOptions.singleRegex.get, srcOpt.get, destOpt.get, data)
           } else {
             Log.debug("error: either src, dest or input not defined!")
           }
@@ -180,6 +190,9 @@ class RegexAnalyser extends Plugin{
         Log.debug("error: other exception")
         e.printStackTrace()
     } finally {
+      if(mBufferedWriter.isDefined){
+        mBufferedWriter.get.close()
+      }
       ready
     }
 
@@ -268,9 +281,17 @@ class RegexAnalyser extends Plugin{
       if(commandResult.isDefined){
         val output = commandResult.get
 
-        //write the resulting log
-        val bw = new BufferedWriter(new FileWriter(outputFile, true))
+        if(mBufferedWriter.isEmpty){
+          if(!mRegexOptions.overwrite){
+            val writer = new BufferedWriter(new FileWriter(outputFile, true))
+            mBufferedWriter = Some(writer)
+          } else {
+            val writer = new BufferedWriter(new FileWriter(outputFile))
+            mBufferedWriter = Some(writer)
+          }
+        }
 
+        val bw = mBufferedWriter.get
         if(mRegexOptions.printHeaders){
           bw.write(RegexAnalyserConstant.HeaderLine.format(regex, src))
           bw.write(RegexAnalyserConstant.NewLine)
@@ -281,8 +302,6 @@ class RegexAnalyser extends Plugin{
         if(mRegexOptions.printHeaders){
           bw.write(RegexAnalyserConstant.NewLine)
         }
-
-        bw.close()
 
         Log.debug("regex finished, saved log to: " + outputFile.getAbsolutePath)
 

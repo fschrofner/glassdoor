@@ -7,6 +7,8 @@ import io.glassdoor.plugin.plugins.analyser.regex.RegexSearchBackend.RegexSearch
   */
 class RegexOptions {
   var searchBackend:RegexSearchBackend = RegexSearchBackend.Grep
+  var singleRegex:Option[String] = None
+  var overwrite = false
   var patternMatcher = PatternMatcher.Extended
   var showLineNumber = false
   var onlyMatching = false
