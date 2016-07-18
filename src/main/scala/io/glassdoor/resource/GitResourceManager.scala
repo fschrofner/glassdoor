@@ -129,7 +129,7 @@ class GitResourceManager extends ResourceManager{
             val repositoryDir = new File(resourceRepositoryPath + "/" + subdir)
             val files = repositoryDir.listFiles()
 
-            if(files != null && files.length > 0){
+            if(files != null && files.nonEmpty){
               for(file <- files){
 
                 //only handle .conf files

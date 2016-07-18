@@ -14,6 +14,7 @@ import io.glassdoor.plugin.manager.PluginManagerConstant
   */
 trait Plugin extends Actor {
   var uniqueId:Option[Long] = None
+  var pluginEnvironment:Option[Map[String,String]] = None
 
   /**
     * This is the method called, when your plugin gets launched.
@@ -75,6 +76,11 @@ trait Plugin extends Actor {
             val id = data.get.asInstanceOf[Long]
             uniqueId = Some(id)
           }
+        case PluginConstant.Action.SetPluginEnvironment =>
+          if(data.isDefined){
+            val environment = data.get.asInstanceOf[Map[String,String]]
+            pluginEnvironment = Some(environment)
+          }
         case PluginConstant.Action.ResolveDynamicValues =>
           if(data.isDefined){
             val parameters = data.get.asInstanceOf[Array[String]]
@@ -91,6 +97,7 @@ object PluginConstant {
     val Apply = "apply"
     val Help = "help"
     val SetUniqueId = "id"
+    val SetPluginEnvironment = "pluginEnvironment"
     val ResolveDynamicValues = "resolveDynamicValues"
   }
 }

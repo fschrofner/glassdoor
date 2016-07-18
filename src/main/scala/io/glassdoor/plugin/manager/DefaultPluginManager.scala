@@ -438,6 +438,8 @@ class DefaultPluginManager extends PluginManager{
 
     if(pluginEnvironment.isDefined){
       //TODO: send environment to plugin, e.g. path to groovy script
+      actor ! Message(PluginConstant.Action.SetUniqueId, pluginEnvironment)
+
     }
 
     Some(actor)
@@ -510,6 +512,61 @@ class DefaultPluginManager extends PluginManager{
   def instantiateDefaultPlugin(className:String):ActorRef = {
     val pluginClass = Class.forName(className)
     context.system.actorOf(Props(pluginClass))
+  }
+
+  def loadInstalledPlugins(context:Context): Unit = {
+    val pluginDirOpt = context.getResolvedValue(ContextConstant.FullKey.ConfigPluginDirectory)
+
+    //TODO: iterate over plugin directory, read config files and add plugins
+    if(pluginDirOpt.isDefined){
+      val pluginDirectory = new File(pluginDirOpt.get)
+      val subFiles = pluginDirectory.list()
+
+      if(subFiles != null){
+        for(subFile <- subFiles){
+          //TODO: read conf file and load plugin
+          val pluginFolder = new File(subFile)
+          if(pluginFolder.isDirectory && pluginFolder.list().length > 0){
+            for(fileName <- pluginFolder.list()){
+              val extension = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length())
+
+              if(extension == PluginManagerConstant.PluginConfFileExtension){
+                val pluginData = parseLocalPlugin(fileName)
+                mLoadedPlugins += ((pluginData.name, pluginData))
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def parseLocalPlugin(confFilePath:String):PluginData = {
+    val confFile = new File(confFilePath)
+    val pluginConfig = ConfigFactory.parseFile(confFile)
+
+    val name = pluginConfig.getString(ConfigConstant.PluginKey.Name)
+    val typ = pluginConfig.getString(ConfigConstant.PluginKey.Type)
+    val dependencies = pluginConfig.getStringList(ConfigConstant.PluginKey.Dependencies).asScala
+    val changes = pluginConfig.getStringList(ConfigConstant.PluginKey.Changes).asScala
+    val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.Commands).asScala
+    val interpreter = pluginConfig.getString(ConfigConstant.PluginKey.Interpreter)
+
+    var pluginClass:Option[String] = None
+    val pluginEnvironment = new mutable.HashMap[String,String]()
+
+    interpreter match {
+      case PluginEnvironmentConstant.Interpreter.Groovy =>
+        pluginClass = Some("io.glassdoor.plugin.language.GroovyPlugin")
+        //TODO: dynamically insert all values inside enviroment object
+        pluginEnvironment.put(PluginEnvironmentConstant.Key.MainClass, pluginConfig.getString(PluginEnvironmentConstant.Key.MainClass))
+      case _ =>
+        Log.debug("error: unknown plugin interpreter")
+    }
+
+    val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass.get, if(pluginEnvironment.nonEmpty)Some(pluginEnvironment.toMap) else None)
+
+    null
   }
 
   override def getPluginInstance(pluginId: Long): Option[PluginInstance] = {

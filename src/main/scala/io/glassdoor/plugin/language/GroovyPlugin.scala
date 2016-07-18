@@ -5,9 +5,9 @@ import java.io.File
 import akka.actor.Actor
 import akka.actor.Actor.Receive
 import groovy.lang.{GroovyClassLoader, GroovyObject}
-import io.glassdoor.application.{Log, Context}
+import io.glassdoor.application.{Context, Log}
 import io.glassdoor.bus.Message
-import io.glassdoor.plugin.Plugin
+import io.glassdoor.plugin.{Plugin, PluginEnvironmentConstant}
 
 /**
   * Wrapper to launch Groovy plugins. Handles all communication with the PluginManager and the actor system.
@@ -15,11 +15,21 @@ import io.glassdoor.plugin.Plugin
   */
 class GroovyPlugin extends Plugin {
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
-    val plugin = instantiateGroovyPlugin("/home/flosch/Projects/groovy-test/main.groovy")
-    if(plugin.isDefined){
-      val output = plugin.get.invokeMethod("saySomething",null)
-      //Log.debug(output)
+    if(pluginEnvironment.isDefined){
+      val pluginPath = pluginEnvironment.get.get(PluginEnvironmentConstant.Key.MainClass)
+
+      if(pluginPath.isDefined){
+        val plugin = instantiateGroovyPlugin(pluginPath.get)
+
+        if(plugin.isDefined){
+          val output = plugin.get.invokeMethod("saySomething",null)
+          //Log.debug(output)
+        }
+      }
+    } else {
+      Log.debug("error: plugin environment not defined!")
     }
+
   }
 
   override def result: Option[Map[String,String]] = ???

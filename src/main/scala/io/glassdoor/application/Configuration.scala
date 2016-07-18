@@ -96,6 +96,7 @@ object ConfigConstant {
       val Aliases = "aliases"
       val WorkingDirectory = "workingDirectory"
       val ResourceDirectory = "resourceDirectory"
+      val PluginDirectory = "pluginDirectory"
       val PluginConfigPath = "pluginConfigPath"
       val AliasConfigPath ="aliasConfigPath"
       val PluginRepository = "pluginRepository"
@@ -107,6 +108,7 @@ object ConfigConstant {
       val Aliases = DefaultKey + DescriptorSplit + Key.Aliases
       val WorkingDirectory = DefaultKey + DescriptorSplit + Key.WorkingDirectory
       val ResourceDirectory = DefaultKey + DescriptorSplit + Key.ResourceDirectory
+      val PluginDirectory = DefaultKey + DescriptorSplit + Key.PluginDirectory
       val PluginConfigPath = DefaultKey + DescriptorSplit + Key.PluginConfigPath
       val AliasConfigPath = DefaultKey + DescriptorSplit + Key.AliasConfigPath
       val PluginRepository = DefaultKey + DescriptorSplit + Key.PluginRepository
@@ -123,6 +125,7 @@ object ConfigConstant {
     val Changes = "changes"
     val Commands = "commands"
     val ClassFile = "classFile"
+    val Interpreter = "interpreter"
   }
 
   object AliasKey  {
