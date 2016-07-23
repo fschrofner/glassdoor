@@ -62,6 +62,11 @@ class DefaultController extends Controller{
     forwardUiPrint(message)
   }
 
+
+  override def handlePluginHelp(plugin: String): Unit = {
+    forwardHelpForPlugin(plugin)
+  }
+
   def resolveAlias(name:String, parameters:Array[String]):Array[Command] = {
     if(mAliasMap.contains(name)){
       val commandBuffer = ArrayBuffer[Command]()

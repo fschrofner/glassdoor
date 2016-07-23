@@ -1,8 +1,9 @@
 package io.glassdoor.interface
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Actor, ActorRef}
 import akka.actor.Actor.Receive
-import io.glassdoor.bus.{Message, MessageEvent, EventBus}
+import io.glassdoor.application.Log
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import jline.console.ConsoleReader
 import jline.console.completer.StringsCompleter
@@ -41,6 +42,8 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
   }
 
   def readLine(): Unit = {
+    Log.debug("readline called in commandlinereader")
+
     if(mConsole.isDefined){
       val console = mConsole.get
       mConsole.get.resetPromptLine("","",-1)

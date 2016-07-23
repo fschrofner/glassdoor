@@ -105,6 +105,10 @@ class CommandLineInterface extends UserInterface {
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.RemoveResource, Some(input.get.parameters))))
       } else if(input.get.name == "update"){
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.UpdateAvailableResources,None)))
+      } else if(input.get.name == "help"){
+        if(input.get.parameters.length == 1){
+          EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ShowPluginHelp, Some(input.get.parameters(0)))))
+        }
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
         if(mConsole.isDefined){
@@ -127,8 +131,14 @@ class CommandLineInterface extends UserInterface {
 //  }
 
   override def print(message: String): Unit = {
+    Log.debug("commandline interface received print")
     if(mConsole.isDefined){
+      Log.debug("console defined, printing..")
+      Log.debug("message: " + message)
       mConsole.get.println(message)
+      //TODO: can't print when waiting for line..
+    } else {
+      Log.debug("error: mConsole not defined")
     }
   }
 

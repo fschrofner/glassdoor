@@ -126,6 +126,7 @@ object ConfigConstant {
     val Commands = "commands"
     val ClassFile = "classFile"
     val Interpreter = "interpreter"
+    val Help = "help"
   }
 
   object AliasKey  {

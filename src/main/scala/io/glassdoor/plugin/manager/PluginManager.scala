@@ -26,6 +26,7 @@ trait PluginManager extends Actor {
   def getPluginInstance(pluginId:Long):Option[PluginInstance]
   def handleContextUpdate(context:Context):Unit
   def handleResolvedDynamicValues(dynamicValues:DynamicValues):Unit
+  def showHelpForPlugin(pluginName:String):Unit
 
   def applyChangedValues(changedValues:Map[String,String]):Unit = {
     val changedResources:scala.collection.mutable.Map[String, String] = new scala.collection.mutable.HashMap[String, String]
@@ -46,6 +47,10 @@ trait PluginManager extends Actor {
 
     val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+  }
+
+  def printInUserInterface(message:String):Unit = {
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.PrintInUi, Some(message))))
   }
 
   def readyForNewInput(): Unit ={
@@ -123,6 +128,11 @@ trait PluginManager extends Actor {
             val resolvedValues = data.get.asInstanceOf[DynamicValues]
             handleResolvedDynamicValues(resolvedValues)
           }
+        case PluginManagerConstant.Action.ShowPluginHelp =>
+          if(data.isDefined){
+            val plugin = data.get.asInstanceOf[String]
+            showHelpForPlugin(plugin)
+          }
       }
   }
 }
@@ -142,6 +152,7 @@ object PluginManagerConstant {
     val PluginTaskCompleted = "pluginTaskCompleted"
     val ContextUpdate = "contextUpdate"
     val DynamicValueUpdate = "dynamicValueUpdate"
+    val ShowPluginHelp = "showPluginHelp"
   }
 
   object PluginErrorCode {

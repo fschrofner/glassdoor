@@ -78,6 +78,8 @@ trait UserInterface extends Actor {
           if(data.isDefined){
             val message = data.get.asInstanceOf[String]
             print(message)
+          } else {
+            Log.debug("error: no data specified to print!")
           }
     }
   }

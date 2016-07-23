@@ -41,6 +41,15 @@ class DefaultPluginManager extends PluginManager{
 
   override def findPlugin(pluginName: String): Array[String] = ???
 
+
+  override def showHelpForPlugin(pluginName: String): Unit = {
+    val plugin = mLoadedPlugins.get(pluginName)
+    if(plugin.isDefined){
+      printInUserInterface(plugin.get.help)
+    }
+    readyForNewInput()
+  }
+
   override def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit = {
     //TODO: check if permissions are met
 
@@ -494,8 +503,9 @@ class DefaultPluginManager extends PluginManager{
           val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.Commands).asScala
           val pluginClass = pluginConfig.getString(ConfigConstant.PluginKey.ClassFile)
           val pluginEnvironment = None
+          val help = pluginConfig.getString(ConfigConstant.PluginKey.Help)
 
-          val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass, pluginEnvironment)
+          val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass, pluginEnvironment, help)
 
           mLoadedPlugins += ((pluginData.name, pluginData))
 
@@ -551,9 +561,9 @@ class DefaultPluginManager extends PluginManager{
     val changes = pluginConfig.getStringList(ConfigConstant.PluginKey.Changes).asScala
     val commands = pluginConfig.getStringList(ConfigConstant.PluginKey.Commands).asScala
     val interpreter = pluginConfig.getString(ConfigConstant.PluginKey.Interpreter)
-
     var pluginClass:Option[String] = None
     val pluginEnvironment = new mutable.HashMap[String,String]()
+    val help = pluginConfig.getString(ConfigConstant.PluginKey.Help)
 
     interpreter match {
       case PluginEnvironmentConstant.Interpreter.Groovy =>
@@ -564,7 +574,7 @@ class DefaultPluginManager extends PluginManager{
         Log.debug("error: unknown plugin interpreter")
     }
 
-    val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass.get, if(pluginEnvironment.nonEmpty)Some(pluginEnvironment.toMap) else None)
+    val pluginData = new PluginData(name,typ,dependencies.toArray,changes.toArray, commands.toArray, pluginClass.get, if(pluginEnvironment.nonEmpty)Some(pluginEnvironment.toMap) else None, help)
 
     null
   }
@@ -580,10 +590,10 @@ class DefaultPluginManager extends PluginManager{
   * for dynamic dependencies and changes).
   */
 case class ScheduledPlugin(id:Option[Long], name:String, kind:String, var dependencies:Array[String], var changes:Array[String],
-                           commands:Array[String], pluginClass:String, pluginEnvironment:Option[Map[String,String]], parameters:Array[String]){
+                           commands:Array[String], pluginClass:String, pluginEnvironment:Option[Map[String,String]], parameters:Array[String], help:String){
 
   def asPluginData():PluginData = {
-    return PluginData(name, kind, dependencies, changes, commands, pluginClass, pluginEnvironment)
+    return PluginData(name, kind, dependencies, changes, commands, pluginClass, pluginEnvironment, help)
   }
 }
 
@@ -600,8 +610,9 @@ object ScheduledPlugin{
     val commands = pluginData.commands.clone()
     val pluginClass = pluginData.pluginClass
     val pluginEnvironment = pluginData.pluginEnvironment
+    val help = pluginData.help
 
-    new ScheduledPlugin(id, name, kind, dependencies, changes, commands, pluginClass, pluginEnvironment, parameters)
+    new ScheduledPlugin(id, name, kind, dependencies, changes, commands, pluginClass, pluginEnvironment, parameters, help)
   }
 
 }
