@@ -173,6 +173,7 @@ object ContextConstant {
     val HashCrack = "hashcrack"
     val RegexLogin = "regex-login"
     val Dictionary = "dictionary"
+    val ExtractedDatabase = "extracted-database"
   }
 
   //keys defining the keymap and the keys in one string

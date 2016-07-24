@@ -267,7 +267,7 @@ class RegexAnalyser extends Plugin{
     val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Regex + "/" + splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Regex + File.separator + splitDescriptor(dest)(1) + "/result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 

@@ -1,17 +1,21 @@
 package io.glassdoor.plugin.plugins.preprocessor.database
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 
-import io.glassdoor.application.{CommandInterpreter, Log, Parameter, ParameterType}
+import io.glassdoor.application._
 import io.glassdoor.plugin.{DynamicValues, Plugin}
-import slick.driver.SQLiteDriver.api._
+
+import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by Florian Schrofner on 7/8/16.
   */
 class DatabaseExtractor extends Plugin{
   var mDatabaseExtractorOptions = new DatabaseExtractorOptions
+  val mSystemCommandExecutor = new SystemCommandExecutor
 
+  var mResult:Option[Map[String, String]] = None
 
   /**
     * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
@@ -36,7 +40,7 @@ class DatabaseExtractor extends Plugin{
         outputDescriptor = Some(Array(mDatabaseExtractorOptions.outputDescriptor.get))
       }
 
-      DynamicValues(uniqueId, inputDescriptor, outputDescriptor)
+      return DynamicValues(uniqueId, inputDescriptor, outputDescriptor)
     }
 
     DynamicValues(uniqueId, None, None)
@@ -63,7 +67,17 @@ class DatabaseExtractor extends Plugin{
 
           if(mDatabaseExtractorOptions.subFile.isDefined) input += File.separator + mDatabaseExtractorOptions.subFile.get
 
-          extractDatabase(input,"")
+          //TODO: change dynamically based on outputdescriptor
+          val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
+
+          if(workingDirectory.isDefined){
+
+            val outputFilePath = workingDirectory.get + File.separator + ContextConstant.Key.ExtractedDatabase + File.separator + splitDescriptor(mDatabaseExtractorOptions.outputDescriptor.get)(1) + "/result.log"
+            extractDatabase(input,outputFilePath)
+
+            val result = HashMap[String,String](mDatabaseExtractorOptions.outputDescriptor.get -> outputFilePath)
+            mResult = Some(result)
+          }
         }
       }
     }
@@ -71,12 +85,67 @@ class DatabaseExtractor extends Plugin{
     ready()
   }
 
+  def splitDescriptor(descriptor:String):Array[String] = {
+    descriptor.split(Constant.Regex.DescriptorSplitRegex)
+  }
+
   def extractDatabase(inputPath:String, outputPath:String):Unit = {
     Log.debug("extract database called")
-    val db = Database.forURL("jdbc:sqlite:" + inputPath, driver = "org.sqlite.JDBC")
-    //val action = sql"select * from *".result
+    val arrayBuffer = ArrayBuffer[String]()
+    val tableNames = getTableNames(inputPath)
 
-    //db.run(action).map(_.foreach(x => println(x)))
+    for(tableName <- tableNames){
+      arrayBuffer ++= getTableContent(inputPath, tableName)
+    }
+
+    val file = new File(outputPath)
+    file.getParentFile.mkdirs()
+
+    val bw = new BufferedWriter(new FileWriter(file, true))
+
+    val newLine = System.getProperty("line.separator")
+
+    for(line <- arrayBuffer){
+      bw.write(line + newLine)
+    }
+
+    bw.close()
+  }
+
+  def getTableNames(inputPath:String): Array[String] =  {
+    val tables = ArrayBuffer[String]()
+    val command = new ArrayBuffer[String]()
+    command.append("sqlite3")
+    command.append(inputPath)
+    command.append(".tables")
+    val resultString = mSystemCommandExecutor.executeSystemCommand(command)
+    if(resultString.isDefined){
+      Log.debug("extracted tables: " + resultString.get)
+      for(line <- scala.io.Source.fromString(resultString.get).getLines()){
+        tables.append(line)
+      }
+    } else {
+      Log.debug("error: could not extract table names!")
+    }
+    tables.toArray
+  }
+
+  def getTableContent(inputPath:String, tableName:String): Array[String] = {
+    val content = ArrayBuffer[String]()
+    val command = ArrayBuffer[String]()
+    command.append("sqlite3")
+    command.append("-header")
+    command.append("-csv")
+    command.append(inputPath)
+    command.append("select * from " + tableName + ";")
+    val resultString = mSystemCommandExecutor.executeSystemCommand(command)
+    if(resultString.isDefined){
+      Log.debug("extracted data from table " + tableName + ": " + resultString.get)
+      for(line <- scala.io.Source.fromString(resultString.get).getLines()){
+        content.append(line)
+      }
+    }
+    content.toArray
   }
 
   def handleParameters(parameterArray:Array[Parameter]):Unit = {
@@ -92,8 +161,10 @@ class DatabaseExtractor extends Plugin{
         case ParameterType.Parameter =>
           if(mDatabaseExtractorOptions.inputDescriptor.isEmpty){
             mDatabaseExtractorOptions.inputDescriptor = Some(parameter.name)
+            Log.debug("parsed input descriptor")
           } else if(mDatabaseExtractorOptions.outputDescriptor.isEmpty){
             mDatabaseExtractorOptions.outputDescriptor = Some(parameter.name)
+            Log.debug("parsed output descriptor")
           }
       }
     }
@@ -107,7 +178,9 @@ class DatabaseExtractor extends Plugin{
     *
     * @return a map containing all the changed values.
     */
-override def result: Option[Map[String, String]] = ???
+  override def result: Option[Map[String, String]] = {
+    mResult
+  }
 
   override def help(parameters: Array[String]): Unit = ???
 }

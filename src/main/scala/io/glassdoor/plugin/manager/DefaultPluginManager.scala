@@ -215,6 +215,7 @@ class DefaultPluginManager extends PluginManager{
 
       //dynamic changes need to be resolved first
       if(change == PluginManagerConstant.DynamicDependency){
+        Log.debug("change dynamic, needs to be resolved first!")
         return ChangeResult(ChangeStatus.Dynamic, None)
       }
 
@@ -229,6 +230,7 @@ class DefaultPluginManager extends PluginManager{
       }
     }
 
+    Log.debug("change status satisfied!")
     ChangeResult(ChangeStatus.Satisfied, Some(mutableHashmap.toMap))
   }
 
@@ -391,6 +393,10 @@ class DefaultPluginManager extends PluginManager{
 
 
   override def handleResolvedDynamicValues(dynamicValues: DynamicValues): Unit = {
+    Log.debug("handle resolved dynamic values")
+    if(dynamicValues.dependencies.isDefined)Log.debug("resolved dependencies")
+    if(dynamicValues.changes.isDefined)Log.debug("resolved changes")
+
     for(plugin <- mPluginQueue){
       if(plugin.id.isDefined && dynamicValues.uniqueId.isDefined && plugin.id.get == dynamicValues.uniqueId.get){
         if(dynamicValues.dependencies.isDefined){
