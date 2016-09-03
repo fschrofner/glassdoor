@@ -33,8 +33,9 @@ class GitInstaller extends Plugin {
         repoUrl = Some(parameters(1))
         path = Some(parameters(2))
       } else {
-        //TODO: send error message
-        Log.debug("incorrect number of parameters!")
+        setErrorMessage("error: incorrect number of parameters!")
+        ready()
+        return
       }
 
       val executor = new SystemCommandExecutor

@@ -50,16 +50,55 @@ class DefaultPluginManager extends PluginManager{
     readyForNewInput()
   }
 
-  override def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit = {
-    //TODO: check if permissions are met
 
-    Log.debug("plugin manager received plugin result!")
+  override def handlePluginFailure(pluginId: Long, errorMessage: Option[String]): Unit = {
+    val matchingPlugin = getRunningPluginInstance(pluginId)
 
+    if(matchingPlugin.isDefined){
+      clearChangingValuesAndDependencies(matchingPlugin.get)
+    }
+
+    mRunningPlugins.remove(pluginId)
+
+    if(errorMessage.isDefined){
+      printInUserInterface(errorMessage.get)
+    }
+
+    startNextPlugin()
+  }
+
+  def getRunningPluginInstance(pluginId: Long) : Option[PluginInstance] = {
     var matchingPlugin:Option[PluginInstance] = None
 
     if(mRunningPlugins.contains(pluginId)){
       matchingPlugin = mRunningPlugins.get(pluginId)
     }
+
+    matchingPlugin
+  }
+
+  def startNextPlugin() : Unit = {
+    //start next (launchable) plugin in queue
+    if(mPluginQueue.nonEmpty){
+      Log.debug("plugin queue not empty! requesting context update")
+      requestContextUpdate()
+    } else {
+      Log.debug("plugin queue empty, not requesting context update")
+      if(mRunningPlugins.isEmpty){
+        Log.debug("also no running plugins: ready for new input")
+        readyForNewInput()
+      } else {
+        Log.debug("but still running plugins, not ready for new input")
+      }
+    }
+  }
+
+  override def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit = {
+    //TODO: check if permissions are met
+
+    Log.debug("plugin manager received plugin result!")
+
+    val matchingPlugin = getRunningPluginInstance(pluginId)
 
     if(matchingPlugin.isDefined){
       val pluginInstance = matchingPlugin.get
@@ -80,19 +119,7 @@ class DefaultPluginManager extends PluginManager{
       clearChangingValuesAndDependencies(pluginInstance)
       mRunningPlugins.remove(pluginId)
 
-      //start next (launchable) plugin in queue
-      if(mPluginQueue.nonEmpty){
-        Log.debug("plugin queue not empty! requesting context update")
-        requestContextUpdate()
-      } else {
-        Log.debug("plugin queue empty, not requesting context update")
-        if(mRunningPlugins.isEmpty){
-          Log.debug("also no running plugins: ready for new input")
-          readyForNewInput()
-        } else {
-          Log.debug("but still running plugins, not ready for new input")
-        }
-      }
+      startNextPlugin()
 
     } else {
       Log.debug("no matching plugin found!")

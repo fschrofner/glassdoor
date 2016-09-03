@@ -46,11 +46,13 @@ class SmaliDisassembler extends Plugin{
             mResult = None
         }
       } else {
-        Log.debug("dex not defined!")
+        setErrorMessage("error: dex not defined!")
       }
+    } else {
+      setErrorMessage("error: working directory not defined")
     }
 
-    ready
+    ready()
   }
 
   override def result:Option[Map[String,String]] = {

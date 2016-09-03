@@ -176,24 +176,24 @@ class RegexAnalyser extends Plugin{
           } else if(srcOpt.isDefined && destOpt.isDefined && mRegexOptions.singleRegex.isDefined){
             callSearchWithRegex(mRegexOptions.singleRegex.get, srcOpt.get, destOpt.get, data)
           } else {
-            Log.debug("error: either src, dest or input not defined!")
+            setErrorMessage("error: either src, dest or input not defined!")
           }
         } else {
-          Log.debug("parameters could not be parsed!")
+          setErrorMessage("parameters could not be parsed!")
         }
       }
     } catch {
       case e: ArrayIndexOutOfBoundsException =>
-        Log.debug("error: array index out of bounds")
+        setErrorMessage("error: array index out of bounds")
         mResult = None
       case e: Exception =>
-        Log.debug("error: other exception")
+        setErrorMessage("error: other exception")
         e.printStackTrace()
     } finally {
       if(mBufferedWriter.isDefined){
         mBufferedWriter.get.close()
       }
-      ready
+      ready()
     }
 
   }
@@ -309,7 +309,7 @@ class RegexAnalyser extends Plugin{
         val result = HashMap[String,String](dest -> outputFile.getParent)
         mResult = Some(result)
       } else {
-        Log.debug("error: when issuing regex search")
+        setErrorMessage("error: when issuing regex search")
         val resultCode = executor.getResultCode
         val error = executor.getErrorOutput
         if(resultCode.isDefined){
@@ -330,7 +330,7 @@ class RegexAnalyser extends Plugin{
         }
       }
     } else {
-      Log.debug("error: either src path or working directory are not defined!")
+      setErrorMessage("error: either src path or working directory are not defined!")
     }
   }
 
@@ -354,7 +354,7 @@ class RegexAnalyser extends Plugin{
         callSearchWithRegex(line, src, dest, data)
       }
     } else {
-      Log.debug("error: input file not found!")
+      setErrorMessage("error: input file not found!")
     }
   }
 
@@ -381,7 +381,7 @@ class RegexAnalyser extends Plugin{
           callSearchWithInputFile(path.get, src, dest, data)
         }
       } else {
-        Log.debug("input path is not defined in data")
+        setErrorMessage("input path is not defined in data")
       }
     }
   }

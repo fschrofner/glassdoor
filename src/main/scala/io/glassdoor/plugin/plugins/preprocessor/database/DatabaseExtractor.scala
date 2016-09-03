@@ -73,13 +73,17 @@ class DatabaseExtractor extends Plugin{
           if(workingDirectory.isDefined){
 
             val outputFilePath = workingDirectory.get + File.separator + ContextConstant.Key.ExtractedDatabase + File.separator + splitDescriptor(mDatabaseExtractorOptions.outputDescriptor.get)(1) + "/result.log"
-            extractDatabase(input,outputFilePath)
+            val success = extractDatabase(input,outputFilePath)
 
-            val result = HashMap[String,String](mDatabaseExtractorOptions.outputDescriptor.get -> outputFilePath)
-            mResult = Some(result)
+            if(success){
+              val result = HashMap[String,String](mDatabaseExtractorOptions.outputDescriptor.get -> outputFilePath)
+              mResult = Some(result)
+            }
           }
         }
       }
+    } else {
+      setErrorMessage("error: could not parse parameters")
     }
 
     ready()
@@ -89,30 +93,35 @@ class DatabaseExtractor extends Plugin{
     descriptor.split(Constant.Regex.DescriptorSplitRegex)
   }
 
-  def extractDatabase(inputPath:String, outputPath:String):Unit = {
+  def extractDatabase(inputPath:String, outputPath:String):Boolean = {
     Log.debug("extract database called")
     val arrayBuffer = ArrayBuffer[String]()
     val tableNames = getTableNames(inputPath)
 
-    for(tableName <- tableNames){
-      arrayBuffer ++= getTableContent(inputPath, tableName)
+    if(tableNames.isDefined){
+      for(tableName <- tableNames.get){
+        arrayBuffer ++= getTableContent(inputPath, tableName)
+      }
+
+      val file = new File(outputPath)
+      file.getParentFile.mkdirs()
+
+      val bw = new BufferedWriter(new FileWriter(file, true))
+
+      val newLine = System.getProperty("line.separator")
+
+      for(line <- arrayBuffer){
+        bw.write(line + newLine)
+      }
+
+      bw.close()
+      return true
+    } else {
+      return false
     }
-
-    val file = new File(outputPath)
-    file.getParentFile.mkdirs()
-
-    val bw = new BufferedWriter(new FileWriter(file, true))
-
-    val newLine = System.getProperty("line.separator")
-
-    for(line <- arrayBuffer){
-      bw.write(line + newLine)
-    }
-
-    bw.close()
   }
 
-  def getTableNames(inputPath:String): Array[String] =  {
+  def getTableNames(inputPath:String): Option[Array[String]] =  {
     val tables = ArrayBuffer[String]()
     val command = new ArrayBuffer[String]()
     command.append("sqlite3")
@@ -125,9 +134,10 @@ class DatabaseExtractor extends Plugin{
         tables.append(line)
       }
     } else {
-      Log.debug("error: could not extract table names!")
+      setErrorMessage("error: could not extract table names!")
+      return None
     }
-    tables.toArray
+    Some(tables.toArray)
   }
 
   def getTableContent(inputPath:String, tableName:String): Array[String] = {

@@ -32,7 +32,11 @@ class JavaDecompiler extends Plugin {
 
         val result = HashMap[String,String](ContextConstant.FullKey.IntermediateSourceJava -> outputDirPath)
         mResult = Some(result)
+      } else {
+        setErrorMessage("error: apk path not defined")
       }
+    } else {
+      setErrorMessage("error: working directory not defined")
     }
 
     ready

@@ -15,6 +15,7 @@ import io.glassdoor.plugin.manager.PluginManagerConstant
 trait Plugin extends Actor {
   var uniqueId:Option[Long] = None
   var pluginEnvironment:Option[Map[String,String]] = None
+  var errorMessage:Option[String] = None
 
   /**
     * This is the method called, when your plugin gets launched.
@@ -43,11 +44,22 @@ trait Plugin extends Actor {
     return DynamicValues(uniqueId,None,None)
   }
 
-  //method should be called when the plugin is ready to return a result
+  /**
+    * This tells the plugin manager that the plugin has finished executing and does not need any execution time anymore.
+    */
   def ready():Unit = {
-    val resultData = PluginResult(uniqueId, result)
+    val resultData = PluginResult(uniqueId, result, errorMessage)
     EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginTaskCompleted, uniqueId)))
     EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.PluginResult, Some(resultData))))
+  }
+
+  /**
+    * Call this method in order to display the user the reason of the error.
+    * This string will only be retrieved, when the result returned is None.
+    * @param message
+    */
+  def setErrorMessage(message:String) : Unit = {
+    errorMessage = Some(message)
   }
 
   //updates the progress of this task to the specified value
@@ -103,6 +115,6 @@ object PluginConstant {
 }
 
 case class PluginParameters(data:Map[String, String], parameters:Array[String])
-case class PluginResult(uniqueId:Option[Long], result:Option[Map[String,String]])
+case class PluginResult(uniqueId:Option[Long], result:Option[Map[String,String]], errorMessage:Option[String])
 case class PluginProgress(uniqueId:Option[Long], pluginName:String, progress:Option[Integer])
 case class DynamicValues(uniqueId:Option[Long], dependencies:Option[Array[String]], changes:Option[Array[String]])

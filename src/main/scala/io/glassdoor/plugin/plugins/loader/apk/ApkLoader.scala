@@ -18,19 +18,20 @@ class ApkLoader extends Plugin{
   var mResult:Option[Map[String,String]] = None
 
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
-    val srcPath = parameters(0)
+    if(parameters.length > 0){
+      val srcPath = parameters(0)
 
-    //TODO: match against regex to check if url or local path
-    //TODO: make a copy to a working directory of glassdoor
-    //TODO: make plugin trait more powerful = check if command exists/show error otherwise
-
-    val path = copyApkToWorkingDirectory(data, srcPath)
-    if(path.isDefined){
-      val result = HashMap[String,String](ContextConstant.FullKey.OriginalBinaryApk -> path.get)
-      mResult = Some(result)
+      val path = copyApkToWorkingDirectory(data, srcPath)
+      if(path.isDefined){
+        val result = HashMap[String,String](ContextConstant.FullKey.OriginalBinaryApk -> path.get)
+        mResult = Some(result)
+      } else {
+        //TODO: error handling
+        setErrorMessage("error: working dir is not defined or error while copying!")
+        mResult = None
+      }
     } else {
-      //TODO: error handling
-      mResult = None
+      setErrorMessage("error: not enough arguments!")
     }
 
     ready()

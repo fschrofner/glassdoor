@@ -23,6 +23,7 @@ trait PluginManager extends Actor {
   def applyPlugin(pluginName:String,parameters:Array[String],context:Context):Unit
   def applyPlugins(pluginNames:Array[String], parameters:Array[Array[String]], context:Context):Unit
   def handlePluginResult(pluginId:Long, changedValues:Map[String,String]):Unit
+  def handlePluginFailure(pluginId:Long, errorMessage:Option[String])
   def getPluginInstance(pluginId:Long):Option[PluginInstance]
   def handleContextUpdate(context:Context):Unit
   def handleResolvedDynamicValues(dynamicValues:DynamicValues):Unit
@@ -98,6 +99,8 @@ trait PluginManager extends Actor {
             val resultData = data.get.asInstanceOf[PluginResult]
             if(resultData.uniqueId.isDefined && resultData.result.isDefined){
               handlePluginResult(resultData.uniqueId.get, resultData.result.get)
+            } else if(resultData.uniqueId.isDefined){
+              handlePluginFailure(resultData.uniqueId.get, resultData.errorMessage)
             }
           }
         case PluginManagerConstant.Action.PluginShowEndlessProgress =>

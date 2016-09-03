@@ -58,14 +58,16 @@ class Extractor extends Plugin{
         mResult = Some(result)
       } else {
         //TODO: error handling when working dir is not defined
+        setErrorMessage("error: working directory not defined")
         mResult = None
       }
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
+        setErrorMessage("error: not enough parameters")
         mResult = None
     } finally {
       Log.debug("extractor ready")
-      ready
+      ready()
     }
 
 

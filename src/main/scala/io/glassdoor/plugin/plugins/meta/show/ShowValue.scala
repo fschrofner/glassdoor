@@ -1,5 +1,6 @@
 package io.glassdoor.plugin.plugins.meta.show
 
+import io.glassdoor.application.Log
 import io.glassdoor.plugin.{DynamicValues, Plugin}
 
 /**
@@ -8,13 +9,19 @@ import io.glassdoor.plugin.{DynamicValues, Plugin}
   */
 class ShowValue extends Plugin {
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
+    Log.debug("apply show callled")
+
     if(parameters.length > 0){
       val value = data.get(parameters(0))
       if(value.isDefined){
         printInUserInterface(value.get)
+      } else {
+        setErrorMessage("error: value unknown")
       }
-      ready()
+    } else {
+      setErrorMessage("error: no value given")
     }
+    ready()
   }
 
 

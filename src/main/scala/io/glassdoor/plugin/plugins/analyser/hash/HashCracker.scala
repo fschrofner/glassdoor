@@ -76,8 +76,10 @@ class HashCracker extends Plugin{
           if(dictFile.isDirectory && dictFile.list.length == 1){
             dictPath = Some(dictFile.listFiles()(0).getAbsolutePath)
           } else if(dictFile.isDirectory){
-            //TODO: abort here
-            Log.debug("error: dictionary not clearly specified!")
+            setErrorMessage("error: dictionary not clearly specified!")
+            //abort
+            ready()
+            return
           }
 
           //when using a hashfile and a directory is specified, which contains only one file, use that file
@@ -136,24 +138,24 @@ class HashCracker extends Plugin{
               val resultMap = HashMap[String,String](ContextConstant.FullKey.ResultLogHashCrack -> file.getParent)
               mResult = Some(resultMap)
             } else {
-              Log.debug("error: working dir or result not defined!")
+              setErrorMessage("error: working dir or result not defined!")
             }
           } else {
-            Log.debug("error: execution of command caused error!")
+            setErrorMessage("error: execution of command caused error!")
             Log.debug("result code:" + executor.getResultCode)
             Log.debug("error output: " +executor.getErrorOutput)
           }
         } else {
-          Log.debug("error: dictPath and hash are NOT defined after replacement")
+          setErrorMessage("error: dictPath and hash are NOT defined after replacement")
         }
       } else {
-        Log.debug("error: dictionary and hash are NOT defined")
+        setErrorMessage("error: dictionary and hash are NOT defined")
       }
 
       //TODO: choose correct destination path in working directory
       //TODO: save to result-log.cracked-hashes
-      ready()
     }
+    ready()
   }
 
   def writeResultToFileSystem(workingDir:String, result:String):String = {
