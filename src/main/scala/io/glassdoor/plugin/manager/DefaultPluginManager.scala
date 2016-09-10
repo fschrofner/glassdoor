@@ -40,12 +40,14 @@ class DefaultPluginManager extends PluginManager{
   override def unloadPlugin(pluginName: String): Unit = ???
 
   override def findPlugin(pluginName: String): Array[String] = {
-    val nameArray = mLoadedPlugins.mapValues(x => x.name).toArray[String]
+    val pluginList = mLoadedPlugins.valuesIterator.toList
+    val nameList = pluginList.map(x => x.name)
+    
     if(pluginName == Constant.Parameter.Any){
-      return nameArray
+      return nameList.toArray
     } else {
       //TODO: find also partially matching plugin names
-      if(nameArray.contains(pluginName)){
+      if(nameList.contains(pluginName)){
         return Array(pluginName)
       } else {
         Array.empty[String]
