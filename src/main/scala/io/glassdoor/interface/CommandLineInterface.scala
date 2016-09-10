@@ -108,6 +108,8 @@ class CommandLineInterface extends UserInterface {
       } else if(input.get.name == "help"){
         if(input.get.parameters.length == 1){
           EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ShowPluginHelp, Some(input.get.parameters(0)))))
+        } else {
+          EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ShowPluginHelp, Some(""))))
         }
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
@@ -266,7 +268,6 @@ class CommandLineInterface extends UserInterface {
     }
 
     if(mConsole.isDefined){
-      //TODO: print matching error
 
       error match {
         case PluginErrorCode.DependenciesNotSatisfied =>
@@ -281,6 +282,8 @@ class CommandLineInterface extends UserInterface {
           mConsole.get.println("error: plugin not found!")
       }
     }
+
+    waitForInput()
   }
 
   override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {

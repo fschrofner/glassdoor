@@ -39,14 +39,33 @@ class DefaultPluginManager extends PluginManager{
 
   override def unloadPlugin(pluginName: String): Unit = ???
 
-  override def findPlugin(pluginName: String): Array[String] = ???
+  override def findPlugin(pluginName: String): Array[String] = {
+    val nameArray = mLoadedPlugins.mapValues(x => x.name).toArray[String]
+    if(pluginName == Constant.Parameter.Any){
+      return nameArray
+    } else {
+      //TODO: find also partially matching plugin names
+      if(nameArray.contains(pluginName)){
+        return Array(pluginName)
+      } else {
+        Array.empty[String]
+      }
+    }
+  }
 
 
   override def showHelpForPlugin(pluginName: String): Unit = {
-    val plugin = mLoadedPlugins.get(pluginName)
-    if(plugin.isDefined){
-      printInUserInterface(plugin.get.help)
+    if(pluginName == null || pluginName.isEmpty){
+      printInUserInterface("error: no plugin specified!")
+    } else {
+      val plugin = mLoadedPlugins.get(pluginName)
+      if(plugin.isDefined){
+        printInUserInterface(plugin.get.help)
+      } else {
+        printInUserInterface("error: plugin not found!")
+      }
     }
+
     readyForNewInput()
   }
 
@@ -166,6 +185,18 @@ class DefaultPluginManager extends PluginManager{
         val dependencyResult = checkAndGetDependencies(plugin.dependencies,context)
         val changeResult = checkAndGetChangedValues(plugin.changes, context)
 
+        if(dependencyResult.status == DependencyStatus.Satisfied){
+          Log.debug("dependencies satisfied!")
+        } else {
+          Log.debug("dependencies unsatisfied")
+        }
+
+        if(changeResult.status == ChangeStatus.Satisfied){
+          Log.debug("changes satisfied")
+        } else {
+          Log.debug("changes unsatisfied")
+        }
+
         if(dependencyResult.status == DependencyStatus.Satisfied && changeResult.status == ChangeStatus.Satisfied){
           //plugin is now ready to launch
           if(dependencyResult.data.isDefined && changeResult.data.isDefined){
@@ -204,9 +235,19 @@ class DefaultPluginManager extends PluginManager{
     */
   def checkAndGetDependencies(dependencies:Array[String], context:Context):DependencyResult = {
     val mutableHashmap = new scala.collection.mutable.HashMap[String,String]
+    Log.debug("checking and getting the dependencies..")
+
+    if(dependencies.length > 1){
+      Log.debug("dependencies less than 1! automatically satisfied")
+      return DependencyResult(DependencyStatus.Satisfied, Some(mutableHashmap.toMap))
+    } else {
+      Log.debug("dependencies more than 1! checking..")
+    }
 
     //provide access to the dependencies and add them to the current dependencies
     for(dependency <- dependencies){
+
+      Log.debug("checking dependency: " + dependency)
 
       //dynamic dependencies need to be resolved first
       if(dependency == PluginManagerConstant.DynamicDependency){

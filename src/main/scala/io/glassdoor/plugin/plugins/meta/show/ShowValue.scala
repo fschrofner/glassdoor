@@ -9,7 +9,7 @@ import io.glassdoor.plugin.{DynamicValues, Plugin}
   */
 class ShowValue extends Plugin {
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
-    Log.debug("apply show callled")
+    Log.debug("apply show called")
 
     if(parameters.length > 0){
       val value = data.get(parameters(0))
@@ -33,9 +33,11 @@ class ShowValue extends Plugin {
     */
   override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
     if(parameters.length > 0){
+      Log.debug("more than 0 parameters specified")
       DynamicValues(uniqueId, Some(Array(parameters(0))),None)
     } else {
-      DynamicValues(uniqueId, None, None)
+      Log.debug("no parameters specified")
+      DynamicValues(uniqueId, Some(Array[String]()), None)
     }
   }
 

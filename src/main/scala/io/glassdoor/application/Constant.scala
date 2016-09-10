@@ -11,4 +11,8 @@ object Constant {
     val RegexPatternDex = """^.*\.[Dd][Ee][Xx]$"""
     val RegexPatternEmail = """.+@.+\..{2,}"""
   }
+
+  object Parameter {
+    val Any = "*"
+  }
 }
