@@ -42,7 +42,7 @@ class DefaultPluginManager extends PluginManager{
   override def findPlugin(pluginName: String): Array[String] = {
     val pluginList = mLoadedPlugins.valuesIterator.toList
     val nameList = pluginList.map(x => x.name)
-    
+
     if(pluginName == Constant.Parameter.Any){
       return nameList.toArray
     } else {
@@ -239,11 +239,11 @@ class DefaultPluginManager extends PluginManager{
     val mutableHashmap = new scala.collection.mutable.HashMap[String,String]
     Log.debug("checking and getting the dependencies..")
 
-    if(dependencies.length > 1){
+    if(dependencies.length < 1){
       Log.debug("dependencies less than 1! automatically satisfied")
       return DependencyResult(DependencyStatus.Satisfied, Some(mutableHashmap.toMap))
     } else {
-      Log.debug("dependencies more than 1! checking..")
+      Log.debug("dependencies more or equal 1! checking..")
     }
 
     //provide access to the dependencies and add them to the current dependencies
@@ -263,6 +263,7 @@ class DefaultPluginManager extends PluginManager{
           Log.debug("dependency in change! can not safely launch plugin!")
           return DependencyResult(DependencyStatus.InUse, None)
         } else {
+          Log.debug("dependency: " + dependency + " satisfied")
           mutableHashmap.put(dependency, value.get)
         }
       } else {

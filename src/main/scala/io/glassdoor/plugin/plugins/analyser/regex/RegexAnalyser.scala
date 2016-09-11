@@ -362,6 +362,8 @@ class RegexAnalyser extends Plugin{
     Log.debug("calling regex with input array..")
 
     for(input <- inputs){
+      Log.debug("trying to get value for: " + input)
+
       val path = data.get(input)
 
       if(path.isDefined){
@@ -381,7 +383,8 @@ class RegexAnalyser extends Plugin{
           callSearchWithInputFile(path.get, src, dest, data)
         }
       } else {
-        setErrorMessage("input path is not defined in data")
+        Log.debug("path was not handed over in data")
+        setErrorMessage("error: input path is not defined in data")
       }
     }
   }
