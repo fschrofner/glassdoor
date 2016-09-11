@@ -3,7 +3,7 @@ package io.glassdoor.plugin.manager
 import java.util.Map.Entry
 
 import akka.actor.{Actor, ActorRef}
-import io.glassdoor.application.{Context, ContextConstant, Log}
+import io.glassdoor.application.{Constant, Context, ContextConstant, Log}
 import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.interface.UserInterfaceConstant
@@ -66,6 +66,11 @@ trait PluginManager extends Actor {
 
   def requestContextUpdate():Unit = {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ContextUpdateRequestPluginManager,None)))
+  }
+
+  def printInstalledPlugins():Unit = {
+    printInUserInterface(findPlugin(Constant.Parameter.Any).mkString(sys.props("line.separator")))
+    readyForNewInput()
   }
 
   override def receive = {
@@ -136,6 +141,8 @@ trait PluginManager extends Actor {
             val plugin = data.get.asInstanceOf[String]
             showHelpForPlugin(plugin)
           }
+        case PluginManagerConstant.Action.ShowPluginList =>
+          printInstalledPlugins()
       }
   }
 }
@@ -156,6 +163,7 @@ object PluginManagerConstant {
     val ContextUpdate = "contextUpdate"
     val DynamicValueUpdate = "dynamicValueUpdate"
     val ShowPluginHelp = "showPluginHelp"
+    val ShowPluginList = "showPluginList"
   }
 
   object PluginErrorCode {

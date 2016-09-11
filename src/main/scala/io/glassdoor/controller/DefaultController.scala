@@ -159,6 +159,10 @@ class DefaultController extends Controller{
     updateAvailableResources()
   }
 
+  override def handlePluginList(): Unit = {
+    forwardPluginList()
+  }
+
   //  def launchPluginTest(): Unit ={
   //    val pluginManager = new DefaultPluginManager
   //    pluginManager.loadDefaultPlugins(context)

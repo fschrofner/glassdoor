@@ -111,6 +111,8 @@ class CommandLineInterface extends UserInterface {
         } else {
           EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ShowPluginHelp, Some(""))))
         }
+      } else if(input.get.name == "list"){
+        EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ShowPluginList, None)))
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
         if(mConsole.isDefined){

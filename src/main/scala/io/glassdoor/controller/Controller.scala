@@ -33,6 +33,7 @@ trait Controller extends Actor {
   def handleWaitForInput():Unit
   def handleUiPrint(message:String):Unit
   def handlePluginHelp(plugin:String):Unit
+  def handlePluginList():Unit
 
   def applyPlugin(pluginName: String, parameters:Array[String]):Unit = {
     if(mContext.isDefined){
@@ -109,6 +110,10 @@ trait Controller extends Actor {
 
   def forwardHelpForPlugin(plugin:String):Unit = {
     EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginHelp, Some(plugin))))
+  }
+
+  def forwardPluginList():Unit = {
+    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginList, None)))
   }
 
   def setup():Unit = {
@@ -209,6 +214,8 @@ trait Controller extends Actor {
             val plugin = data.get.asInstanceOf[String]
             handlePluginHelp(plugin)
           }
+        case ControllerConstant.Action.ShowPluginList =>
+          handlePluginList()
       }
   }
 
@@ -234,5 +241,6 @@ object ControllerConstant {
     val WaitForInput = "waitForInput"
     val PrintInUi = "printInUi"
     val ShowPluginHelp = "showPluginHelp"
+    val ShowPluginList = "showPluginList"
   }
 }
