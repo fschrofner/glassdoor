@@ -147,11 +147,11 @@ class CommandLineInterface extends UserInterface {
 
   override def print(message: String): Unit = {
     Log.debug("commandline interface received print")
-    if(mConsoleOutput.isDefined){
+    if(mConsoleOutput.isDefined && mConsole.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
       mConsoleOutput.get.append(message + newLine).flush()
-      //TODO: can't print when waiting for line..
+      //TODO: make sure that prompt is not overwritten here!
     } else {
       Log.debug("error: mConsole not defined")
     }
@@ -286,7 +286,6 @@ class CommandLineInterface extends UserInterface {
       }
 
       console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
-      //mConsoleOutput.get.append(newLine).flush()
     }
   }
 
@@ -321,18 +320,17 @@ class CommandLineInterface extends UserInterface {
     }
 
     if(mConsoleOutput.isDefined){
-
       error match {
         case PluginErrorCode.DependenciesNotSatisfied =>
           if(data.isDefined){
-            mConsoleOutput.get.append("error: dependency not satisfied: " + data.get.asInstanceOf[String] + newLine).flush()
+            print("error: dependency not satisfied: " + data.get.asInstanceOf[String])
           }
         case PluginErrorCode.DependenciesInChange =>
           if(data.isDefined){
-            mConsoleOutput.get.append("error: dependency in change: " + data.get.asInstanceOf[String] + newLine).flush()
+            print("error: dependency in change: " + data.get.asInstanceOf[String])
           }
         case PluginErrorCode.PluginNotFound =>
-          mConsoleOutput.get.append("error: plugin not found!" + newLine).flush()
+          print("error: plugin not found!")
       }
     }
 
@@ -344,10 +342,10 @@ class CommandLineInterface extends UserInterface {
       error match {
         case ResourceErrorCode.ResourceAlreadyInstalled =>
           if(resource.isDefined){
-            mConsoleOutput.get.append("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]" + newLine).flush()
+            print("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
           }
         case ResourceErrorCode.ResourceNotFound =>
-          mConsoleOutput.get.append("error: resource not found!" + newLine).flush()
+          print("error: resource not found!")
       }
     }
 
@@ -364,8 +362,11 @@ class CommandLineInterface extends UserInterface {
     mPluginsShowingProgress = Array()
 
     if(mCommandLineReader.isDefined){
+      Log.debug("command line reader defined")
       val commandLineReader = mCommandLineReader.get
       commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
+    } else {
+      Log.debug("command line reader not defined")
     }
   }
 

@@ -26,6 +26,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
           initialise()
         }
       case CommandLineReaderConstant.Action.read =>
+        Log.debug("commandlinereader received read action")
         readLine()
     }
   }
@@ -49,6 +50,8 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
 
       //make sure not to overwrite an existing line
       console.drawLine()
+
+      //TODO: sometimes the prompt line is not resetted correctly?
       console.resetPromptLine("","",-1)
       console.setPrompt(">")
 

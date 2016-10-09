@@ -4,7 +4,14 @@ appender("CONSOLE", ConsoleAppender) {
   }
 }
 
-root(OFF, ["CONSOLE"])
+appender("FILE", FileAppender) {
+    file = "./logs/glassdoor.log"
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{HH:mm:ss.SSS} [%-5level] %msg%n"
+    }
+}
+
+root(DEBUG, ["FILE"])
 
 logger("jadx", OFF)
 logger("j", OFF)
