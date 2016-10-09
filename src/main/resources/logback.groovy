@@ -4,7 +4,7 @@ appender("CONSOLE", ConsoleAppender) {
   }
 }
 
-root(DEBUG, ["CONSOLE"])
+root(OFF, ["CONSOLE"])
 
 logger("jadx", OFF)
 logger("j", OFF)

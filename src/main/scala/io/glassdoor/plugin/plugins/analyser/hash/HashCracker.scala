@@ -31,7 +31,7 @@ class HashCracker extends Plugin{
         return DynamicValues(uniqueId, Some(Array[String](mHashCrackerOptions.dictionary.get)),None)
       }
     }
-    DynamicValues(uniqueId, Some(Array[String]()),None)
+    DynamicValues(uniqueId, Some(Array[String]()), None)
   }
 
   /**

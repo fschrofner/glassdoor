@@ -243,8 +243,11 @@ class DefaultPluginManager extends PluginManager{
       Log.debug("dependencies less than 1! automatically satisfied")
       return DependencyResult(DependencyStatus.Satisfied, Some(mutableHashmap.toMap))
     } else {
-      Log.debug("dependencies more or equal 1! checking..")
+      Log.debug("dependencies size: " + dependencies.length + " checking..")
     }
+
+    //save first error result, when an error is encountered
+    var errorResult:Option[DependencyResult] = None;
 
     //provide access to the dependencies and add them to the current dependencies
     for(dependency <- dependencies){
@@ -253,6 +256,8 @@ class DefaultPluginManager extends PluginManager{
 
       //dynamic dependencies need to be resolved first
       if(dependency == PluginManagerConstant.DynamicDependency){
+        Log.debug("dynamic dependency, needs to be resolved first")
+        //instantly return here, dependency needs to be resolved!
         return DependencyResult(DependencyStatus.Dynamic, None)
       }
 
@@ -261,19 +266,24 @@ class DefaultPluginManager extends PluginManager{
       if(value.isDefined) {
         if (mChangingValues.contains(dependency)) {
           Log.debug("dependency in change! can not safely launch plugin!")
-          return DependencyResult(DependencyStatus.InUse, None)
+          if(errorResult.isEmpty) errorResult = Some(DependencyResult(DependencyStatus.InUse, None))
         } else {
           Log.debug("dependency: " + dependency + " satisfied")
           mutableHashmap.put(dependency, value.get)
         }
       } else {
-        //there might be multiple dependencies, that are not satisfied, but it already stops at the first mismatch
+        //there might be multiple dependencies, that are not satisfied, but it only saves the first mismatch
         Log.debug("dependency: " + dependency + " not satisfied!")
-        return DependencyResult(DependencyStatus.Unsatisfied, Some(dependency))
+        if(errorResult.isEmpty) errorResult = Some(DependencyResult(DependencyStatus.Unsatisfied, Some(dependency)))
       }
     }
 
-    DependencyResult(DependencyStatus.Satisfied, Some(mutableHashmap.toMap))
+    //if there has been an error
+    if(errorResult.isDefined){
+      return errorResult.get;
+    } else {
+      DependencyResult(DependencyStatus.Satisfied, Some(mutableHashmap.toMap))
+    }
   }
 
   def checkAndGetChangedValues(changes:Array[String], context:Context):ChangeResult = {
@@ -471,7 +481,7 @@ class DefaultPluginManager extends PluginManager{
     for(plugin <- mPluginQueue){
       if(plugin.id.isDefined && dynamicValues.uniqueId.isDefined && plugin.id.get == dynamicValues.uniqueId.get){
         if(dynamicValues.dependencies.isDefined){
-          //delete the dynamic dependency
+          //delete the dynamic dependencies
           plugin.dependencies = plugin.dependencies.filterNot(_ == PluginManagerConstant.DynamicDependency)
           //append the resolved dependencies
           plugin.dependencies ++= dynamicValues.dependencies.get

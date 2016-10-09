@@ -315,10 +315,13 @@ class RegexAnalyser extends Plugin{
         if(resultCode.isDefined){
           Log.debug("result code: " + resultCode.get)
           if(resultCode.get == 1 && mRegexOptions.searchBackend == RegexSearchBackend.Grep){
+            Log.debug("was issuing grep command, result code of 1 means no lines were selected")
             //with grep result code of 1 means, that no lines were selected (see documentation)
             //TODO: check for other backends
             val result = HashMap[String,String](dest -> outputFile.getParent)
             mResult = Some(result)
+          } else {
+            Log.debug("result code of 1 equals an error!")
           }
         } else {
           Log.debug("no result code")

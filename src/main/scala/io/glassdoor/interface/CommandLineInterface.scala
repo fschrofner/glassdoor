@@ -307,6 +307,13 @@ class CommandLineInterface extends UserInterface {
 
   override def waitForInput(): Unit = {
     Log.debug("wait for input called!")
+
+    //cancel animations that might be still going on
+    if(mAnimationTask.isDefined){
+      mAnimationTask.get.cancel()
+      mAnimationTask = None
+    }
+
     if(mCommandLineReader.isDefined){
       val commandLineReader = mCommandLineReader.get
       commandLineReader ! CommandLineMessage(CommandLineReaderConstant.Action.read, None)
