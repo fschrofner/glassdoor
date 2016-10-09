@@ -87,7 +87,7 @@ class RegexAnalyser extends Plugin{
 
         showEndlessProgress()
         callSearchWithRegex(regex,src,dest, data)
-      } else {
+      } else if(parameters.length > 3){
         Log.debug("additional parameters specified, need to parse..")
 
         //convert to parameter keymap and iterate
@@ -181,6 +181,9 @@ class RegexAnalyser extends Plugin{
         } else {
           setErrorMessage("parameters could not be parsed!")
         }
+      } else {
+        setErrorMessage("error: not enough arguments")
+        mResult = None
       }
     } catch {
       case e: ArrayIndexOutOfBoundsException =>

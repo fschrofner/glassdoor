@@ -16,7 +16,10 @@ import io.glassdoor.resource.Resource
 import jline.{Terminal, UnixTerminal}
 import jline.console.ConsoleReader
 import jline.console.completer.StringsCompleter
-
+import org.fusesource.jansi.AnsiConsole
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.Ansi.Color
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
@@ -28,7 +31,7 @@ class CommandLineInterface extends UserInterface {
   var mConsole:Option[ConsoleReader] = None
   var mCompleter:Option[StringsCompleter] = None
   var mCommandLineReader:Option[ActorRef] = None
-  var mCounter = 0
+  var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()
 
   //TODO: there can be mutliple animations going on!
   var mAnimationTask:Option[Cancellable] = None
@@ -53,6 +56,8 @@ class CommandLineInterface extends UserInterface {
     Log.debug("initialising interface..")
 
     val console = new ConsoleReader()
+
+    AnsiConsole.systemInstall()
 
     console.getTerminal.init()
     //console.clearScreen() //TODO: uncomment
@@ -159,17 +164,52 @@ class CommandLineInterface extends UserInterface {
 
   override def showEndlessProgress(taskInstance: PluginInstance): Unit = {
     Log.debug("commandline interface: showing endless progress")
+    //TODO: check if endless progress is already shown for that plugin
+    mPluginsShowingProgress = mPluginsShowingProgress :+ PluginProgress(taskInstance, 0, true)
+
     if(mConsole.isDefined){
       Log.debug("console defined")
-      //val console = mConsole.get
-      val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateEndlessProgress(taskInstance))
-      mAnimationTask = Some(handle)
+      //stop animation task, if there is already one going on
+      stopProgressUpdates()
+      startProgressUpdates()
+
     } else {
       Log.debug("error: console not defined!")
     }
   }
 
-  def updateEndlessProgress(taskInstance: PluginInstance):Unit = {
+  def startProgressUpdates(): Unit ={
+    val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateProgresses())
+    mAnimationTask = Some(handle)
+  }
+
+  def stopProgressUpdates(): Unit ={
+    if(mAnimationTask.isDefined){
+      mAnimationTask.get.cancel()
+      mAnimationTask = None
+    }
+  }
+
+  def updateProgresses():Unit = {
+    val stringBuilder = new StringBuilder
+    for(pluginProgress <- mPluginsShowingProgress){
+      if(pluginProgress.endlessProgress){
+        val result = updateEndlessProgress(pluginProgress.pluginInstance, pluginProgress.progress)
+        pluginProgress.progress = result.progressValue
+        stringBuilder.append(result.progressString)
+      } else {
+        //TODO
+      }
+    }
+
+    if(mConsole.isDefined){
+      val console = mConsole.get
+      //TODO: do some fancy ansi stuff here (or maybe above), to update multiple lines?
+      console.resetPromptLine("",stringBuilder.toString(),-1)
+    }
+  }
+
+  def updateEndlessProgress(taskInstance: PluginInstance, counter:Int):UpdateProgressResult = {
     if(mConsole.isDefined){
       val console = mConsole.get
       val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
@@ -178,8 +218,8 @@ class CommandLineInterface extends UserInterface {
       stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
 
       for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
-        if((i > mCounter && i <= mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
-          || (i < (mCounter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
+        if((i > counter && i <= counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
+          || (i < (counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
           stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
         } else {
           stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
@@ -197,13 +237,18 @@ class CommandLineInterface extends UserInterface {
 
       //TODO: need to do something here
       //TODO: multithreading will not work here
-      console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
+      //console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
 
-      mCounter += 1
+      val resultString = infoString + stringBuilder.toString()
+      var resultInt = counter + 1
 
-      if(mCounter >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
-        mCounter = 0
+      if(resultInt >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        resultInt = 0
       }
+
+      UpdateProgressResult(resultString, resultInt)
+    } else {
+      UpdateProgressResult("", 0)
     }
   }
 
@@ -212,7 +257,6 @@ class CommandLineInterface extends UserInterface {
 
     if(mConsole.isDefined){
       stopAnimation(taskInstance)
-      mCounter = 0
 
       //show completed task
       val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
@@ -257,10 +301,11 @@ class CommandLineInterface extends UserInterface {
   }
 
   def stopAnimation(taskInstance: PluginInstance):Unit = {
-    //TODO: stop correct animation
-    if(mAnimationTask.isDefined){
-      mAnimationTask.get.cancel()
-      mAnimationTask = None
+    mPluginsShowingProgress = mPluginsShowingProgress.filterNot(_.pluginInstance.uniqueId == taskInstance.uniqueId)
+    stopProgressUpdates()
+
+    if(mPluginsShowingProgress.size > 0){
+      startProgressUpdates()
     }
   }
 
@@ -309,10 +354,8 @@ class CommandLineInterface extends UserInterface {
     Log.debug("wait for input called!")
 
     //cancel animations that might be still going on
-    if(mAnimationTask.isDefined){
-      mAnimationTask.get.cancel()
-      mAnimationTask = None
-    }
+    stopProgressUpdates()
+    mPluginsShowingProgress = Array()
 
     if(mCommandLineReader.isDefined){
       val commandLineReader = mCommandLineReader.get
@@ -323,6 +366,8 @@ class CommandLineInterface extends UserInterface {
 }
 
 case class CommandLineMessage(action: String, data:Option[Any])
+case class PluginProgress(pluginInstance: PluginInstance, var progress:Int, endlessProgress:Boolean)
+case class UpdateProgressResult(progressString:String, progressValue:Int)
 
 object CommandLineInterfaceConstant {
   object Action {
