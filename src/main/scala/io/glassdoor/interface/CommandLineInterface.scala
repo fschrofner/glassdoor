@@ -1,6 +1,6 @@
 package io.glassdoor.interface
 
-import java.io.PrintWriter
+import java.io.{PrintWriter, Writer}
 import java.util.concurrent.TimeUnit
 import javax.smartcardio.TerminalFactory
 
@@ -19,6 +19,7 @@ import jline.console.completer.StringsCompleter
 import org.fusesource.jansi.AnsiConsole
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
+
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -28,13 +29,19 @@ import scala.concurrent.duration.Duration
   */
 class CommandLineInterface extends UserInterface {
 
+  //mConsoleOutput should be used for simple outputs, that will not change
+  //while mConsole should be used for lines that will be updated
   var mConsole:Option[ConsoleReader] = None
+  var mConsoleOutput:Option[Writer] = None
+
   var mCompleter:Option[StringsCompleter] = None
   var mCommandLineReader:Option[ActorRef] = None
   var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()
 
   //TODO: there can be mutliple animations going on!
   var mAnimationTask:Option[Cancellable] = None
+
+  val newLine = sys.props("line.separator")
 
 
   override def receive: PartialFunction[Any, Unit] = {
@@ -62,6 +69,7 @@ class CommandLineInterface extends UserInterface {
     console.getTerminal.init()
     //console.clearScreen() //TODO: uncomment
     console.setPrompt(">")
+    mConsoleOutput = Some(console.getOutput)
 
     mConsole = Some(console)
 
@@ -131,8 +139,6 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
-
-
 //  def setupAutoComplete():Unit = {
 //    //TODO: handover all possible commands (system commands + plugins + aliases)
 //    val completer = new StringsCompleter()
@@ -141,10 +147,10 @@ class CommandLineInterface extends UserInterface {
 
   override def print(message: String): Unit = {
     Log.debug("commandline interface received print")
-    if(mConsole.isDefined){
+    if(mConsoleOutput.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
-      mConsole.get.println(message)
+      mConsoleOutput.get.append(message + newLine).flush()
       //TODO: can't print when waiting for line..
     } else {
       Log.debug("error: mConsole not defined")
@@ -152,11 +158,12 @@ class CommandLineInterface extends UserInterface {
   }
 
   override def showPluginList(plugins: Array[PluginInstance]): Unit = {
-    if(mConsole.isDefined){
-      val console = mConsole.get
+    if(mConsoleOutput.isDefined){
+      val console = mConsoleOutput.get
       for(plugin:PluginInstance <- plugins){
-        console.println(plugin.kind + ":" + plugin.name)
+        console.append(plugin.kind + ":" + plugin.name + newLine)
       }
+      console.flush()
     }
   }
 
@@ -169,10 +176,9 @@ class CommandLineInterface extends UserInterface {
 
     if(mConsole.isDefined){
       Log.debug("console defined")
-      //stop animation task, if there is already one going on
+      //restart progress updates
       stopProgressUpdates()
       startProgressUpdates()
-
     } else {
       Log.debug("error: console not defined!")
     }
@@ -255,7 +261,7 @@ class CommandLineInterface extends UserInterface {
   override def taskCompleted(taskInstance: PluginInstance): Unit = {
     Log.debug("interface received task completed")
 
-    if(mConsole.isDefined){
+    if(mConsole.isDefined && mConsoleOutput.isDefined){
       stopAnimation(taskInstance)
 
       //show completed task
@@ -280,7 +286,7 @@ class CommandLineInterface extends UserInterface {
       }
 
       console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
-      console.println()
+      //mConsoleOutput.get.append(newLine).flush()
     }
   }
 
@@ -314,19 +320,19 @@ class CommandLineInterface extends UserInterface {
       stopAnimation(taskInstance.get)
     }
 
-    if(mConsole.isDefined){
+    if(mConsoleOutput.isDefined){
 
       error match {
         case PluginErrorCode.DependenciesNotSatisfied =>
           if(data.isDefined){
-            mConsole.get.println("error: dependency not satisfied: " + data.get.asInstanceOf[String])
+            mConsoleOutput.get.append("error: dependency not satisfied: " + data.get.asInstanceOf[String] + newLine).flush()
           }
         case PluginErrorCode.DependenciesInChange =>
           if(data.isDefined){
-            mConsole.get.println("error: dependency in change: " + data.get.asInstanceOf[String])
+            mConsoleOutput.get.append("error: dependency in change: " + data.get.asInstanceOf[String] + newLine).flush()
           }
         case PluginErrorCode.PluginNotFound =>
-          mConsole.get.println("error: plugin not found!")
+          mConsoleOutput.get.append("error: plugin not found!" + newLine).flush()
       }
     }
 
@@ -334,14 +340,14 @@ class CommandLineInterface extends UserInterface {
   }
 
   override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {
-    if(mConsole.isDefined){
+    if(mConsoleOutput.isDefined){
       error match {
         case ResourceErrorCode.ResourceAlreadyInstalled =>
           if(resource.isDefined){
-            mConsole.get.println("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
+            mConsoleOutput.get.append("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]" + newLine).flush()
           }
         case ResourceErrorCode.ResourceNotFound =>
-          mConsole.get.print("error: resource not found!")
+          mConsoleOutput.get.append("error: resource not found!" + newLine).flush()
       }
     }
 

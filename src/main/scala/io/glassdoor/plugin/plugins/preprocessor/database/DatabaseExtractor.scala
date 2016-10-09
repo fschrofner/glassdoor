@@ -26,7 +26,7 @@ class DatabaseExtractor extends Plugin{
   override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
 
-    if(parameterArray.isDefined){
+    if(parameterArray.isDefined && parameterArray.get.length >= 2){
       handleParameters(parameterArray.get)
 
       var inputDescriptor:Option[Array[String]] = None
@@ -43,7 +43,7 @@ class DatabaseExtractor extends Plugin{
       return DynamicValues(uniqueId, inputDescriptor, outputDescriptor)
     }
 
-    DynamicValues(uniqueId, None, None)
+    DynamicValues(uniqueId, Some(Array[String]()), Some(Array[String]()))
   }
 
   /**
@@ -56,7 +56,7 @@ class DatabaseExtractor extends Plugin{
     Log.debug("apply database extractor called")
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
 
-    if(parameterArray.isDefined){
+    if(parameterArray.isDefined && parameterArray.get.length >= 2){
       handleParameters(parameterArray.get)
 
       if(mDatabaseExtractorOptions.inputDescriptor.isDefined && mDatabaseExtractorOptions.outputDescriptor.isDefined){
@@ -83,7 +83,12 @@ class DatabaseExtractor extends Plugin{
         }
       }
     } else {
-      setErrorMessage("error: could not parse parameters")
+      mResult = None
+      if(parameterArray.isDefined){
+        setErrorMessage("error: not enough parameters")
+      } else {
+        setErrorMessage("error: could not parse parameters")
+      }
     }
 
     ready()

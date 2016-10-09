@@ -26,10 +26,15 @@ class Extractor extends Plugin{
     * None values will be ignored, to change your dynamic dependency to an empty dependency wrap an empty string array in Some = Some(Array[String]()).
     */
   override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
-    DynamicValues(uniqueId, Some(Array[String](parameters(1))), Some(Array[String](parameters(2))))
+    if(parameters.length > 0){
+      DynamicValues(uniqueId, Some(Array[String](parameters(1))), Some(Array[String](parameters(2))))
+    } else {
+      DynamicValues(uniqueId, Some(Array[String]()), Some(Array[String]()))
+    }
   }
 
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
+    Log.debug("apply extractor called, size of parameters: " + parameters.length)
 
     try {
       //get source
@@ -63,14 +68,13 @@ class Extractor extends Plugin{
       }
     } catch {
       case e:ArrayIndexOutOfBoundsException =>
+        Log.debug("array index out of bounds, not enough arguments")
         setErrorMessage("error: not enough parameters")
         mResult = None
     } finally {
       Log.debug("extractor ready")
       ready()
     }
-
-
   }
 
   def extract(source: String, regex: String, targetFolder: String) = {

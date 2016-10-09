@@ -73,6 +73,7 @@ class DefaultPluginManager extends PluginManager{
 
 
   override def handlePluginFailure(pluginId: Long, errorMessage: Option[String]): Unit = {
+    Log.debug("plugin failed, handling error..")
     val matchingPlugin = getRunningPluginInstance(pluginId)
 
     if(matchingPlugin.isDefined){
@@ -82,6 +83,7 @@ class DefaultPluginManager extends PluginManager{
     mRunningPlugins.remove(pluginId)
 
     if(errorMessage.isDefined){
+      Log.debug("error message is defined, printing error in user interface..")
       printInUserInterface(errorMessage.get)
     }
 

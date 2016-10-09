@@ -31,7 +31,7 @@ class ApkLoader extends Plugin{
         mResult = None
       }
     } else {
-      setErrorMessage("error: not enough arguments!")
+      setErrorMessage("error: not enough parameters")
     }
 
     ready()

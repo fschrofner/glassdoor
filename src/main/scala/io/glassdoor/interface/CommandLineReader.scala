@@ -46,17 +46,14 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
 
     if(mConsole.isDefined){
       val console = mConsole.get
-      mConsole.get.resetPromptLine("","",-1)
-      mConsole.get.setPrompt(">")
+
+      //make sure not to overwrite an existing line
+      console.drawLine()
+      console.resetPromptLine("","",-1)
+      console.setPrompt(">")
 
       val line = console.readLine()
-      //while({line = console.readLine();line} != "exit"){
-        //send line to commandline interface
       mCommandLineInterface ! CommandLineMessage(CommandLineInterfaceConstant.Action.HandleLine, Some(line))
-      //}
-
-      //terminate program
-      //EventBus.publish(MessageEvent(ControllerConstant.channel, Message(ControllerConstant.Action.terminate, None)))
     }
   }
 }
