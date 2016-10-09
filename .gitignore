@@ -9,3 +9,4 @@ out
 .ensime_cache.d
 /#build.gradle#
 .idea
+logs

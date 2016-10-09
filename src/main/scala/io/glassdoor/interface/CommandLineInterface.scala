@@ -150,7 +150,9 @@ class CommandLineInterface extends UserInterface {
     if(mConsoleOutput.isDefined && mConsole.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
+      val prompt = mConsole.get.getPrompt
       mConsoleOutput.get.append(message + newLine).flush()
+      mConsole.get.setPrompt(prompt)
       //TODO: make sure that prompt is not overwritten here!
     } else {
       Log.debug("error: mConsole not defined")
@@ -334,7 +336,7 @@ class CommandLineInterface extends UserInterface {
       }
     }
 
-    waitForInput()
+    //waitForInput()
   }
 
   override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {

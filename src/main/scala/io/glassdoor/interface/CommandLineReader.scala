@@ -53,8 +53,10 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
 
       //TODO: sometimes the prompt line is not resetted correctly?
       console.resetPromptLine("","",-1)
+      Log.debug("resetted prompt line, showing prompt")
       console.setPrompt(">")
 
+      Log.debug("waiting for input..")
       val line = console.readLine()
       mCommandLineInterface ! CommandLineMessage(CommandLineInterfaceConstant.Action.HandleLine, Some(line))
     }

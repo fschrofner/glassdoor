@@ -515,6 +515,7 @@ class DefaultPluginManager extends PluginManager{
     } else {
       Log.debug("error: plugin not found!")
       sendErrorMessage(None, PluginErrorCode.PluginNotFound, None)
+      readyForNewInput()
     }
   }
 
