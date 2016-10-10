@@ -1,13 +1,13 @@
 package io.glassdoor.application
 
-import java.io.File
+import java.io.{File, PrintWriter}
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.Files.copy
 import java.nio.file.Paths.get
 import java.util
 import java.util.Map.Entry
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import com.typesafe.config._
 
 /**
@@ -22,31 +22,55 @@ object Configuration {
     var configFile:File = null
 
     if(configDirEnv.isDefined){
-      configDir = configDirEnv.get + ConfigConstant.Path.ConfigSubDir
+      configDir = configDirEnv.get + ConfigConstant.Path.GlassdoorSubDir
     } else {
-      configDir = ConfigConstant.Path.DefaultConfigDir + ConfigConstant.Path.ConfigSubDir
+      configDir = ConfigConstant.Path.DefaultConfigDir + ConfigConstant.Path.GlassdoorSubDir
     }
 
     configFile = new File(configDir + ConfigConstant.Path.ConfigFileName)
 
     if(!configFile.exists()){
-      configFile.getParentFile.mkdirs()
+      setupDefaultConfig(configFile, configDir)
+    }
+    val config = ConfigFactory.parseFile(configFile)
+    mConfig = Some(config.resolve())
+  }
 
-      //TODO: adapt values in config to match location of alias and plugins configuration
-      Log.debug("resource config file stored in: " + getClass.getResource(ConfigConstant.Path.ConfigFileName).getPath)
 
-      val configResource = getClass.getResourceAsStream(ConfigConstant.Path.ConfigFileName)
-      val aliasResource = getClass.getResourceAsStream(ConfigConstant.Path.AliasFileName)
-      val pluginsResource = getClass.getResourceAsStream(ConfigConstant.Path.PluginsFileName)
+  def setupDefaultConfig(configFile:File, configDir:String): Unit ={
+    configFile.getParentFile.mkdirs()
 
-      copy(configResource, get(configDir + File.separator + ConfigConstant.Path.ConfigFileName), REPLACE_EXISTING)
-      copy(aliasResource, get(configDir + File.separator + ConfigConstant.Path.AliasFileName), REPLACE_EXISTING)
-      copy(pluginsResource, get(configDir + File.separator + ConfigConstant.Path.PluginsFileName), REPLACE_EXISTING)
+    Log.debug("resource config file stored in: " + getClass.getResource(ConfigConstant.Path.ConfigFileName).getPath)
 
-      Log.debug("copied config file to: " + configDir + File.separator + ConfigConstant.Path.ConfigFileName)
+    val configResource = getClass.getResourceAsStream(ConfigConstant.Path.ConfigFileName)
+    val aliasResource = getClass.getResourceAsStream(ConfigConstant.Path.AliasFileName)
+    val pluginsResource = getClass.getResourceAsStream(ConfigConstant.Path.PluginsFileName)
+
+
+    val configPath = configDir + ConfigConstant.Path.ConfigFileName
+    val aliasPath = configDir + ConfigConstant.Path.AliasFileName
+    val pluginsPath = configDir + ConfigConstant.Path.PluginsFileName
+
+    copy(configResource, get(configPath), REPLACE_EXISTING)
+    copy(aliasResource, get(aliasPath), REPLACE_EXISTING)
+    copy(pluginsResource, get(pluginsPath), REPLACE_EXISTING)
+
+    Log.debug("copied config file to: " + configDir + File.separator + ConfigConstant.Path.ConfigFileName)
+
+    //set paths in config file correctly
+    val config = ConfigFactory.parseFile(configFile)
+
+    val adaptedConfig = config.withValue(ConfigConstant.ConfigKey.FullKey.AliasConfigPath,ConfigValueFactory.fromAnyRef(aliasPath)).
+      withValue(ConfigConstant.ConfigKey.FullKey.PluginConfigPath,ConfigValueFactory.fromAnyRef(pluginsPath)).
+      withValue(ConfigConstant.ConfigKey.FullKey.RootDirectory, ConfigValueFactory.fromAnyRef(sys.env("HOME") + ConfigConstant.Path.GlassdoorSubDir))
+
+    new PrintWriter(configFile) {
+      val renderOptions = ConfigRenderOptions.defaults().setComments(false).setOriginComments(false)
+      write(adaptedConfig.root().render(renderOptions))
+      close()
     }
 
-    mConfig = Some(ConfigFactory.parseFile(configFile))
+    Log.debug("adapted paths of alias.conf and plugins.conf inside glassdoor.conf")
   }
 
   def loadConfigIntoContext(context:io.glassdoor.application.Context): Option[Context] ={
@@ -116,7 +140,7 @@ object ConfigConstant {
 
   object Path {
     //TODO: this needs to be adapted dynamically
-    val ConfigSubDir = File.separator + "glassdoor"
+    val GlassdoorSubDir = File.separator + "glassdoor"
     val DefaultConfigDir = sys.env("HOME") + File.separator + ".config"
     val AliasFileName = File.separator + "alias.conf"
     val PluginsFileName = File.separator + "plugins.conf"
@@ -131,6 +155,7 @@ object ConfigConstant {
       val Aliases = "aliases"
       val WorkingDirectory = "workingDirectory"
       val ResourceDirectory = "resourceDirectory"
+      val RootDirectory = "rootDirectory"
       val PluginDirectory = "pluginDirectory"
       val PluginConfigPath = "pluginConfigPath"
       val AliasConfigPath ="aliasConfigPath"
@@ -143,6 +168,7 @@ object ConfigConstant {
       val Aliases = DefaultKey + DescriptorSplit + Key.Aliases
       val WorkingDirectory = DefaultKey + DescriptorSplit + Key.WorkingDirectory
       val ResourceDirectory = DefaultKey + DescriptorSplit + Key.ResourceDirectory
+      val RootDirectory = DefaultKey + DescriptorSplit + Key.RootDirectory
       val PluginDirectory = DefaultKey + DescriptorSplit + Key.PluginDirectory
       val PluginConfigPath = DefaultKey + DescriptorSplit + Key.PluginConfigPath
       val AliasConfigPath = DefaultKey + DescriptorSplit + Key.AliasConfigPath

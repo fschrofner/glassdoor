@@ -75,19 +75,7 @@ class CommandLineInterface extends UserInterface {
 
     startReadingFromCommandline()
 
-//    var line:String = null
 //    setupAutoComplete()
-
-    //loop forever until exit command is called
-    //TODO: write man + store default commands centrally
-    //TODO: this loop blocks akka from receiving more messages
-
-//    while({line = console.readLine();line} != "exit"){
-//      handleLine(line)
-//      println("continue with loop!")
-//    }
-
-    //terminate()
   }
 
   def startReadingFromCommandline():Unit = {
@@ -287,7 +275,13 @@ class CommandLineInterface extends UserInterface {
         stringBuilder.insert(0, " ")
       }
 
-      console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
+      console.resetPromptLine("", "",-1)
+      print(infoString + stringBuilder.toString())
+
+      if(mPluginsShowingProgress.size > 0){
+        startProgressUpdates()
+      }
+      //console.resetPromptLine("", infoString + stringBuilder.toString(),-1)
     }
   }
 
@@ -311,9 +305,7 @@ class CommandLineInterface extends UserInterface {
     mPluginsShowingProgress = mPluginsShowingProgress.filterNot(_.pluginInstance.uniqueId == taskInstance.uniqueId)
     stopProgressUpdates()
 
-    if(mPluginsShowingProgress.size > 0){
-      startProgressUpdates()
-    }
+    //TODO: clear prompt
   }
 
   override def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]): Unit = {
@@ -336,6 +328,9 @@ class CommandLineInterface extends UserInterface {
       }
     }
 
+    if(mPluginsShowingProgress.size > 0){
+      startProgressUpdates()
+    }
     //waitForInput()
   }
 
