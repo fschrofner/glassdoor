@@ -4,6 +4,10 @@
 glassdoor is a modern, autonomous security framework for Android APKs written in [Scala](http://scala-lang.org/).  
 Its purpose is to automatically find backdoors, security flaws and other data leakages in applications running on the Android system, without having any actual access to the code itself.
 
+[![asciicast](https://asciinema.org/a/70clw1ccnwzl1f0aad4byi26x.png)](https://asciinema.org/a/70clw1ccnwzl1f0aad4byi26x)  
+
+It uses a simple commandline interface like depicted above. Each command is realized as plugin, which defines dependencies and values it changes in order to support multithreading. The `complete` command basically uses all available plugins.  
+
 ##Dependencies
 ###Build Dependencies
 Scala
