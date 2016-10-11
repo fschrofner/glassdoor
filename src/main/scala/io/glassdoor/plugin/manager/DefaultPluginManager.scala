@@ -185,9 +185,17 @@ class DefaultPluginManager extends PluginManager{
    */
   def executeNextFromPluginQueue(context:Context):Unit = {
     if(!mPluginQueue.isEmpty){
+      var allDependenciesUnsatisfied = true
+
       for(plugin <- mPluginQueue){
         val dependencyResult = checkAndGetDependencies(plugin.dependencies,context)
         val changeResult = checkAndGetChangedValues(plugin.changes, context)
+
+        //if there is at least one plugin that has not unsatisfied
+        //dependencies for sure, there might be a way..
+        if(dependencyResult.status != DependencyStatus.Unsatisfied){
+          allDependenciesUnsatisfied = false
+        }
 
         if(dependencyResult.status == DependencyStatus.Satisfied){
           Log.debug("dependencies satisfied!")
@@ -223,10 +231,20 @@ class DefaultPluginManager extends PluginManager{
           readyForNewInput()
         }
       }
+
+      if(allDependenciesUnsatisfied && mRunningPlugins.isEmpty){
+        //TODO: clear plugin queue and readyForNewInput
+        mPluginQueue.clear()
+        printInUserInterface("error: some dependencies were not satisfied and there are no running plugins that can provide them")
+        readyForNewInput()
+      }
+
     } else {
       Log.debug("plugin queue is empty!")
     }
   }
+
+
 
   /**
     * Checks if the dependencies are met and only if all dependencies are met and not in use (= dependency status Satisfied), they get returned as Map[String,String].

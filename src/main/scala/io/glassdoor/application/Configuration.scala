@@ -11,11 +11,16 @@ import scala.collection.JavaConverters._
 import com.typesafe.config._
 
 /**
+  * This object handles everything that has to do with the configuration.
   * Created by Florian Schrofner on 3/31/16.
   */
 object Configuration {
   var mConfig:Option[Config] = None
 
+  /**
+    * Loads the config from the path specified in xdg_config_home.
+    * If not specified, the default path $HOME/.config/glassdoor is used
+    */
   def loadConfig():Unit = {
     val configDirEnv = sys.env.get("XDG_CONFIG_HOME")
     var configDir:String = null
@@ -30,15 +35,22 @@ object Configuration {
     configFile = new File(configDir + ConfigConstant.Path.ConfigFileName)
 
     if(!configFile.exists()){
-      setupDefaultConfig(configFile, configDir)
+      setupDefaultConfig(configFile)
     }
     val config = ConfigFactory.parseFile(configFile)
     mConfig = Some(config.resolve())
   }
 
-
-  def setupDefaultConfig(configFile:File, configDir:String): Unit ={
+  /**
+    * This method should be called, if there is no config file yet.
+    * It will create a new configuration file at the specified location.
+    * Additionally it will copy the default plugins and alias configuration to the same directory
+    * and adapt the config file accordingly.
+    * @param configFile
+    */
+  def setupDefaultConfig(configFile:File): Unit ={
     configFile.getParentFile.mkdirs()
+    val configDir = configFile.getParentFile.getAbsolutePath
 
     Log.debug("resource config file stored in: " + getClass.getResource(ConfigConstant.Path.ConfigFileName).getPath)
 

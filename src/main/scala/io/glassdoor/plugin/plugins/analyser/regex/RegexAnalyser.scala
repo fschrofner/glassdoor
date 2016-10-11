@@ -312,7 +312,7 @@ class RegexAnalyser extends Plugin{
         val result = HashMap[String,String](dest -> outputFile.getParent)
         mResult = Some(result)
       } else {
-        setErrorMessage("error: when issuing regex search")
+        setErrorMessage("error: no results when issuing regex search")
         val resultCode = executor.getResultCode
         val error = executor.getErrorOutput
         if(resultCode.isDefined){

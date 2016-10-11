@@ -5,7 +5,17 @@ import io.glassdoor.application.ParameterType.ParameterType
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+/**
+  * Object used to parse commands and split parameters into different parameter types.
+  */
 object CommandInterpreter {
+
+  /**
+    * Interprets the given string and returns a command object, when parsed successfully.
+    * @param input the command as string
+    * @param placeholderParameters there might be placeholders in the command, these should be replaced (not implemented yet, just handover None or nothing).
+    * @return if successful Some containing a Command, None otherwise
+    */
   def interpret(input:String, placeholderParameters:Option[String] = None):Option[Command] = {
     try {
       //TODO: also handle spaces in quotes!! (regex maybe?)
@@ -28,6 +38,12 @@ object CommandInterpreter {
 
   }
 
+  /**
+    * Parses the given String array and returns an array of Parameters which
+    * contain the correct parameter type and values associated with the parameter.
+    * @param input array of already split parameter values
+    * @return array of categorized parameters containing the values
+    */
   def parseToParameterArray(input:Array[String]):Option[Array[Parameter]]={
     val buffer = ArrayBuffer.empty[Parameter]
 
