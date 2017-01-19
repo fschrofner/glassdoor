@@ -173,6 +173,7 @@ object ConfigConstant {
       val AliasConfigPath ="aliasConfigPath"
       val PluginRepository = "pluginRepository"
       val ResourceRepository = "resourceRepository"
+      val EmulatorRepositoryPath = "emulatorRepositoryPath"
     }
 
     object FullKey {
@@ -186,6 +187,7 @@ object ConfigConstant {
       val AliasConfigPath = DefaultKey + DescriptorSplit + Key.AliasConfigPath
       val PluginRepository = DefaultKey + DescriptorSplit + Key.PluginRepository
       val ResourceRepository = DefaultKey + DescriptorSplit + Key.ResourceRepository
+      val EmulatorRepositoryPath = DefaultKey + DescriptorSplit + Key.EmulatorRepositoryPath
     }
 
   }

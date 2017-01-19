@@ -11,7 +11,7 @@ appender("FILE", FileAppender) {
     }
 }
 
-root(OFF, ["FILE"])
+root(DEBUG, ["CONSOLE"])
 
 logger("jadx", OFF)
 logger("j", OFF)

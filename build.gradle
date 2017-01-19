@@ -30,7 +30,7 @@ dependencies {
     compile 'jline:jline:2.12'
     compile 'org.fusesource.jansi:jansi:1.14'
     compile 'fr.inria.gforge.spoon:spoon-core:5.1.1'
-    compile 'com.github.fschrofner:jadx-jitpack:v0.6.1-dev2'
+    compile 'com.github.fschrofner:jadx-jitpack:v0.6.1'
 }
 
 task wrapper(type: Wrapper) {
