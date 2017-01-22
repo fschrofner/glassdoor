@@ -1,6 +1,6 @@
 package io.glassdoor.plugin.plugins.emulator
 
-import io.glassdoor.application.{ContextConstant, Log, SystemCommandExecutor}
+import io.glassdoor.application.{AdbCommand, ContextConstant, Log, SystemCommandExecutor}
 import io.glassdoor.plugin.Plugin
 
 import scala.collection.immutable.HashMap
@@ -41,7 +41,16 @@ class Emulator extends Plugin {
         errorMessage = executor.getErrorOutput
       }
 
+      //just testing adb connection here
       Log.debug("emulator ready")
+      var adbCommand = new AdbCommand("whoami", x => Log.debug("received whoami output in emulator: " + x))
+      adbCommand.execute()
+
+      adbCommand = new AdbCommand("echo testForAdb", x => Log.debug("received echo output in emulator: " + x))
+      adbCommand.execute()
+
+      adbCommand = new AdbCommand("touch /sdcard/Download/THISISATEST", x => Log.debug("received touch output in emulator: " + x))
+      adbCommand.execute()
     } else {
       Log.debug("emulator path undefined")
       errorMessage = Some("error: emulator repository path not defined inside config!")
