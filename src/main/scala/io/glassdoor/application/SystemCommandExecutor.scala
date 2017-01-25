@@ -1,5 +1,6 @@
 package io.glassdoor.application
 
+import scala.collection.mutable.ArrayBuffer
 import scala.sys.process.ProcessLogger
 import scala.sys.process._
 
@@ -43,13 +44,42 @@ class SystemCommandExecutor {
     }
   }
 
+  def executeSystemCommandInBackground(command:Seq[String]): Option[Process] = {
+    try {
+      var result: Option[String] = None
+
+      val stdout = new StringBuilder
+      val stderr = new StringBuilder
+
+      mStdOut = Some(stdout)
+      mStdErr = Some(stderr)
+
+      val newLine = sys.props("line.separator")
+
+      val shellCommand = ArrayBuffer[String]()
+      shellCommand.append("sh")
+      shellCommand.append("-c")
+      shellCommand.append(command.mkString(" "))
+
+      val processLogger = ProcessLogger(line => stdout.append(line + newLine),
+        line => stderr.append(line + newLine))
+
+      val process = shellCommand.run(processLogger)
+
+      Some(process)
+    } catch {
+      case e: Exception =>
+        None
+    }
+  }
+
   def getResultCode:Option[Int] = {
     mResultCode
   }
 
   def getResult:Option[String] = {
     if(mStdOut.isDefined){
-      Some(mStdOut.toString)
+      Some(mStdOut.get.toString())
     } else {
       None
     }

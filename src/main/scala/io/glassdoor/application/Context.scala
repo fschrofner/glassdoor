@@ -176,6 +176,7 @@ object ContextConstant {
     val Dictionary = "dictionary"
     val ExtractedDatabase = "extracted-database"
     val Emulator = "emulator"
+    val Mitm = "mitm"
   }
 
   //keys defining the keymap and the keys in one string
