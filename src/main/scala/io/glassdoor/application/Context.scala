@@ -10,6 +10,7 @@ class Context {
   private var intermediateSource:Map[String, String] = new HashMap[String, String]
   private var intermediateAssembly:Map[String, String] = new HashMap[String, String]
   private var intermediateResource:Map[String, String] = new HashMap[String, String]
+  private var dynamicAnalysis:Map[String, String] = new HashMap[String, String]
   private var resultLog:Map[String, String] = new HashMap[String, String]
   private var resource:Map[String,String] = new HashMap[String,String]
   private var configuration:Map[String,String] = new HashMap[String,String]
@@ -26,6 +27,8 @@ class Context {
         result = Some(intermediateSource)
       case ContextConstant.Keymap.IntermediateResource =>
         result = Some(intermediateResource)
+      case ContextConstant.Keymap.DynamicAnalysis =>
+        result = Some(dynamicAnalysis)
       case ContextConstant.Keymap.ResultLog =>
         result = Some(resultLog)
       case ContextConstant.Keymap.Resource =>
@@ -48,6 +51,8 @@ class Context {
         intermediateSource = keymap
       case ContextConstant.Keymap.IntermediateResource =>
         intermediateResource = keymap
+      case ContextConstant.Keymap.DynamicAnalysis =>
+        dynamicAnalysis = keymap
       case ContextConstant.Keymap.ResultLog =>
         resultLog = keymap
       case ContextConstant.Keymap.Resource =>
@@ -158,10 +163,10 @@ object ContextConstant {
     val IntermediateAssembly = "intermediate-assembly"
     val IntermediateSource = "intermediate-source"
     val IntermediateResource = "intermediate-resource"
+    val DynamicAnalysis = "dynamic-analysis"
     val ResultLog = "result-log"
     val Config = "config"
     val Resource = "resource"
-    val DynamicAnalysis = "dynamic-analysis"
   }
 
   //these are the key values used inside the keymaps
@@ -177,6 +182,7 @@ object ContextConstant {
     val ExtractedDatabase = "extracted-database"
     val Emulator = "emulator"
     val Mitm = "mitm"
+    val Tracer = "tracer"
   }
 
   //keys defining the keymap and the keys in one string
@@ -188,6 +194,7 @@ object ContextConstant {
     val ResultLogRegexLogin = Keymap.ResultLog + DescriptorSplit + Key.RegexLogin
     val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
     val ResultLogMitm = Keymap.ResultLog + DescriptorSplit + Key.Mitm
+    val ResultLogTracer = Keymap.ResultLog + DescriptorSplit + Key.Tracer
     val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
     val ConfigPluginDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginDirectory
@@ -198,5 +205,6 @@ object ContextConstant {
     val ResourceDictionary = Keymap.Resource + DescriptorSplit + Key.Dictionary
     val DynamicAnalysisEmulator = Keymap.DynamicAnalysis + DescriptorSplit + Key.Emulator
     val DynamicAnalysisMitm = Keymap.DynamicAnalysis + DescriptorSplit + Key.Mitm
+    val DynamicAnalysisTracer = Keymap.DynamicAnalysis + DescriptorSplit + Key.Tracer
   }
 }

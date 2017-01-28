@@ -27,7 +27,10 @@ class HashCracker extends Plugin{
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
     if(parameterArray.isDefined){
       applyParameters(parameterArray.get)
-      if(mHashCrackerOptions.dictionary.isDefined){
+      //if hash is not directly provided, it needs to be loaded
+      if(mHashCrackerOptions.dictionary.isDefined && !mHashCrackerOptions.singleHash && mHashCrackerOptions.hash.isDefined){
+        return DynamicValues(uniqueId, Some(Array[String](mHashCrackerOptions.dictionary.get, mHashCrackerOptions.hash.get)),None)
+      } else if(mHashCrackerOptions.dictionary.isDefined && mHashCrackerOptions.singleHash){
         return DynamicValues(uniqueId, Some(Array[String](mHashCrackerOptions.dictionary.get)),None)
       }
     }
@@ -54,7 +57,15 @@ class HashCracker extends Plugin{
         Log.debug("hash: " + mHashCrackerOptions.hash.get)
 
         var dictPath = data.get(mHashCrackerOptions.dictionary.get)
-        var hash = if(mHashCrackerOptions.singleHash) mHashCrackerOptions.hash else data.get(mHashCrackerOptions.hash.get)
+        var hash : Option [String] = None
+
+        if(mHashCrackerOptions.singleHash) {
+          Log.debug("single hash")
+          hash = mHashCrackerOptions.hash
+        } else {
+          Log.debug("directory defined")
+          hash = data.get(mHashCrackerOptions.hash.get)
+        }
 
         Log.debug("dictionary path: " + dictPath)
         Log.debug("hash: " + hash)
