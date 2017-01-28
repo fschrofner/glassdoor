@@ -19,7 +19,7 @@ object CommandInterpreter {
   def interpret(input:String, placeholderParameters:Option[String] = None):Option[Command] = {
     try {
       //TODO: also handle spaces in quotes!! (regex maybe?)
-      val inputArray = input.split(" ")
+      val inputArray = input.split("'?( |$)(?=(([^']*'){2})*[^']*$)'?")
       val inputBuffer = inputArray.toBuffer
       inputBuffer.remove(0)
 

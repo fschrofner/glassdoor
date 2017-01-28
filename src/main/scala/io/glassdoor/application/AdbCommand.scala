@@ -11,12 +11,11 @@ import scala.sys.process._
   * Created by Florian Schrofner on 1/22/17.
   */
 class AdbCommand(val command : String, val outputCallback : String => Unit){
-  private var adbProcess : Process = null
 
   def execute(): Unit = {
     val adbConnection = new ProcessIO(adbInput, adbOutput, errorOutput)
     val adbCommand = Seq("adb", "shell")
-    var adbProcess = adbCommand.run(adbConnection)
+    adbCommand.run(adbConnection)
   }
 
   private def adbOutput(in: InputStream) {

@@ -13,7 +13,7 @@ import scala.reflect.io.File
 class Emulator extends Plugin {
 
   var mResult:Option[Map[String, String]] = None
-  val executor = new SystemCommandExecutor
+  val mExecutor = new SystemCommandExecutor
 
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
     val emulatorPath = data.get(ContextConstant.FullKey.ConfigEmulatorRepositoryPath)
@@ -38,19 +38,9 @@ class Emulator extends Plugin {
         mResult = Some(result)
       } else {
         //there was an error
-        errorMessage = executor.getErrorOutput
+        errorMessage = mExecutor.getErrorOutput
       }
-
-      //just testing adb connection here
       Log.debug("emulator ready")
-      var adbCommand = new AdbCommand("whoami", x => Log.debug("received whoami output in emulator: " + x))
-      adbCommand.execute()
-
-      adbCommand = new AdbCommand("echo testForAdb", x => Log.debug("received echo output in emulator: " + x))
-      adbCommand.execute()
-
-      adbCommand = new AdbCommand("touch /sdcard/Download/THISISATEST", x => Log.debug("received touch output in emulator: " + x))
-      adbCommand.execute()
     } else {
       Log.debug("emulator path undefined")
       errorMessage = Some("error: emulator repository path not defined inside config!")
@@ -64,9 +54,9 @@ class Emulator extends Plugin {
     val command = ArrayBuffer[String]()
     command.append(scriptPath)
     command.append(systemImagePath)
-    executor.executeSystemCommand(command)
+    mExecutor.executeSystemCommand(command)
     Log.debug("emulator started")
-    executor.getResultCode
+    mExecutor.getResultCode
   }
 
   /**
