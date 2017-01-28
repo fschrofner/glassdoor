@@ -187,6 +187,7 @@ object ContextConstant {
     val IntermediateSourceJava = Keymap.IntermediateSource + DescriptorSplit + Key.Java
     val ResultLogRegexLogin = Keymap.ResultLog + DescriptorSplit + Key.RegexLogin
     val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
+    val ResultLogMitm = Keymap.ResultLog + DescriptorSplit + Key.Mitm
     val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
     val ConfigPluginDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginDirectory
@@ -196,5 +197,6 @@ object ContextConstant {
     val ConfigEmulatorRepositoryPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.EmulatorRepositoryPath
     val ResourceDictionary = Keymap.Resource + DescriptorSplit + Key.Dictionary
     val DynamicAnalysisEmulator = Keymap.DynamicAnalysis + DescriptorSplit + Key.Emulator
+    val DynamicAnalysisMitm = Keymap.DynamicAnalysis + DescriptorSplit + Key.Mitm
   }
 }

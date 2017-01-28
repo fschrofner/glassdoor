@@ -25,6 +25,9 @@ class MitmProxy extends Plugin {
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
     var givenPort : Option[String] = None
 
+    val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
+    val destPath = workingDir.get + "/" + ContextConstant.Key.Mitm + "/network.log"
+
     if(parameterArray.isDefined){
       for(parameter <- parameterArray.get){
         parameter.paramType match {
@@ -32,9 +35,12 @@ class MitmProxy extends Plugin {
             if(parameter.name == "stop" && MitmProxy.mitmProcess.isDefined){
               MitmProxy.mitmProcess.get.destroy()
               MitmProxy.mitmProcess = None
+
               //delete port from values
-              //TODO: can save value to point to resulting log!
-              val result = HashMap[String,String]("dynamic-analysis.mitmproxy" -> "")
+              val result = HashMap[String,String](
+                ContextConstant.FullKey.DynamicAnalysisMitm -> "",
+                ContextConstant.FullKey.ResultLogMitm -> destPath
+              )
               mResult = Some(result)
               ready()
               return
@@ -51,8 +57,6 @@ class MitmProxy extends Plugin {
     }
 
     if(MitmProxy.mitmProcess.isEmpty){
-      val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
-      val destPath = workingDir.get + "/" + ContextConstant.Key.Mitm + "/network.log"
       createFolderStructure(destPath)
 
       var port = ""
@@ -74,11 +78,9 @@ class MitmProxy extends Plugin {
       MitmProxy.mitmProcess = process
 
       //TODO: find out if process successfully started
-
-      val result = HashMap[String,String]("dynamic-analysis.mitmproxy" -> port)
+      val result = HashMap[String,String](ContextConstant.FullKey.DynamicAnalysisMitm -> port)
       mResult = Some(result)
     } else {
-      //TODO: error! mitm already running
       Log.debug("error: mitm process already defined")
     }
 
