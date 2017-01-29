@@ -98,8 +98,8 @@ class CommandLineInterface extends UserInterface {
 
       //TODO: use list of system commands instead
       //TODO: this should be moved out of the interface and be interpreted somewhere else
-      if(input.get.name == "install") {
-        Log.debug("install called!")
+      if(input.get.name == "add") {
+        Log.debug("add called!")
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.InstallResource, Some(input.get.parameters))))
       } else if(input.get.name == "remove"){
         Log.debug("remove called!")

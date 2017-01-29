@@ -50,6 +50,7 @@ class Emulator extends Plugin {
   }
 
   def startEmulator(scriptPath : String, systemImagePath : String) : Option[Int] = {
+    showEndlessProgress()
     Log.debug("starting emulator with " + scriptPath + " using " + systemImagePath)
     val command = ArrayBuffer[String]()
     command.append(scriptPath)
