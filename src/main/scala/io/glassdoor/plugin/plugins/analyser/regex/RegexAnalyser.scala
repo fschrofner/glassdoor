@@ -239,6 +239,7 @@ class RegexAnalyser extends Plugin{
   def buildSilverSearcherCommand(regex:String, srcPath:String):Seq[String] = {
     val command = ArrayBuffer[String]()
     command.append("ag")
+    command.append("--nocolor")
     command.append("--search-binary")
     command.append("-a")
 
@@ -270,7 +271,7 @@ class RegexAnalyser extends Plugin{
     val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(srcPath.isDefined && workingDirectory.isDefined){
-      val destPath = workingDirectory.get + "/" + ContextConstant.Key.Regex + File.separator + splitDescriptor(dest)(1) + "/result.log"
+      val destPath = workingDirectory.get + File.separator + ContextConstant.Key.Regex + File.separator + splitDescriptor(dest)(1) + File.separator + "result.log"
       val outputFile = new File(destPath)
       outputFile.getParentFile.mkdirs()
 
@@ -283,6 +284,8 @@ class RegexAnalyser extends Plugin{
 
       if(commandResult.isDefined){
         val output = commandResult.get
+
+        Log.debug("regex output" + output)
 
         if(mBufferedWriter.isEmpty){
           if(!mRegexOptions.overwrite){

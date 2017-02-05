@@ -171,6 +171,7 @@ object ContextConstant {
 
   //these are the key values used inside the keymaps
   object Key {
+    val Aapt = "aapt"
     val Apk = "apk"
     val Dex = "dex"
     val Smali = "smali"
@@ -202,6 +203,7 @@ object ContextConstant {
     val ConfigResourceDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceDirectory
     val ConfigResourceRepository = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.ResourceRepository
     val ConfigEmulatorRepositoryPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.EmulatorRepositoryPath
+    val ConfigAndroidSdkPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.AndroidSdkPath
     val ResourceDictionary = Keymap.Resource + DescriptorSplit + Key.Dictionary
     val DynamicAnalysisEmulator = Keymap.DynamicAnalysis + DescriptorSplit + Key.Emulator
     val DynamicAnalysisMitm = Keymap.DynamicAnalysis + DescriptorSplit + Key.Mitm

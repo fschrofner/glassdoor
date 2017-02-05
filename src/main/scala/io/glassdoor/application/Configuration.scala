@@ -174,6 +174,7 @@ object ConfigConstant {
       val PluginRepository = "pluginRepository"
       val ResourceRepository = "resourceRepository"
       val EmulatorRepositoryPath = "emulatorRepositoryPath"
+      val AndroidSdkPath = "androidSdkPath"
     }
 
     object FullKey {
@@ -188,6 +189,7 @@ object ConfigConstant {
       val PluginRepository = DefaultKey + DescriptorSplit + Key.PluginRepository
       val ResourceRepository = DefaultKey + DescriptorSplit + Key.ResourceRepository
       val EmulatorRepositoryPath = DefaultKey + DescriptorSplit + Key.EmulatorRepositoryPath
+      val AndroidSdkPath = DefaultKey + DescriptorSplit + Key.AndroidSdkPath
     }
 
   }

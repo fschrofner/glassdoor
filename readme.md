@@ -17,7 +17,8 @@ Java
 Grep  
 Git  
 John The Ripper  
-the_silver_searcher [optional]
+the_silver_searcher [optional]  
+Android SDK (including adb & aapt)
 
 ##Build Instructions
 Glassdoor uses the wonderful [Gradle](https://gradle.org/) build system to realise its builds.  
@@ -43,6 +44,7 @@ Credit, where credit is due. Glassdoor makes extensive use of libraries, see the
 [Scala-Logging](https://github.com/typesafehub/scala-logging) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)  
 [Logback](https://github.com/qos-ch/logback) - [EPL 1.0](https://opensource.org/licenses/EPL-1.0)  
 [Spoon](https://github.com/INRIA/spoon) - [CECILL](https://opensource.org/licenses/CECILL-2.1)  
+[Jadx](https://github.com/skylot/jadx) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)  
 
 ##Licence
 //TODO
