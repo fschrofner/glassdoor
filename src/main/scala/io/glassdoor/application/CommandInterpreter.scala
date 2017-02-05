@@ -18,8 +18,18 @@ object CommandInterpreter {
     */
   def interpret(input:String, placeholderParameters:Option[String] = None):Option[Command] = {
     try {
-      //TODO: also handle spaces in quotes!! (regex maybe?)
-      val inputArray = input.split("'?( |$)(?=(([^']*'){2})*[^']*$)'?")
+      //split into groups, considering double and single quotes
+      val commandRegex = "(\"[^\"]*\"|'[^']*'|[\\S]+)+".r
+      var inputArray = commandRegex.findAllIn(input).toArray
+
+      //remove leading and ending quotes
+      val quoteRegex = "^\\s*[\"']?|[\"']?\\s*$".r
+      inputArray = inputArray.map(x => quoteRegex.replaceAllIn(x, ""))
+
+      for(part <- inputArray){
+        Log.debug("command part: " + part)
+      }
+
       val inputBuffer = inputArray.toBuffer
       inputBuffer.remove(0)
 

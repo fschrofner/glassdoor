@@ -26,7 +26,6 @@ class Tracer extends Plugin {
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
     mWorkingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
-    //TODO: when tracer is stopped, copy file to pc and store in context
     //TODO: when starting to trace, save current application traced in context
 
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
