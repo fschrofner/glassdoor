@@ -233,7 +233,6 @@ class DefaultPluginManager extends PluginManager{
       }
 
       if(allDependenciesUnsatisfied && mRunningPlugins.isEmpty){
-        //TODO: clear plugin queue and readyForNewInput
         mPluginQueue.clear()
         printInUserInterface("error: some dependencies were not satisfied and there are no running plugins that can provide them")
         readyForNewInput()
@@ -574,7 +573,7 @@ class DefaultPluginManager extends PluginManager{
           val dependencyResult = checkAndGetDependencies(pluginDataOpt.get.dependencies, context)
           val changeResult = checkAndGetChangedValues(pluginDataOpt.get.changes, context)
 
-          if(dependencyResult.status == DependencyStatus.Dynamic){
+          if(dependencyResult.status == DependencyStatus.Dynamic || changeResult.status == ChangeStatus.Dynamic){
             resolveDynamicValues(pluginDataOpt.get, parameters(i))
           } else {
             mPluginQueue.append(ScheduledPlugin(pluginDataOpt.get,parameters(i)))

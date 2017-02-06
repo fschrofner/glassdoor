@@ -117,13 +117,20 @@ class CommandLineInterface extends UserInterface {
       } else if(input.get.name == "exit"){
         Log.debug("exit called!")
         if(mConsole.isDefined){
+          Log.debug("console defined")
+          //mConsole.get.
           mConsole.get.shutdown()
+          Log.debug("shut down")
           mConsole = None
         }
         terminate()
+        System.exit(1)
       } else {
         EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ApplyPlugin, input)))
       }
+    } else {
+      Log.debug("input not defined!")
+      waitForInput()
     }
   }
 

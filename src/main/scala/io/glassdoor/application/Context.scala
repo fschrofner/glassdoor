@@ -149,8 +149,6 @@ class Context {
       None
     }
   }
-
-  //TODO: abstract keymaps behind more, provide context interface
 }
 
 object ContextConstant {
@@ -180,6 +178,7 @@ object ContextConstant {
     val HashCrack = "hashcrack"
     val RegexLogin = "regex-login"
     val Dictionary = "dictionary"
+    val PackageName = "package-name"
     val ExtractedDatabase = "extracted-database"
     val Emulator = "emulator"
     val Mitm = "mitm"
@@ -196,6 +195,7 @@ object ContextConstant {
     val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
     val ResultLogMitm = Keymap.ResultLog + DescriptorSplit + Key.Mitm
     val ResultLogTracer = Keymap.ResultLog + DescriptorSplit + Key.Tracer
+    val ResultLogPackageName = Keymap.ResultLog + DescriptorSplit + Key.PackageName
     val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
     val ConfigPluginDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginDirectory

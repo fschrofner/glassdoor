@@ -20,16 +20,22 @@ class ApkLoader extends Plugin{
   override def apply(data:Map[String,String], parameters: Array[String]): Unit = {
     if(parameters.length > 0){
       val srcPath = parameters(0)
+      val srcFile = new File(srcPath)
 
-      val path = copyApkToWorkingDirectory(data, srcPath)
-      if(path.isDefined){
-        val result = HashMap[String,String](ContextConstant.FullKey.OriginalBinaryApk -> path.get)
-        mResult = Some(result)
+      if(srcFile.exists()){
+        val path = copyApkToWorkingDirectory(data, srcPath)
+        if(path.isDefined){
+          val result = HashMap[String,String](ContextConstant.FullKey.OriginalBinaryApk -> path.get)
+          mResult = Some(result)
+        } else {
+          //TODO: error handling
+          setErrorMessage("error: working dir is not defined or error while copying!")
+          mResult = None
+        }
       } else {
-        //TODO: error handling
-        setErrorMessage("error: working dir is not defined or error while copying!")
-        mResult = None
+        setErrorMessage("error: source file does not exist!")
       }
+
     } else {
       setErrorMessage("error: not enough parameters")
     }
