@@ -43,8 +43,6 @@ class Launcher extends Plugin {
     } else {
       val packageNameOpt = data.get(ContextConstant.FullKey.ResultLogPackageName)
       if(packageNameOpt.isDefined){
-        //TODO: that's just a directory, load the log file!
-
         for (line <- Source.fromFile(packageNameOpt.get + File.separator + "result.log").getLines()) {
           if(packageName == null){
             packageName = line

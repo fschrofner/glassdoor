@@ -3,11 +3,12 @@ package io.glassdoor.plugin.plugins.tracer
 import java.io.File
 
 import io.glassdoor.application._
-import io.glassdoor.plugin.Plugin
+import io.glassdoor.plugin.{DynamicValues, Plugin}
 
 import scala.collection.immutable.HashMap
 import scala.collection.immutable.HashMap.HashMap1
 import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 /**
   * Created by flosch on 1/28/17.
@@ -16,6 +17,21 @@ class Tracer extends Plugin {
   private var mResult : Option[Map[String,String]] = None
   private var mApplicationToTrace : Option[String] = None
   private var mWorkingDir : Option[String] = None
+
+
+  /**
+    * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
+    * This method will then be called with the given parameters, before the plugin can be scheduled.
+    * The result should contain the values requested. Specify None, if you did not specify this value as dynamic.
+    * None values will be ignored, to change your dynamic dependency to an empty dependency wrap an empty string array in Some = Some(Array[String]()).
+    */
+  override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
+    if(parameters != null && (parameters.length > 1 && parameters(0) == "start") || (parameters.length > 0 && parameters(0) == "stop")){
+      DynamicValues(uniqueId, Some(Array[String]()), None)
+    } else {
+      DynamicValues(uniqueId, Some(Array(ContextConstant.FullKey.ResultLogPackageName)), None)
+    }
+  }
 
   /**
     * This is the method called, when your plugin gets launched.
@@ -42,6 +58,18 @@ class Tracer extends Plugin {
             } else if(mApplicationToTrace.isEmpty){
               mApplicationToTrace = Some(parameter.name)
             }
+        }
+      }
+
+      //read package name from context
+      if(mApplicationToTrace.isEmpty){
+        val packageNamePath = data.get(ContextConstant.FullKey.ResultLogPackageName)
+        if(packageNamePath.isDefined){
+          for (line <- Source.fromFile(packageNamePath.get + File.separator + "result.log").getLines()) {
+            if(mApplicationToTrace.isEmpty){
+              mApplicationToTrace = Some(line)
+            }
+          }
         }
       }
 
