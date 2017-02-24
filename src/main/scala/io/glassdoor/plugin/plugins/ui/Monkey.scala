@@ -1,23 +1,18 @@
-package io.glassdoor.plugin.plugins.tracer
+package io.glassdoor.plugin.plugins.ui
 
 import java.io.File
 
 import io.glassdoor.application._
 import io.glassdoor.plugin.{DynamicValues, Plugin}
 
-import scala.collection.immutable.HashMap
-import scala.collection.immutable.HashMap.HashMap1
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
-  * Created by Florian Schrofner on 1/28/17.
+  * Created by Florian Schrofner on 2/24/17.
   */
-class Tracer extends Plugin {
+class Monkey extends Plugin {
   private var mResult : Option[Map[String,String]] = None
-  private var mApplicationToTrace : Option[String] = None
-  private var mWorkingDir : Option[String] = None
-
+  private var mPackageName: Option[String] = None
 
   /**
     * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
@@ -26,7 +21,7 @@ class Tracer extends Plugin {
     * None values will be ignored, to change your dynamic dependency to an empty dependency wrap an empty string array in Some = Some(Array[String]()).
     */
   override def resolveDynamicValues(parameters: Array[String]): DynamicValues = {
-    if(parameters != null && (parameters.length > 1 && parameters(0) == "start") || (parameters.length > 0 && parameters(0) == "stop")){
+    if (parameters != null && (parameters.length > 1 && parameters(0) == "start") || (parameters.length > 0 && parameters(0) == "stop")) {
       DynamicValues(uniqueId, Some(Array[String]()), None)
     } else {
       DynamicValues(uniqueId, Some(Array(ContextConstant.FullKey.ResultLogPackageName)), None)
@@ -40,95 +35,84 @@ class Tracer extends Plugin {
     * @param parameters the parameters that were provided, when your plugin was called
     */
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
-    mWorkingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
-
-    //TODO: when starting to trace, save current application traced in context
-
     val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
 
-    if(parameterArray.isDefined){
-      var command : Option[String] = None
+    if (parameterArray.isDefined) {
+      var command: Option[String] = None
 
-      for(parameter <- parameterArray.get){
+      for (parameter <- parameterArray.get) {
         parameter.paramType match {
           case ParameterType.Parameter =>
             //first one being the application to trace
-            if(command.isEmpty){
+            if (command.isEmpty) {
               command = Some(parameter.name)
-            } else if(mApplicationToTrace.isEmpty){
-              mApplicationToTrace = Some(parameter.name)
+            } else if (mPackageName.isEmpty) {
+              mPackageName = Some(parameter.name)
             }
         }
       }
 
       //read package name from context
-      if(mApplicationToTrace.isEmpty){
+      if (mPackageName.isEmpty) {
         val packageNamePath = data.get(ContextConstant.FullKey.ResultLogPackageName)
-        if(packageNamePath.isDefined){
+        if (packageNamePath.isDefined) {
           for (line <- Source.fromFile(packageNamePath.get + File.separator + "result.log").getLines()) {
-            if(mApplicationToTrace.isEmpty){
-              mApplicationToTrace = Some(line)
+            if (mPackageName.isEmpty) {
+              mPackageName = Some(line)
             }
           }
         }
       }
 
-      if(command.isDefined){
+      if (command.isDefined) {
         command.get match {
           case "start" =>
-            startTracer()
+            startMonkeyTesting()
           case "stop" =>
-            stopTracer()
+            stopMonkeyTesting()
         }
       } else {
         setErrorMessage("error: command not defined")
-        ready()
       }
 
     }
-  }
 
-  def startTracer() : Unit = {
-    if(mApplicationToTrace.isDefined){
-      //we do not care about the output
-      val command = new AdbCommand("gtrace " + mApplicationToTrace.get + " &", _ => Unit)
-      command.execute()
-      val result = HashMap[String,String](ContextConstant.FullKey.DynamicAnalysisTracer -> mApplicationToTrace.get)
-      mResult = Some(result)
-      ready()
-    } else {
-      setErrorMessage("error: application to trace not defined")
-      ready()
-    }
-  }
-
-  def stopTracer() : Unit = {
-    //TODO: cancel tracer
-    if(mWorkingDir.isDefined){
-      val destPath = mWorkingDir.get + "/" + ContextConstant.Key.Tracer + "/result.log"
-      createFolderStructure(destPath)
-
-      val executor = new SystemCommandExecutor
-      val commandBuffer = ArrayBuffer[String]()
-      commandBuffer.append("adb")
-      commandBuffer.append("pull")
-      commandBuffer.append("/sdcard/gtrace.log")
-      commandBuffer.append(destPath)
-      executor.executeSystemCommand(commandBuffer)
-
-      val result = HashMap[String,String](ContextConstant.FullKey.ResultLogTracer -> destPath)
-      mResult = Some(result)
-    } else {
-      setErrorMessage("error: working directory not defined!")
-    }
     ready()
   }
 
-  def createFolderStructure(path:String):Unit = {
-    val file = new File(path)
-    file.getParentFile.mkdirs()
+  def startMonkeyTesting() : Unit = {
+    if(!Monkey.monkeyTestingStarted){
+      Monkey.monkeyTestingStarted = true
+      startMonkeyTest()
+
+      mResult = Some(Map[String, String](ContextConstant.FullKey.DynamicAnalysisUi -> mPackageName.get))
+    } else {
+      setErrorMessage("error: monkey testing already running!")
+    }
   }
 
+  def startMonkeyTest(): Unit = {
+    Log.debug("monkey test started: " + Monkey.monkeyTestingStarted)
+    if(mPackageName.isDefined && Monkey.monkeyTestingStarted){
+      val command = new AdbCommand("monkey -p " + mPackageName.get + " --throttle 100 -pct-touch 100 10", monkeyTestCallback)
+      command.execute()
+    }
+  }
+
+  def stopMonkeyTesting(): Unit = {
+    if(Monkey.monkeyTestingStarted){
+      Monkey.monkeyTestingStarted = false
+      mResult = Some(Map[String, String](ContextConstant.FullKey.DynamicAnalysisUi -> ""))
+    } else {
+      setErrorMessage("error: no monkey tests running")
+    }
+  }
+
+  def monkeyTestCallback(output: String): Unit = {
+    if(Monkey.monkeyTestingStarted){
+      startMonkeyTest()
+    }
+  }
 
   /**
     * This will be called once you call the ready() method inside your plugin.
@@ -143,4 +127,9 @@ class Tracer extends Plugin {
   }
 
   override def help(parameters: Array[String]): Unit = ???
+
+}
+
+object Monkey {
+  private var monkeyTestingStarted = false
 }

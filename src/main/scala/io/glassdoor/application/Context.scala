@@ -125,7 +125,14 @@ class Context {
 
     if(keymapOpt.isDefined){
       var keymap = keymapOpt.get
-      keymap = keymap + ((keyDescriptor,value))
+
+      //remove the key, if it was set to an empty value
+      if(value == null || (value != null && value.isEmpty)){
+        keymap = keymap - keyDescriptor
+      } else {
+        keymap = keymap + ((keyDescriptor,value))
+      }
+
       setKeymapMatchingString(keymapDescriptor,keymap)
       Some(this)
     } else {
@@ -183,6 +190,7 @@ object ContextConstant {
     val Emulator = "emulator"
     val Mitm = "mitm"
     val Tracer = "tracer"
+    val Ui = "ui"
   }
 
   //keys defining the keymap and the keys in one string
@@ -208,5 +216,6 @@ object ContextConstant {
     val DynamicAnalysisEmulator = Keymap.DynamicAnalysis + DescriptorSplit + Key.Emulator
     val DynamicAnalysisMitm = Keymap.DynamicAnalysis + DescriptorSplit + Key.Mitm
     val DynamicAnalysisTracer = Keymap.DynamicAnalysis + DescriptorSplit + Key.Tracer
+    val DynamicAnalysisUi = Keymap.DynamicAnalysis + DescriptorSplit + Key.Ui
   }
 }

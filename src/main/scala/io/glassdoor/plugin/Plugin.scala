@@ -28,6 +28,7 @@ trait Plugin extends Actor {
     * This will be called once you call the ready() method inside your plugin.
     * Please return ALL the changed values here as a map containing the key and the changed value.
     * If you did not change any values, simply return an empty map = Some(Map[String,String]())
+    * If you want to delete values from the context, set the matching key to an empty string value.
     * Returning None here, will be interpreted as an error.
     * @return a map containing all the changed values.
     */
