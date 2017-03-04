@@ -190,6 +190,7 @@ object ContextConstant {
     val Emulator = "emulator"
     val Mitm = "mitm"
     val Tracer = "tracer"
+    val Fs = "fs"
     val Ui = "ui"
   }
 
@@ -203,6 +204,7 @@ object ContextConstant {
     val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
     val ResultLogMitm = Keymap.ResultLog + DescriptorSplit + Key.Mitm
     val ResultLogTracer = Keymap.ResultLog + DescriptorSplit + Key.Tracer
+    val ResultLogFs = Keymap.ResultLog + DescriptorSplit + Key.Fs
     val ResultLogPackageName = Keymap.ResultLog + DescriptorSplit + Key.PackageName
     val ConfigWorkingDirectory = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.WorkingDirectory
     val ConfigPluginConfigPath = Keymap.Config + DescriptorSplit + ConfigConstant.ConfigKey.Key.PluginConfigPath
@@ -217,5 +219,6 @@ object ContextConstant {
     val DynamicAnalysisMitm = Keymap.DynamicAnalysis + DescriptorSplit + Key.Mitm
     val DynamicAnalysisTracer = Keymap.DynamicAnalysis + DescriptorSplit + Key.Tracer
     val DynamicAnalysisUi = Keymap.DynamicAnalysis + DescriptorSplit + Key.Ui
+    val DynamicAnalysisFs = Keymap.DynamicAnalysis + DescriptorSplit + Key.Fs
   }
 }
