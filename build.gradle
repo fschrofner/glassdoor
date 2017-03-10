@@ -27,7 +27,7 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.1.7'
     compile 'com.typesafe:config:1.3.0'
     compile 'org.smali:baksmali:2.1.1'
-    compile 'jline:jline:2.12'
+    compile 'org.jline:jline:3.1.3'
     compile 'org.fusesource.jansi:jansi:1.14'
     compile 'fr.inria.gforge.spoon:spoon-core:5.1.1'
     compile 'com.github.fschrofner:jadx-jitpack:v0.6.1'

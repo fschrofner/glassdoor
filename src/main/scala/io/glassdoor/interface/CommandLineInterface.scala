@@ -13,12 +13,13 @@ import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCode
 import io.glassdoor.plugin.resource.ResourceManagerConstant
 import io.glassdoor.plugin.resource.ResourceManagerConstant.ResourceErrorCode
 import io.glassdoor.resource.Resource
-import jline.{Terminal, UnixTerminal}
-import jline.console.ConsoleReader
-import jline.console.completer.StringsCompleter
 import org.fusesource.jansi.AnsiConsole
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
+import org.jline.reader.impl.LineReaderImpl
+import org.jline.reader.{LineReader, LineReaderBuilder}
+import org.jline.reader.impl.completer.StringsCompleter
+import org.jline.terminal.TerminalBuilder
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,8 +32,8 @@ class CommandLineInterface extends UserInterface {
 
   //mConsoleOutput should be used for simple outputs, that will not change
   //while mConsole should be used for lines that will be updated
-  var mConsole:Option[ConsoleReader] = None
-  var mConsoleOutput:Option[Writer] = None
+  var mConsole:Option[LineReader] = None
+  var mConsoleOutput:Option[PrintWriter] = None
 
   var mCompleter:Option[StringsCompleter] = None
   var mCommandLineReader:Option[ActorRef] = None
@@ -62,14 +63,12 @@ class CommandLineInterface extends UserInterface {
   override def initialise(context: Context): Unit = {
     Log.debug("initialising interface..")
 
-    val console = new ConsoleReader()
+    val terminal = TerminalBuilder.builder().system(true).build()
+    val console = LineReaderBuilder.builder().terminal(terminal).build()
 
     AnsiConsole.systemInstall()
-
-    console.getTerminal.init()
-    //console.clearScreen() //TODO: uncomment
-    console.setPrompt(">")
-    mConsoleOutput = Some(console.getOutput)
+    console.getTerminal.flush()
+    mConsoleOutput = Some(terminal.writer())
 
     mConsole = Some(console)
 
@@ -94,7 +93,7 @@ class CommandLineInterface extends UserInterface {
 
     if(input.isDefined){
       //don't show next command prompt, while there is still a task executing
-      mConsole.get.resetPromptLine("","",0)
+      //mConsole.get.resetPromptLine("","",0)
 
       //TODO: use list of system commands instead
       //TODO: this should be moved out of the interface and be interpreted somewhere else
@@ -119,7 +118,7 @@ class CommandLineInterface extends UserInterface {
         if(mConsole.isDefined){
           Log.debug("console defined")
           //mConsole.get.
-          mConsole.get.shutdown()
+          //mConsole.get.shutdown()
           Log.debug("shut down")
           mConsole = None
         }
@@ -145,10 +144,7 @@ class CommandLineInterface extends UserInterface {
     if(mConsoleOutput.isDefined && mConsole.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
-      val prompt = mConsole.get.getPrompt
       mConsoleOutput.get.append(message + newLine).flush()
-      mConsole.get.setPrompt(prompt)
-      //TODO: make sure that prompt is not overwritten here!
     } else {
       Log.debug("error: mConsole not defined")
     }
@@ -188,6 +184,9 @@ class CommandLineInterface extends UserInterface {
 
   def stopProgressUpdates(): Unit ={
     if(mAnimationTask.isDefined){
+      mConsoleOutput.get.write(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString)
+      mConsoleOutput.get.write(Ansi.ansi().cursorToColumn(0).toString)
+      mConsoleOutput.get.flush()
       mAnimationTask.get.cancel()
       mAnimationTask = None
     }
@@ -208,7 +207,6 @@ class CommandLineInterface extends UserInterface {
     if(mConsole.isDefined){
       val console = mConsole.get
       //TODO: do some fancy ansi stuff here (or maybe above), to update multiple lines?
-      console.resetPromptLine("",stringBuilder.toString(),-1)
     }
   }
 
@@ -238,9 +236,10 @@ class CommandLineInterface extends UserInterface {
         stringBuilder.insert(0, " ")
       }
 
-      //TODO: need to do something here
-      //TODO: multithreading will not work here
-      //console.resetPromptLine("",infoString + stringBuilder.toString(),-1)
+      mConsoleOutput.get.write(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString)
+      mConsoleOutput.get.write(Ansi.ansi().cursorToColumn(0).toString)
+      mConsoleOutput.get.write(infoString + stringBuilder.toString())
+      mConsoleOutput.get.flush()
 
       val resultString = infoString + stringBuilder.toString()
       var resultInt = counter + 1
@@ -282,7 +281,7 @@ class CommandLineInterface extends UserInterface {
         stringBuilder.insert(0, " ")
       }
 
-      console.resetPromptLine("", "",-1)
+      //console.resetPromptLine("", "",-1)
       print(infoString + stringBuilder.toString())
 
       if(mPluginsShowingProgress.size > 0){
@@ -311,8 +310,6 @@ class CommandLineInterface extends UserInterface {
   def stopAnimation(taskInstance: PluginInstance):Unit = {
     mPluginsShowingProgress = mPluginsShowingProgress.filterNot(_.pluginInstance.uniqueId == taskInstance.uniqueId)
     stopProgressUpdates()
-
-    //TODO: clear prompt
   }
 
   override def taskFailed(taskInstance: Option[PluginInstance], error: Int, data:Option[Any]): Unit = {

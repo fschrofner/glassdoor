@@ -5,15 +5,15 @@ import akka.actor.Actor.Receive
 import io.glassdoor.application.Log
 import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
-import jline.console.ConsoleReader
-import jline.console.completer.StringsCompleter
+import org.jline.reader.LineReader
+import org.jline.reader.impl.completer.StringsCompleter
 
 /**
   * Created by Florian Schrofner on 6/14/16.
   */
 class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
 
-  var mConsole:Option[ConsoleReader] = None
+  var mConsole:Option[LineReader] = None
   var mCompleter:Option[StringsCompleter] = None
 
   override def receive: Receive = {
@@ -21,7 +21,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
     action match {
       case CommandLineReaderConstant.Action.init =>
         if(data.isDefined){
-          val console = data.get.asInstanceOf[ConsoleReader]
+          val console = data.get.asInstanceOf[LineReader]
           mConsole = Some(console)
           initialise()
         }
@@ -49,15 +49,15 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
       val console = mConsole.get
 
       //make sure not to overwrite an existing line
-      console.drawLine()
+      //console.drawLine()
 
       //TODO: sometimes the prompt line is not resetted correctly?
-      console.resetPromptLine("","",0)
+      //console.resetPromptLine("","",0)
       Log.debug("resetted prompt line, showing prompt")
-      console.setPrompt(">")
+      //console.setPrompt(">")
 
       Log.debug("waiting for input..")
-      val line = console.readLine()
+      val line = console.readLine(">")
       mCommandLineInterface ! CommandLineMessage(CommandLineInterfaceConstant.Action.HandleLine, Some(line))
     }
   }
