@@ -240,6 +240,7 @@ class DefaultPluginManager extends PluginManager{
 
     } else {
       Log.debug("plugin queue is empty!")
+      readyForNewInput()
     }
   }
 
@@ -500,10 +501,16 @@ class DefaultPluginManager extends PluginManager{
     for(plugin <- mPluginQueue){
       if(plugin.id.isDefined && dynamicValues.uniqueId.isDefined && plugin.id.get == dynamicValues.uniqueId.get){
         if(dynamicValues.dependencies.isDefined){
-          //delete the dynamic dependencies
-          plugin.dependencies = plugin.dependencies.filterNot(_ == PluginManagerConstant.DynamicDependency)
-          //append the resolved dependencies
-          plugin.dependencies ++= dynamicValues.dependencies.get
+            //delete the dynamic dependencies
+            plugin.dependencies = plugin.dependencies.filterNot(_ == PluginManagerConstant.DynamicDependency)
+            //append the resolved dependencies
+            plugin.dependencies ++= dynamicValues.dependencies.get
+        } else {
+          if(plugin.dependencies.contains(PluginManagerConstant.DynamicDependency)){
+            //TODO: send error message instead of print in user interface?
+            printInUserInterface("error: the plugin can not resolve its dependencies with the given call")
+            mPluginQueue = mPluginQueue.filterNot(_ == plugin)
+          }
         }
 
         if(dynamicValues.changes.isDefined){
@@ -511,6 +518,12 @@ class DefaultPluginManager extends PluginManager{
           plugin.changes = plugin.changes.filterNot(_ == PluginManagerConstant.DynamicDependency)
           //append the resolved changes
           plugin.changes ++= dynamicValues.changes.get
+        } else {
+          if(plugin.dependencies.contains(PluginManagerConstant.DynamicDependency)){
+            //TODO: send error message instead of print in user interface?
+            printInUserInterface("error: the plugin can not resolve its changes with the given call")
+            mPluginQueue = mPluginQueue.filterNot(_ == plugin)
+          }
         }
       }
     }

@@ -52,7 +52,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
       console.drawLine()
 
       //TODO: sometimes the prompt line is not resetted correctly?
-      console.resetPromptLine("","",-1)
+      console.resetPromptLine("","",0)
       Log.debug("resetted prompt line, showing prompt")
       console.setPrompt(">")
 

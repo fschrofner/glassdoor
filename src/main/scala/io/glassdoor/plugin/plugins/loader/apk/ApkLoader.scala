@@ -49,6 +49,7 @@ class ApkLoader extends Plugin{
 
   def copyApkToWorkingDirectory(data:Map[String,String], srcPath:String): Option[String] ={
     val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
+
     if(workingDir.isDefined){
       try {
         val destPath = workingDir.get + "/" + ContextConstant.Key.Apk + "/" + getFileName(srcPath)

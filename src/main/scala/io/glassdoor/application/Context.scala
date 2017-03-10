@@ -192,6 +192,8 @@ object ContextConstant {
     val Tracer = "tracer"
     val Fs = "fs"
     val Ui = "ui"
+    val Pull = "pull"
+    val ChangedFiles = "changed-files"
   }
 
   //keys defining the keymap and the keys in one string
@@ -220,5 +222,6 @@ object ContextConstant {
     val DynamicAnalysisTracer = Keymap.DynamicAnalysis + DescriptorSplit + Key.Tracer
     val DynamicAnalysisUi = Keymap.DynamicAnalysis + DescriptorSplit + Key.Ui
     val DynamicAnalysisFs = Keymap.DynamicAnalysis + DescriptorSplit + Key.Fs
+    val DynamicAnalysisChangedFiles = Keymap.DynamicAnalysis + DescriptorSplit + Key.ChangedFiles
   }
 }
