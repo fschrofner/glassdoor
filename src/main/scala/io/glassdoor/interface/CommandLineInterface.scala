@@ -67,6 +67,7 @@ class CommandLineInterface extends UserInterface {
     val console = LineReaderBuilder.builder().terminal(terminal).build()
 
     AnsiConsole.systemInstall()
+
     console.getTerminal.flush()
     mConsoleOutput = Some(terminal.writer())
 
@@ -165,7 +166,9 @@ class CommandLineInterface extends UserInterface {
   override def showEndlessProgress(taskInstance: PluginInstance): Unit = {
     Log.debug("commandline interface: showing endless progress")
     //TODO: check if endless progress is already shown for that plugin
-    mPluginsShowingProgress = mPluginsShowingProgress :+ PluginProgress(taskInstance, 0, true)
+
+    //TODO: get current line, to save inside plugin. somehow prints chars into console, this should not happen
+    mPluginsShowingProgress = mPluginsShowingProgress :+ PluginProgress(taskInstance, 0, 0, true)
 
     if(mConsole.isDefined){
       Log.debug("console defined")
@@ -184,19 +187,22 @@ class CommandLineInterface extends UserInterface {
 
   def stopProgressUpdates(): Unit ={
     if(mAnimationTask.isDefined){
-      mConsoleOutput.get.write(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString)
-      mConsoleOutput.get.write(Ansi.ansi().cursorToColumn(0).toString)
+      val ansi = Ansi.ansi()
+      ansi.eraseLine()
+      ansi.cursorToColumn(0)
+
+      mConsoleOutput.get.print(ansi.toString)
       mConsoleOutput.get.flush()
       mAnimationTask.get.cancel()
       mAnimationTask = None
     }
   }
 
-  def updateProgresses():Unit = {
+  def updateProgresses() : Unit = {
     val stringBuilder = new StringBuilder
     for(pluginProgress <- mPluginsShowingProgress){
       if(pluginProgress.endlessProgress){
-        val result = updateEndlessProgress(pluginProgress.pluginInstance, pluginProgress.progress)
+        val result = updateEndlessProgress(pluginProgress.pluginInstance, pluginProgress.progress, pluginProgress.line)
         pluginProgress.progress = result.progressValue
         stringBuilder.append(result.progressString)
       } else {
@@ -210,7 +216,7 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
-  def updateEndlessProgress(taskInstance: PluginInstance, counter:Int):UpdateProgressResult = {
+  def updateEndlessProgress(taskInstance: PluginInstance, counter:Int, line:Int):UpdateProgressResult = {
     if(mConsole.isDefined){
       val console = mConsole.get
       val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
@@ -236,9 +242,12 @@ class CommandLineInterface extends UserInterface {
         stringBuilder.insert(0, " ")
       }
 
-      mConsoleOutput.get.write(Ansi.ansi().eraseLine(Ansi.Erase.ALL).toString)
-      mConsoleOutput.get.write(Ansi.ansi().cursorToColumn(0).toString)
-      mConsoleOutput.get.write(infoString + stringBuilder.toString())
+      val ansi = Ansi.ansi()
+      ansi.eraseLine(Ansi.Erase.ALL)
+      ansi.cursorToColumn(0)
+
+      mConsoleOutput.get.print(ansi.toString)
+      mConsoleOutput.get.print(infoString + stringBuilder.toString())
       mConsoleOutput.get.flush()
 
       val resultString = infoString + stringBuilder.toString()
@@ -374,7 +383,7 @@ class CommandLineInterface extends UserInterface {
 }
 
 case class CommandLineMessage(action: String, data:Option[Any])
-case class PluginProgress(pluginInstance: PluginInstance, var progress:Int, endlessProgress:Boolean)
+case class PluginProgress(pluginInstance: PluginInstance, var progress:Int, var line:Int, endlessProgress:Boolean)
 case class UpdateProgressResult(progressString:String, progressValue:Int)
 
 object CommandLineInterfaceConstant {
