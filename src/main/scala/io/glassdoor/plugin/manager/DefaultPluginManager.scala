@@ -5,7 +5,8 @@ import java.io.File
 import akka.actor.{ActorRef, Props}
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import io.glassdoor.application._
-import io.glassdoor.bus.Message
+import io.glassdoor.bus.{EventBus, Message, MessageEvent}
+import io.glassdoor.controller.ControllerConstant
 import io.glassdoor.plugin.manager.ChangeStatus.ChangeStatus
 import io.glassdoor.plugin.manager.DependencyStatus.DependencyStatus
 import io.glassdoor.plugin.manager.PluginManagerConstant.PluginErrorCode
@@ -71,6 +72,21 @@ class DefaultPluginManager extends PluginManager{
     readyForNewInput()
   }
 
+  def sendPluginsForAutocomplete():Unit = {
+    val buffer = ArrayBuffer[String]()
+
+    for(plugin <- mLoadedPlugins.values){
+      buffer.append(plugin.name)
+
+      if(plugin.commands != null && plugin.commands.length > 0){
+        for(command <- plugin.commands){
+          buffer.append(plugin.name + " " + command)
+        }
+      }
+    }
+
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.PluginCommandList, Some(buffer.toArray))))
+  }
 
   override def handlePluginFailure(pluginId: Long, errorMessage: Option[String]): Unit = {
     Log.debug("plugin failed, handling error..")
@@ -636,6 +652,8 @@ class DefaultPluginManager extends PluginManager{
         }
 
       }
+
+      sendPluginsForAutocomplete()
     }
   }
 

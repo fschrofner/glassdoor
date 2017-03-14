@@ -6,6 +6,7 @@ import io.glassdoor.application.Log
 import io.glassdoor.bus.{EventBus, Message, MessageEvent}
 import io.glassdoor.controller.ControllerConstant
 import org.jline.reader.LineReader
+import org.jline.reader.impl.LineReaderImpl
 import org.jline.reader.impl.completer.StringsCompleter
 
 /**
@@ -14,7 +15,6 @@ import org.jline.reader.impl.completer.StringsCompleter
 class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
 
   var mConsole:Option[LineReader] = None
-  var mCompleter:Option[StringsCompleter] = None
 
   override def receive: Receive = {
     case CommandLineMessage(action,data) =>
@@ -32,14 +32,7 @@ class CommandLineReader(mCommandLineInterface: ActorRef) extends Actor {
   }
 
   def initialise():Unit = {
-    setupAutoComplete()
     readLine()
-  }
-
-  def setupAutoComplete():Unit = {
-    //TODO: handover all possible commands (system commands + plugins + aliases)
-    val completer = new StringsCompleter()
-    mCompleter = Some(completer)
   }
 
   def readLine(): Unit = {

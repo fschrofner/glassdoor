@@ -23,6 +23,7 @@ trait UserInterface extends Actor {
   def resourceFailed(resource:Option[Resource], error:Int, data:Option[Any]):Unit
   def waitForInput():Unit
   def print(message:String):Unit
+  def handlePluginCommandList(commands:Array[String]):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -81,6 +82,11 @@ trait UserInterface extends Actor {
           } else {
             Log.debug("error: no data specified to print!")
           }
+        case UserInterfaceConstant.Action.PluginCommandList =>
+          if(data.isDefined){
+            val commands = data.get.asInstanceOf[Array[String]]
+            handlePluginCommandList(commands)
+          }
     }
   }
 }
@@ -95,6 +101,7 @@ object UserInterfaceConstant {
     val ShowProgress = "showProgress"
     val TaskCompleted = "taskCompleted"
     val PluginError = "pluginError"
+    val PluginCommandList = "pluginCommandList"
     val ResourceSuccess = "resourceCompleted"
     val ResourceError = "resourceError"
     val WaitForInput = "waitForInput"

@@ -116,6 +116,10 @@ trait Controller extends Actor {
     EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginList, None)))
   }
 
+  def forwardPluginCommandList(commands: Array[String]):Unit = {
+    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.PluginCommandList, Some(commands))))
+  }
+
   def setup():Unit = {
     Configuration.loadConfig()
     mContext = Some(new Context)
@@ -214,6 +218,11 @@ trait Controller extends Actor {
             val plugin = data.get.asInstanceOf[String]
             handlePluginHelp(plugin)
           }
+        case ControllerConstant.Action.PluginCommandList =>
+          if(data.isDefined){
+            val commands = data.get.asInstanceOf[Array[String]]
+            forwardPluginCommandList(commands)
+          }
         case ControllerConstant.Action.ShowPluginList =>
           handlePluginList()
       }
@@ -232,6 +241,7 @@ object ControllerConstant {
     val RemoveResource = "removeResource"
     val ApplyChangedValues = "applyChangedValues"
     val ApplyRemovedValues = "applyRemovedValues"
+    val PluginCommandList = "pluginCommandList"
     val PluginError = "pluginError"
     val ResourceError = "resourceError"
     val ResourceSuccess = "resourceSuccess"

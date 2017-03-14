@@ -1,6 +1,7 @@
 package io.glassdoor.interface
 
 import java.io.{PrintWriter, Writer}
+import java.util
 import java.util.concurrent.TimeUnit
 import javax.smartcardio.TerminalFactory
 
@@ -36,6 +37,9 @@ class CommandLineInterface extends UserInterface {
   var mConsoleOutput:Option[PrintWriter] = None
 
   var mCompleter:Option[StringsCompleter] = None
+  var mPluginCommandList:Option[Array[String]] = None
+  var mAliasCommandList:Option[Array[String]] = None
+
   var mCommandLineReader:Option[ActorRef] = None
   var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()
 
@@ -74,8 +78,6 @@ class CommandLineInterface extends UserInterface {
     mConsole = Some(console)
 
     startReadingFromCommandline()
-
-    //    setupAutoComplete()
   }
 
   def startReadingFromCommandline():Unit = {
@@ -473,6 +475,16 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
+  def reloadCompletions(): Unit ={
+    val completer = new StringsCompleter(mPluginCommandList.get:_*)
+    mCompleter = Some(completer)
+    mConsole.get.asInstanceOf[LineReaderImpl].setCompleter(mCompleter.get)
+  }
+
+  override def handlePluginCommandList(commands: Array[String]): Unit = {
+    mPluginCommandList = Some(commands)
+    reloadCompletions()
+  }
 }
 
 case class CommandLineMessage(action: String, data:Option[Any])

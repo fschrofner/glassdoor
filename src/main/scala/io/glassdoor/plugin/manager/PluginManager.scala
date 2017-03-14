@@ -50,6 +50,11 @@ trait PluginManager extends Actor {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
   }
 
+  def sendPluginCommandsToInterface(commands:Array[String]):Unit = {
+    val message = new Message(ControllerConstant.Action.PluginCommandList, Some(commands))
+    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+  }
+
   def printInUserInterface(message:String):Unit = {
     EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.PrintInUi, Some(message))))
   }
