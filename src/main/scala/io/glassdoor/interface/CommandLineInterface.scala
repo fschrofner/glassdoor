@@ -1,6 +1,7 @@
 package io.glassdoor.interface
 
 import java.io.{PrintWriter, Writer}
+import collection.JavaConverters._
 import java.util
 import java.util.concurrent.TimeUnit
 import javax.smartcardio.TerminalFactory
@@ -18,9 +19,10 @@ import org.fusesource.jansi.AnsiConsole
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
 import org.jline.reader.impl.LineReaderImpl
-import org.jline.reader.{LineReader, LineReaderBuilder}
-import org.jline.reader.impl.completer.StringsCompleter
+import org.jline.reader.{Completer, Highlighter, LineReader, LineReaderBuilder}
+import org.jline.reader.impl.completer.{AggregateCompleter, FileNameCompleter, StringsCompleter}
 import org.jline.terminal.TerminalBuilder
+import org.jline.utils.{AttributedString, AttributedStringBuilder}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,7 +38,7 @@ class CommandLineInterface extends UserInterface {
   var mConsole:Option[LineReader] = None
   var mConsoleOutput:Option[PrintWriter] = None
 
-  var mCompleter:Option[StringsCompleter] = None
+  var mCompleter:Option[Completer] = None
   var mPluginCommandList:Option[Array[String]] = None
   var mAliasCommandList:Option[Array[String]] = None
 
@@ -439,7 +441,6 @@ class CommandLineInterface extends UserInterface {
     if(mPluginsShowingProgress.size > 0){
       startProgressUpdates()
     }
-    //waitForInput()
   }
 
   override def resourceFailed(resource: Option[Resource], error: Int, data: Option[Any]): Unit = {
@@ -476,14 +477,28 @@ class CommandLineInterface extends UserInterface {
   }
 
   def reloadCompletions(): Unit ={
-    val completer = new StringsCompleter(mPluginCommandList.get:_*)
+    val stringsCompleter = new StringsCompleter(mPluginCommandList.get:_*)
+    val fileNamesCompleter = new FileNameCompleter()
+    val completer = new AggregateCompleter(ArrayBuffer(stringsCompleter, fileNamesCompleter).asJava)
+
     mCompleter = Some(completer)
     mConsole.get.asInstanceOf[LineReaderImpl].setCompleter(mCompleter.get)
   }
 
+//  def reloadHighlighter():Unit = {
+//    //TODO: highlight based on plugin command list
+//    val highlighter = new Highlighter {
+//      override def highlight(reader: LineReader, buffer: String) = {
+//        val highlightedString = new AttributedString(buffer)
+//      }
+//    }
+//    //mConsole.get.asInstanceOf[LineReaderImpl].setHighlighter()
+//  }
+
   override def handlePluginCommandList(commands: Array[String]): Unit = {
     mPluginCommandList = Some(commands)
     reloadCompletions()
+    //reloadHighlighter()
   }
 }
 
