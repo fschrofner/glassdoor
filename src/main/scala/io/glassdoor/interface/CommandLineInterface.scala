@@ -50,6 +50,8 @@ class CommandLineInterface extends UserInterface {
 
   val newLine = sys.props("line.separator")
 
+  var nrOfPrintedEndlessProgresses = 0
+
 
   override def receive: PartialFunction[Any, Unit] = {
     //let the default user interface trait handle all messages,
@@ -145,14 +147,19 @@ class CommandLineInterface extends UserInterface {
   //  }
 
   override def print(message: String): Unit = {
+    stopProgressUpdates()
+    clearEndlessProgresses()
+
     Log.debug("commandline interface received print")
-    if(mConsoleOutput.isDefined && mConsole.isDefined){
+    if(mConsoleOutput.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
-      mConsoleOutput.get.append(message + newLine).flush()
+      mConsoleOutput.get.print(message)
     } else {
       Log.debug("error: mConsole not defined")
     }
+
+    startProgressUpdates()
   }
 
   override def showPluginList(plugins: Array[PluginInstance]): Unit = {
@@ -169,15 +176,11 @@ class CommandLineInterface extends UserInterface {
 
   override def showEndlessProgress(taskInstance: PluginInstance): Unit = {
     Log.debug("commandline interface: showing endless progress")
-    //TODO: check if endless progress is already shown for that plugin
-
-    //TODO: get current line, to save inside plugin. somehow prints chars into console, this should not happen
-    Log.debug("INCREASING LINE DELTA - SHOW ENDLESS PROGRESS: " + taskInstance.name)
-    increaseProgressLineDelta(1)
-    mPluginsShowingProgress = mPluginsShowingProgress :+ PluginProgress(taskInstance, 0, 0, true)
+    mPluginsShowingProgress = mPluginsShowingProgress :+ PluginProgress(taskInstance, 0, true)
 
     if(mConsole.isDefined){
       Log.debug("console defined")
+
       //restart progress updates
       stopProgressUpdates()
       startProgressUpdates()
@@ -187,121 +190,105 @@ class CommandLineInterface extends UserInterface {
   }
 
   def startProgressUpdates(): Unit ={
-    val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateProgresses())
-    mAnimationTask = Some(handle)
+    if(mPluginsShowingProgress.length > 0){
+      val handle = context.system.scheduler.schedule(Duration.Zero, Duration.create(1, TimeUnit.SECONDS))(updateProgresses())
+      mAnimationTask = Some(handle)
+    }
   }
 
   def stopProgressUpdates(): Unit ={
-    if(mAnimationTask.isDefined){
-      //      val ansi = Ansi.ansi()
-      //      ansi.eraseLine()
-      //      ansi.cursorToColumn(0)
-      //
-      //      mConsoleOutput.get.print(ansi.toString)
-      //      mConsoleOutput.get.flush()
-      mAnimationTask.get.cancel()
-      mAnimationTask = None
+    this.synchronized{
+      if(mAnimationTask.isDefined){
+        mAnimationTask.get.cancel()
+        mAnimationTask = None
+      }
+    }
+  }
+
+  def clearEndlessProgresses() : Unit = {
+    if(nrOfPrintedEndlessProgresses > 0){
+
+      val ansiUp = Ansi.ansi()
+      val ansiErase = Ansi.ansi()
+
+      ansiUp.cursorUpLine()
+      ansiErase.eraseLine(Ansi.Erase.ALL)
+      ansiErase.cursorToColumn(0)
+
+
+      for(i <- 0 until nrOfPrintedEndlessProgresses){
+        mConsoleOutput.get.print(ansiUp.toString)
+        mConsoleOutput.get.flush()
+
+        mConsoleOutput.get.print(ansiErase.toString)
+        mConsoleOutput.get.flush()
+      }
+
+      nrOfPrintedEndlessProgresses = 0
     }
   }
 
   def updateProgresses() : Unit = {
-    val stringBuilder = new StringBuilder
-    for(pluginProgress <- mPluginsShowingProgress){
-      if(pluginProgress.endlessProgress){
-        val result = updateEndlessProgress(pluginProgress.pluginInstance, pluginProgress.progress, pluginProgress.lineDelta)
-        pluginProgress.progress = result.progressValue
-        stringBuilder.append(result.progressString)
-      } else {
-        //TODO
+    this.synchronized {
+      clearEndlessProgresses()
+
+      val stringBuilder = new StringBuilder
+
+      for(pluginProgress <- mPluginsShowingProgress){
+        if(pluginProgress.endlessProgress){
+          val result = updateEndlessProgress(pluginProgress.pluginInstance, pluginProgress.progress)
+          pluginProgress.progress = result.progressValue
+          stringBuilder.append(result.progressString + newLine)
+          nrOfPrintedEndlessProgresses += 1
+        } else {
+          //TODO
+        }
+      }
+
+      if(mConsoleOutput.isDefined){
+        Log.debug("printing endless progresses. nr of progresses: " + nrOfPrintedEndlessProgresses)
+        mConsoleOutput.get.print(stringBuilder.toString())
+        mConsoleOutput.get.flush()
       }
     }
+  }
 
+  def updateEndlessProgress(taskInstance: PluginInstance, counter:Int):UpdateProgressResult = {
     if(mConsole.isDefined){
       val console = mConsole.get
-      //TODO: do some fancy ansi stuff here (or maybe above), to update multiple lines?
-    }
-  }
+      val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
 
-  def increaseProgressLineDelta(incBy : Int) : Unit = {
-    for(pluginProgress <- mPluginsShowingProgress){
-      pluginProgress.lineDelta += incBy
-      Log.debug("LINE DELTA OF " + pluginProgress.pluginInstance.name + " INCREASED TO " + pluginProgress.lineDelta)
-    }
-    Log.debug("LINE DELTAS INCREASED")
-  }
+      val stringBuilder = new StringBuilder()
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
 
-  def updateEndlessProgress(taskInstance: PluginInstance, counter:Int, lineDelta:Int):UpdateProgressResult = {
-    this.synchronized{
-      if(mConsole.isDefined){
-        Log.debug("UPDATING " + taskInstance.name + " with line delta: " + lineDelta)
-
-        val console = mConsole.get
-        val infoString = "[" + taskInstance.uniqueId + "] " + taskInstance.name + ":"
-
-        val stringBuilder = new StringBuilder()
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.StartString)
-
-        for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
-          if((i > counter && i <= counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
-            || (i < (counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
-            stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
-          } else {
-            stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
-          }
+      for(i <- 1 to CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        if((i > counter && i <= counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength)
+          || (i < (counter + CommandLineInterfaceConstant.Progress.EndlessProgressLength) - CommandLineInterfaceConstant.Progress.ProgressbarLength)){
+          stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarFilledString)
+        } else {
+          stringBuilder.append(CommandLineInterfaceConstant.Progress.ProgressbarEmptyString)
         }
-
-        stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
-
-        val terminalWidth = console.getTerminal.getWidth
-        val spacing = terminalWidth - infoString.length - stringBuilder.length
-
-        for(i <- 1 to spacing){
-          stringBuilder.insert(0, " ")
-        }
-
-        if(lineDelta != 0){
-          val ansiChangeLine = Ansi.ansi()
-          ansiChangeLine.cursorUpLine(lineDelta)
-
-          mConsoleOutput.get.print(ansiChangeLine.toString)
-          mConsoleOutput.get.flush()
-        }
-
-        val ansiErase = Ansi.ansi()
-        ansiErase.eraseLine(Ansi.Erase.ALL)
-        ansiErase.cursorToColumn(0)
-
-        mConsoleOutput.get.print(ansiErase.toString)
-        mConsoleOutput.get.flush()
-        //        if(lineDelta == 0){
-        //          mConsoleOutput.get.println(infoString + stringBuilder.toString())
-        //        } else {
-        //          mConsoleOutput.get.print(infoString + stringBuilder.toString())
-        //        }
-
-        mConsoleOutput.get.print(infoString + stringBuilder.toString())
-        mConsoleOutput.get.flush()
-
-        if(lineDelta != 0){
-          val ansiRestore = Ansi.ansi()
-          ansiRestore.cursorDownLine(lineDelta)
-          ansiRestore.cursorToColumn(0)
-
-          mConsoleOutput.get.print(ansiRestore.toString)
-          mConsoleOutput.get.flush()
-        }
-
-        val resultString = infoString + stringBuilder.toString()
-        var resultInt = counter + 1
-
-        if(resultInt >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
-          resultInt = 0
-        }
-
-        UpdateProgressResult(resultString, resultInt)
-      } else {
-        UpdateProgressResult("", 0)
       }
+
+      stringBuilder.append(CommandLineInterfaceConstant.Progress.EndString)
+
+      val terminalWidth = console.getTerminal.getWidth
+      val spacing = terminalWidth - infoString.length - stringBuilder.length
+
+      for(i <- 1 to spacing){
+        stringBuilder.insert(0, " ")
+      }
+
+      val resultString = infoString + stringBuilder.toString()
+      var resultInt = counter + 1
+
+      if(resultInt >= CommandLineInterfaceConstant.Progress.ProgressbarLength){
+        resultInt = 0
+      }
+
+      UpdateProgressResult(resultString, resultInt)
+    } else {
+      UpdateProgressResult("", 0)
     }
   }
 
@@ -333,59 +320,9 @@ class CommandLineInterface extends UserInterface {
           stringBuilder.insert(0, " ")
         }
 
-        val pluginProgress = mPluginsShowingProgress.find(_.pluginInstance.uniqueId == taskInstance.uniqueId)
+        stopAnimation(taskInstance)
 
-        if(pluginProgress.isDefined){
-
-          Log.debug(taskInstance.name + " WAS SHOWING ENDLESS PROGRESS")
-
-
-          stopAnimation(taskInstance)
-
-          if(pluginProgress.get.lineDelta != 0){
-            val ansiChangeLine = Ansi.ansi()
-            ansiChangeLine.cursorUpLine(pluginProgress.get.lineDelta)
-
-            mConsoleOutput.get.print(ansiChangeLine.toString)
-            mConsoleOutput.get.flush()
-          }
-
-          val ansiErase = Ansi.ansi()
-          ansiErase.eraseLine(Ansi.Erase.ALL)
-          ansiErase.cursorToColumn(0)
-
-          mConsoleOutput.get.print(ansiErase.toString)
-          mConsoleOutput.get.flush()
-
-          Log.debug(taskInstance.name + " HAD A LINE DELTA OF " + pluginProgress.get.lineDelta)
-
-          if(pluginProgress.get.lineDelta != 0){
-            mConsoleOutput.get.print(infoString + stringBuilder.toString())
-            mConsoleOutput.get.flush()
-
-            val restoreAnsi = Ansi.ansi()
-            restoreAnsi.cursorDownLine(pluginProgress.get.lineDelta)
-            restoreAnsi.cursorToColumn(0)
-
-            mConsoleOutput.get.print(restoreAnsi.toString)
-            mConsoleOutput.get.flush()
-          } else {
-            mConsoleOutput.get.println(infoString + stringBuilder.toString())
-            mConsoleOutput.get.flush()
-            Log.debug("INCREASING LINE DELTA - TASK COMPLETED (ENDLESS) AND 0 LINE DELTA: " + taskInstance.name)
-            increaseProgressLineDelta(1)
-          }
-
-        } else {
-          mConsoleOutput.get.println(infoString + stringBuilder.toString())
-          Log.debug("INCREASING LINE DELTA - TASK COMPLETED (NOT ENDLESS): " + taskInstance.name)
-          increaseProgressLineDelta(1)
-        }
-
-
-        if(mPluginsShowingProgress.size > 0){
-          startProgressUpdates()
-        }
+        print(infoString + stringBuilder.toString() + newLine)
       }
     }
   }
@@ -395,11 +332,11 @@ class CommandLineInterface extends UserInterface {
     code match {
       case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyInstalled =>
         if(resource.isDefined){
-          Console.println("successfully installed resource: " + resource.get.name + "[" + resource.get.kind + "]")
+          print("successfully installed resource: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
         }
       case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyRemoved =>
         if(resource.isDefined){
-          Console.println("successfully removed resource: " + resource.get.name + "[" + resource.get.kind + "]")
+          print("successfully removed resource: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
         }
     }
 
@@ -416,10 +353,6 @@ class CommandLineInterface extends UserInterface {
       val pluginProgress = mPluginsShowingProgress.find(_.pluginInstance.uniqueId == taskInstance.get.uniqueId)
       if(pluginProgress.isDefined){
         stopAnimation(taskInstance.get)
-        //TODO: clear line
-      } else {
-        Log.debug("INCREASING LINE DELTA - TASK FAILED")
-        increaseProgressLineDelta(1)
       }
     }
 
@@ -427,19 +360,15 @@ class CommandLineInterface extends UserInterface {
       error match {
         case PluginErrorCode.DependenciesNotSatisfied =>
           if(data.isDefined){
-            print("error: dependency not satisfied: " + data.get.asInstanceOf[String])
+            print("error: dependency not satisfied: " + data.get.asInstanceOf[String] + newLine)
           }
         case PluginErrorCode.DependenciesInChange =>
           if(data.isDefined){
-            print("error: dependency in change: " + data.get.asInstanceOf[String])
+            print("error: dependency in change: " + data.get.asInstanceOf[String] + newLine)
           }
         case PluginErrorCode.PluginNotFound =>
-          print("error: plugin not found!")
+          print("error: plugin not found!" + newLine)
       }
-    }
-
-    if(mPluginsShowingProgress.size > 0){
-      startProgressUpdates()
     }
   }
 
@@ -448,10 +377,10 @@ class CommandLineInterface extends UserInterface {
       error match {
         case ResourceErrorCode.ResourceAlreadyInstalled =>
           if(resource.isDefined){
-            print("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
+            print("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
           }
         case ResourceErrorCode.ResourceNotFound =>
-          print("error: resource not found!")
+          print("error: resource not found!" + newLine)
       }
     }
 
@@ -502,7 +431,7 @@ class CommandLineInterface extends UserInterface {
 }
 
 case class CommandLineMessage(action: String, data:Option[Any])
-case class PluginProgress(pluginInstance: PluginInstance, var progress:Int, var lineDelta:Int, endlessProgress:Boolean)
+case class PluginProgress(pluginInstance: PluginInstance, var progress:Int, endlessProgress:Boolean)
 case class UpdateProgressResult(progressString:String, progressValue:Int)
 
 object CommandLineInterfaceConstant {
