@@ -70,9 +70,17 @@ object CommandInterpreter {
           Log.debug("found named parameter: " + input(i))
           //for now - and -- are the same
           val strippedName = input(i).stripPrefix("-").stripPrefix("-") //if prefix is not found, the string is returned unchanged
-          val param = Parameter(strippedName, ParameterType.NamedParameter, Some(input(i+1)))
-          buffer.append(param)
-          pendingNamedParameter = true
+
+          Log.debug("input length: " + input.length)
+          Log.debug("current index: " + input.length)
+
+          //if param is not empty after stripping the prefix
+          if(input.length > (i + 1)){
+            Log.debug("input length is larger than index + 1")
+            val param = Parameter(strippedName, ParameterType.NamedParameter, Some(input(i+1)))
+            buffer.append(param)
+            pendingNamedParameter = true
+          }
         case flag() =>
           Log.debug("found flag: " + input(i))
           //TODO: remove + or ++ and parse correctly

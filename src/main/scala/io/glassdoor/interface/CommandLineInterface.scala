@@ -477,7 +477,11 @@ class CommandLineInterface extends UserInterface {
   }
 
   def reloadCompletions(): Unit ={
-    val stringsCompleter = new StringsCompleter(mPluginCommandList.get:_*)
+    val stringsBuffer = ArrayBuffer[String]()
+    stringsBuffer.appendAll(mPluginCommandList.get)
+    //TODO: also add aliases and other commands like exit, list & help
+
+    val stringsCompleter = new StringsCompleter(stringsBuffer.toArray:_*)
     val fileNamesCompleter = new FileNameCompleter()
     val completer = new AggregateCompleter(ArrayBuffer(stringsCompleter, fileNamesCompleter).asJava)
 
@@ -485,20 +489,15 @@ class CommandLineInterface extends UserInterface {
     mConsole.get.asInstanceOf[LineReaderImpl].setCompleter(mCompleter.get)
   }
 
-//  def reloadHighlighter():Unit = {
-//    //TODO: highlight based on plugin command list
-//    val highlighter = new Highlighter {
-//      override def highlight(reader: LineReader, buffer: String) = {
-//        val highlightedString = new AttributedString(buffer)
-//      }
-//    }
-//    //mConsole.get.asInstanceOf[LineReaderImpl].setHighlighter()
-//  }
+  def reloadHighlighter():Unit = {
+    val highlighter = new CommandLineHighlighter(mPluginCommandList)
+    mConsole.get.asInstanceOf[LineReaderImpl].setHighlighter(highlighter)
+  }
 
   override def handlePluginCommandList(commands: Array[String]): Unit = {
     mPluginCommandList = Some(commands)
     reloadCompletions()
-    //reloadHighlighter()
+    reloadHighlighter()
   }
 }
 
