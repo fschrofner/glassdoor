@@ -1,6 +1,7 @@
 package io.glassdoor.application
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by Florian Schrofner on 3/16/16.
@@ -115,6 +116,21 @@ class Context {
     string.split(ContextConstant.StringArraySplit)
   }
 
+
+  def getDefinedKeys:Array[String] = {
+    val contextKeys = ArrayBuffer[String]()
+
+    contextKeys.appendAll(originalBinary.keys.map(x => ContextConstant.Keymap.OriginalBinary + ContextConstant.DescriptorSplit +  x))
+    contextKeys.appendAll(intermediateSource.keys.map(x => ContextConstant.Keymap.IntermediateSource + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(intermediateAssembly.keys.map(x => ContextConstant.Keymap.IntermediateAssembly + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(intermediateResource.keys.map(x => ContextConstant.Keymap.IntermediateResource + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(dynamicAnalysis.keys.map(x => ContextConstant.Keymap.DynamicAnalysis + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(resultLog.keys.map(x => ContextConstant.Keymap.ResultLog + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(resource.keys.map(x => ContextConstant.Keymap.Resource + ContextConstant.DescriptorSplit + x))
+    contextKeys.appendAll(configuration.keys.map(x => ContextConstant.Keymap.Config + ContextConstant.DescriptorSplit + x))
+
+    contextKeys.toArray
+  }
 
   def setResolvedValue(descriptor:String, value:String):Option[Context] = {
     val descriptorSplitString = splitDescriptor(descriptor)

@@ -24,6 +24,8 @@ trait UserInterface extends Actor {
   def waitForInput():Unit
   def print(message:String):Unit
   def handlePluginCommandList(commands:Array[String]):Unit
+  def handleAliasList(aliases:Array[String]):Unit
+  def handleContextList(context:Array[String]):Unit
 
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
@@ -87,6 +89,16 @@ trait UserInterface extends Actor {
             val commands = data.get.asInstanceOf[Array[String]]
             handlePluginCommandList(commands)
           }
+        case UserInterfaceConstant.Action.AliasList =>
+          if(data.isDefined){
+            val aliases = data.get.asInstanceOf[Array[String]]
+            handleAliasList(aliases)
+          }
+        case UserInterfaceConstant.Action.ContextList =>
+          if(data.isDefined){
+            val contextList = data.get.asInstanceOf[Array[String]]
+            handleContextList(contextList)
+          }
     }
   }
 }
@@ -102,6 +114,8 @@ object UserInterfaceConstant {
     val TaskCompleted = "taskCompleted"
     val PluginError = "pluginError"
     val PluginCommandList = "pluginCommandList"
+    val AliasList = "aliasList"
+    val ContextList = "contextList"
     val ResourceSuccess = "resourceCompleted"
     val ResourceError = "resourceError"
     val WaitForInput = "waitForInput"

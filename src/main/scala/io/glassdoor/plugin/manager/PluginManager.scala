@@ -42,21 +42,21 @@ trait PluginManager extends Actor {
     //additionally notify resource manager of changed resources
     if(changedResources.size > 0){
       Log.debug("changed values containing resources! notifying resource manager..")
-      val message = new Message(ResourceManagerConstant.Action.ResourceInstallComplete, Some(changedResources.toMap))
-      EventBus.publish(new MessageEvent(ResourceManagerConstant.Channel, message))
+      val message = Message(ResourceManagerConstant.Action.ResourceInstallComplete, Some(changedResources.toMap))
+      EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, message))
     }
 
-    val message = new Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
-    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+    val message = Message(ControllerConstant.Action.ApplyChangedValues, Some(changedValues))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, message))
   }
 
   def sendPluginCommandsToInterface(commands:Array[String]):Unit = {
-    val message = new Message(ControllerConstant.Action.PluginCommandList, Some(commands))
-    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+    val message = Message(ControllerConstant.Action.PluginCommandList, Some(commands))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, message))
   }
 
   def printInUserInterface(message:String):Unit = {
-    EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.PrintInUi, Some(message))))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.PrintInUi, Some(message))))
   }
 
   def readyForNewInput(): Unit ={
@@ -64,13 +64,13 @@ trait PluginManager extends Actor {
   }
 
   def sendErrorMessage(pluginInstance:Option[PluginInstance], errorCode:Integer, data:Option[Any]):Unit = {
-    val messageData = new PluginErrorMessage(pluginInstance, errorCode, data)
-    val message = new Message(ControllerConstant.Action.PluginError, Some(messageData))
-    EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
+    val messageData = PluginErrorMessage(pluginInstance, errorCode, data)
+    val message = Message(ControllerConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, message))
   }
 
   def requestContextUpdate():Unit = {
-    EventBus.publish(new MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ContextUpdateRequestPluginManager,None)))
+    EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ContextUpdateRequestPluginManager,None)))
   }
 
   def printInstalledPlugins():Unit = {

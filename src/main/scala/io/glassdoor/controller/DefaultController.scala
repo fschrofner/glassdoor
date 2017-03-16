@@ -27,6 +27,8 @@ class DefaultController extends Controller{
 
         mContext.get.setResolvedValue(key,value)
       }
+
+      forwardContextKeys(mContext.get.getDefinedKeys)
     }
   }
 
@@ -139,6 +141,9 @@ class DefaultController extends Controller{
 
       }
     }
+
+    //send to ui
+    forwardAliasList(mAliasMap.keys.toArray)
   }
 
   override def handlePluginError(pluginInstance: Option[PluginInstance], errorCode: Integer, data: Option[Any]): Unit = {

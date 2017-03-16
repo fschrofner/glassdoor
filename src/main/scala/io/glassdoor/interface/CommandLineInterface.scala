@@ -41,6 +41,8 @@ class CommandLineInterface extends UserInterface {
   var mCompleter:Option[Completer] = None
   var mPluginCommandList:Option[Array[String]] = None
   var mAliasCommandList:Option[Array[String]] = None
+  var mContextKeys:Option[Array[String]] = None
+  val mSystemCommands:Array[String] = Array[String]("help", "list", "exit")
 
   var mCommandLineReader:Option[ActorRef] = None
   var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()
@@ -140,12 +142,6 @@ class CommandLineInterface extends UserInterface {
     }
   }
 
-  //  def setupAutoComplete():Unit = {
-  //    //TODO: handover all possible commands (system commands + plugins + aliases)
-  //    val completer = new StringsCompleter()
-  //    mCompleter = Some(completer)
-  //  }
-
   override def print(message: String): Unit = {
     stopProgressUpdates()
     clearEndlessProgresses()
@@ -154,7 +150,7 @@ class CommandLineInterface extends UserInterface {
     if(mConsoleOutput.isDefined){
       Log.debug("console defined, printing..")
       Log.debug("message: " + message)
-      mConsoleOutput.get.print(message)
+      mConsoleOutput.get.println(message)
     } else {
       Log.debug("error: mConsole not defined")
     }
@@ -322,7 +318,7 @@ class CommandLineInterface extends UserInterface {
 
         stopAnimation(taskInstance)
 
-        print(infoString + stringBuilder.toString() + newLine)
+        print(infoString + stringBuilder.toString())
       }
     }
   }
@@ -332,11 +328,11 @@ class CommandLineInterface extends UserInterface {
     code match {
       case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyInstalled =>
         if(resource.isDefined){
-          print("successfully installed resource: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
+          print("successfully installed resource: " + resource.get.name + "[" + resource.get.kind + "]")
         }
       case ResourceManagerConstant.ResourceSuccessCode.ResourceSuccessfullyRemoved =>
         if(resource.isDefined){
-          print("successfully removed resource: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
+          print("successfully removed resource: " + resource.get.name + "[" + resource.get.kind + "]")
         }
     }
 
@@ -360,14 +356,14 @@ class CommandLineInterface extends UserInterface {
       error match {
         case PluginErrorCode.DependenciesNotSatisfied =>
           if(data.isDefined){
-            print("error: dependency not satisfied: " + data.get.asInstanceOf[String] + newLine)
+            print("error: dependency not satisfied: " + data.get.asInstanceOf[String])
           }
         case PluginErrorCode.DependenciesInChange =>
           if(data.isDefined){
-            print("error: dependency in change: " + data.get.asInstanceOf[String] + newLine)
+            print("error: dependency in change: " + data.get.asInstanceOf[String])
           }
         case PluginErrorCode.PluginNotFound =>
-          print("error: plugin not found!" + newLine)
+          print("error: plugin not found!")
       }
     }
   }
@@ -377,10 +373,10 @@ class CommandLineInterface extends UserInterface {
       error match {
         case ResourceErrorCode.ResourceAlreadyInstalled =>
           if(resource.isDefined){
-            print("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]" + newLine)
+            print("error: resource already installed: " + resource.get.name + "[" + resource.get.kind + "]")
           }
         case ResourceErrorCode.ResourceNotFound =>
-          print("error: resource not found!" + newLine)
+          print("error: resource not found!")
       }
     }
 
@@ -407,24 +403,68 @@ class CommandLineInterface extends UserInterface {
 
   def reloadCompletions(): Unit ={
     val stringsBuffer = ArrayBuffer[String]()
-    stringsBuffer.appendAll(mPluginCommandList.get)
-    //TODO: also add aliases and other commands like exit, list & help
+
+    stringsBuffer.appendAll(mSystemCommands)
+
+    if(mPluginCommandList.isDefined){
+      stringsBuffer.appendAll(mPluginCommandList.get)
+    }
+
+    if(mAliasCommandList.isDefined){
+      stringsBuffer.appendAll(mAliasCommandList.get)
+    }
+
+    if(mContextKeys.isDefined){
+      stringsBuffer.appendAll(mContextKeys.get)
+    }
+
+    //TODO: also add other commands like exit, list & help
 
     val stringsCompleter = new StringsCompleter(stringsBuffer.toArray:_*)
     val fileNamesCompleter = new FileNameCompleter()
     val completer = new AggregateCompleter(ArrayBuffer(stringsCompleter, fileNamesCompleter).asJava)
 
     mCompleter = Some(completer)
-    mConsole.get.asInstanceOf[LineReaderImpl].setCompleter(mCompleter.get)
+
+    if(mConsole.isDefined){
+      mConsole.get.asInstanceOf[LineReaderImpl].setCompleter(mCompleter.get)
+    }
   }
 
   def reloadHighlighter():Unit = {
-    val highlighter = new CommandLineHighlighter(mPluginCommandList)
-    mConsole.get.asInstanceOf[LineReaderImpl].setHighlighter(highlighter)
+    val stringsBuffer = ArrayBuffer[String]()
+
+    stringsBuffer.appendAll(mSystemCommands)
+
+    if(mPluginCommandList.isDefined){
+      stringsBuffer.appendAll(mPluginCommandList.get)
+    }
+
+    if(mAliasCommandList.isDefined){
+      stringsBuffer.appendAll(mAliasCommandList.get)
+    }
+
+    val highlighter = new CommandLineHighlighter(Some(stringsBuffer.toArray), mContextKeys)
+
+    if(mConsole.isDefined){
+      mConsole.get.asInstanceOf[LineReaderImpl].setHighlighter(highlighter)
+    }
   }
 
   override def handlePluginCommandList(commands: Array[String]): Unit = {
     mPluginCommandList = Some(commands)
+    reloadCompletions()
+    reloadHighlighter()
+  }
+
+  override def handleAliasList(aliases: Array[String]): Unit = {
+    mAliasCommandList = Some(aliases)
+    reloadCompletions()
+    reloadHighlighter()
+  }
+
+  override def handleContextList(context: Array[String]): Unit = {
+    mContextKeys = Some(context)
     reloadCompletions()
     reloadHighlighter()
   }

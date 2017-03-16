@@ -70,54 +70,62 @@ trait Controller extends Actor {
 
   def installResource(resourceName:String):Unit = {
     if(mContext.isDefined){
-      val message = new ResourceManagerResourceParameters(resourceName, mContext.get)
+      val message = ResourceManagerResourceParameters(resourceName, mContext.get)
       EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.InstallResource, Some(message))))
     }
   }
 
   def removeResource(resourceName:String):Unit = {
     if(mContext.isDefined){
-      val message = new ResourceManagerResourceParameters(resourceName, mContext.get)
+      val message = ResourceManagerResourceParameters(resourceName, mContext.get)
       EventBus.publish(MessageEvent(ResourceManagerConstant.Channel, Message(ResourceManagerConstant.Action.RemoveResource, Some(message))))
     }
   }
 
   def forwardPluginErrorMessage(pluginInstance:Option[PluginInstance], error:Int, data:Option[Any]): Unit ={
-    val messageData = new PluginErrorMessage(pluginInstance, error, data)
-    val message = new Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+    val messageData = PluginErrorMessage(pluginInstance, error, data)
+    val message = Message(UserInterfaceConstant.Action.PluginError, Some(messageData))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
   def forwardResourceSuccessMessage(resource:Option[Resource], code:Integer): Unit = {
-    val messageData = new ResourceSuccessMessage(resource,code)
-    val message = new Message(UserInterfaceConstant.Action.ResourceSuccess, Some(messageData))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+    val messageData = ResourceSuccessMessage(resource,code)
+    val message = Message(UserInterfaceConstant.Action.ResourceSuccess, Some(messageData))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
   def forwardResourceErrorMessage(resource:Option[Resource], errorCode:Integer, data:Option[Any]): Unit = {
-    val messageData = new ResourceErrorMessage(resource, errorCode, data)
-    val message = new Message(UserInterfaceConstant.Action.ResourceError, Some(messageData))
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, message))
+    val messageData = ResourceErrorMessage(resource, errorCode, data)
+    val message = Message(UserInterfaceConstant.Action.ResourceError, Some(messageData))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, message))
   }
 
   def forwardTaskCompletedMessage(pluginInstance:PluginInstance): Unit = {
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, Some(pluginInstance))))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.TaskCompleted, Some(pluginInstance))))
   }
 
   def forwardUiPrint(message:String):Unit = {
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Print, Some(message))))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.Print, Some(message))))
   }
 
   def forwardHelpForPlugin(plugin:String):Unit = {
-    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginHelp, Some(plugin))))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginHelp, Some(plugin))))
   }
 
   def forwardPluginList():Unit = {
-    EventBus.publish(new MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginList, None)))
+    EventBus.publish(MessageEvent(PluginManagerConstant.Channel, Message(PluginManagerConstant.Action.ShowPluginList, None)))
   }
 
   def forwardPluginCommandList(commands: Array[String]):Unit = {
-    EventBus.publish(new MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.PluginCommandList, Some(commands))))
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.PluginCommandList, Some(commands))))
+  }
+
+  def forwardAliasList(aliases: Array[String]):Unit = {
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.AliasList, Some(aliases))))
+  }
+
+  def forwardContextKeys(contextKeys: Array[String]):Unit = {
+    EventBus.publish(MessageEvent(UserInterfaceConstant.Channel, Message(UserInterfaceConstant.Action.ContextList, Some(contextKeys))))
   }
 
   def setup():Unit = {

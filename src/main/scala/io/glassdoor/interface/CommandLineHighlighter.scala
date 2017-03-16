@@ -9,7 +9,7 @@ import org.jline.utils.{AttributedString, AttributedStringBuilder, AttributedSty
 /**
   * Created by Florian Schrofner on 3/15/17.
   */
-class CommandLineHighlighter(pluginCommandList:Option[Array[String]]) extends Highlighter {
+class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKeys:Option[Array[String]]) extends Highlighter {
 
   override def highlight(reader: LineReader, buffer: String): AttributedString = {
     val builder = new AttributedStringBuilder()
@@ -44,6 +44,7 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]]) extends Hi
         }
       }
 
+      //TODO: highlight context keys, when they are not the first
       var singleQuoteActive = false
       var doubleQuoteActive = false
 
