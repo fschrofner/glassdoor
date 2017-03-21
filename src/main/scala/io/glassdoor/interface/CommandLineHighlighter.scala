@@ -6,6 +6,8 @@ import io.glassdoor.application.{CommandInterpreter, ParameterType}
 import org.jline.reader.{Highlighter, LineReader}
 import org.jline.utils.{AttributedString, AttributedStringBuilder, AttributedStyle}
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * Created by Florian Schrofner on 3/15/17.
   */
@@ -18,7 +20,9 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
 
     if(command.isDefined){
       var markValid = false
+      val validContexts = ArrayBuffer[CommandPart]()
       var commandLength = command.get.name.length
+
 
       if(pluginCommandList.isDefined && pluginCommandList.get.contains(command.get.name)){
         markValid = true
@@ -31,7 +35,6 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
         val params = CommandInterpreter.parseToParameterArray(parameterStrings)
 
         if(params.isDefined && params.get.length > 0){
-
           //if the first parameter is an unnamed one, it might be a command
           //highlight everything, if it is found in the command list
           if(params.get(0).paramType == ParameterType.Parameter){
@@ -42,9 +45,22 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
             }
           }
         }
+
+        for(param <- params.get){
+          if(param.paramType == ParameterType.Parameter){
+            if(contextKeys.isDefined && contextKeys.get.contains(param.name)){
+              val parts = findCommandParts(param.name, buffer)
+              validContexts.appendAll(parts)
+            }
+          } else if(param.paramType == ParameterType.NamedParameter){
+            if(contextKeys.isDefined && param.value.isDefined && contextKeys.get.contains(param.value.get)){
+              val parts = findCommandParts(param.value.get, buffer)
+              validContexts.appendAll(parts)
+            }
+          }
+        }
       }
 
-      //TODO: highlight context keys, when they are not the first
       var singleQuoteActive = false
       var doubleQuoteActive = false
 
@@ -66,6 +82,11 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
             builder.style(builder.style().foreground(AttributedStyle.YELLOW))
           }
 
+          if(!singleQuoteActive && !doubleQuoteActive && validContexts.exists(x => x.start <= i && x.end >= i)){
+            builder.style(builder.style().bold())
+            builder.style(builder.style().foreground(AttributedStyle.GREEN))
+          }
+
           if(buffer(i) == '"' && !singleQuoteActive){
             doubleQuoteActive = !doubleQuoteActive
 
@@ -85,4 +106,20 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
 
     builder.toAttributedString
   }
+
+  def findCommandParts(textToFind: String, buffer:String) : Array[CommandPart] = {
+    var searchIndex = 0
+    val parts = ArrayBuffer[CommandPart]()
+
+    while(buffer.indexOf(textToFind, searchIndex) != -1){
+      val startIndex = buffer.indexOf(textToFind, searchIndex)
+      val endIndex = startIndex + textToFind.length
+      parts.append(CommandPart(startIndex, endIndex))
+      searchIndex = endIndex + 1
+    }
+
+    parts.toArray
+  }
 }
+
+case class CommandPart(start:Int, end:Int)
