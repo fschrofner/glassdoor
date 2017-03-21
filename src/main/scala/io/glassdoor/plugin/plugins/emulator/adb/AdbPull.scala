@@ -188,7 +188,7 @@ class AdbPull extends Plugin {
     Log.debug("now waiting for permissions to be fixed..")
 
     //wait for permissions to be fixed
-    Await result(waitCondition, 6 seconds)
+    Await result(waitCondition, Duration.Inf)
   }
 
   def permissionCallback(output:String) : Unit = {
