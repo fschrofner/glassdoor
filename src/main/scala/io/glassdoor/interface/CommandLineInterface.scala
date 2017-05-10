@@ -42,7 +42,7 @@ class CommandLineInterface extends UserInterface {
   var mPluginCommandList:Option[Array[String]] = None
   var mAliasCommandList:Option[Array[String]] = None
   var mContextKeys:Option[Array[String]] = None
-  val mSystemCommands:Array[String] = Array[String]("help", "list", "exit")
+  val mSystemCommands:Array[String] = Array[String]("help", "list", "exit", "add", "remove")
 
   var mCommandLineReader:Option[ActorRef] = None
   var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()

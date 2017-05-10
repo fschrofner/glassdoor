@@ -2,7 +2,7 @@ package io.glassdoor.plugin.plugins.preprocessor.java
 
 import java.io.File
 
-import io.glassdoor.application.{Log, ContextConstant, Constant, Context}
+import io.glassdoor.application._
 import io.glassdoor.plugin.Plugin
 import jadx.api._
 
@@ -18,10 +18,26 @@ class JavaDecompiler extends Plugin {
       val apkPath = data.get(ContextConstant.FullKey.OriginalBinaryApk)
 
       if(apkPath.isDefined){
+
+        val arguments = new JadxArgs
+
+        val parameterArray = CommandInterpreter.parseToParameterArray(parameters)
+
+        if(parameterArray.isDefined) {
+          for(parameter <- parameterArray.get){
+            if(parameter.paramType == ParameterType.Flag){
+              parameter.name match {
+                case "deobfuscate" | "d" =>
+                  arguments.setDeobfuscationOn(true)
+              }
+            }
+          }
+        }
+
         Log.debug("decompiling " + apkPath.get)
         showEndlessProgress()
 
-        val decompiler = new JadxDecompiler()
+        val decompiler = new JadxDecompiler(arguments)
         val file = new File(apkPath.get)
         val outputDirPath = workingDir.get + "/" + ContextConstant.Key.Java
         val outputDir = new File(outputDirPath)
