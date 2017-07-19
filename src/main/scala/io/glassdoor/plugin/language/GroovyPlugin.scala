@@ -34,8 +34,6 @@ class GroovyPlugin extends Plugin {
 
   override def result: Option[Map[String,String]] = ???
 
-  override def help(parameters: Array[String]): Unit = ???
-
   def instantiateGroovyPlugin(fileName:String):Option[GroovyObject] = {
     val file = new File(fileName)
 

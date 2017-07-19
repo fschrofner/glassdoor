@@ -45,5 +45,4 @@ class ShowValue extends Plugin {
     Some(Map[String,String]())
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

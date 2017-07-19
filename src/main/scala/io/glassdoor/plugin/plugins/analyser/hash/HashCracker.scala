@@ -103,6 +103,7 @@ class HashCracker extends Plugin{
 
           Log.debug("building command with dict: " + dictPath.get +" and hash: " + hash.get)
           val command = buildHashCrackCommand(dictPath.get, hash.get,data)
+          Log.debug("hashcrack command: " + command)
           val executor = new SystemCommandExecutor
           var resultString = executor.executeSystemCommand(command)
           val resultCode = executor.getResultCode
@@ -280,5 +281,4 @@ class HashCracker extends Plugin{
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

@@ -17,9 +17,6 @@ class SmaliDisassembler extends Plugin{
   var mResult:Option[Map[String,String]] = None
 
   override def apply(data: Map[String,String], parameters: Array[String]): Unit = {
-    //baksmali.disassembleDexFile(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
-    //val folder = new File(context.intermediateAssembly(Constant.INTERMEDIATE_ASSEMBLY_DEX))
-
     val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
     if(workingDir.isDefined){
@@ -59,5 +56,4 @@ class SmaliDisassembler extends Plugin{
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

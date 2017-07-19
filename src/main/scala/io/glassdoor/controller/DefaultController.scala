@@ -81,10 +81,8 @@ class DefaultController extends Controller{
         val command = CommandInterpreter.interpret(commandString)
 
         if(command.isDefined){
-          commandBuffer ++= resolveAlias(command.get.name, command.get.parameters)
-          //applyPlugin(command.get.name,command.get.parameters)
           //recursively call method in order to interpret other aliases
-          //handleApplyPlugin(command.get.name, command.get.parameters)
+          commandBuffer ++= resolveAlias(command.get.name, command.get.parameters)
         } else {
           //TODO: could not interpret command!
           Log.debug("error: could not interpret command: " + name)

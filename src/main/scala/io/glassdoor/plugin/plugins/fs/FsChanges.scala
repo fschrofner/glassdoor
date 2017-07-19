@@ -114,5 +114,4 @@ class FsChanges extends Plugin {
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

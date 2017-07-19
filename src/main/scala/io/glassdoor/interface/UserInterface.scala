@@ -30,8 +30,6 @@ trait UserInterface extends Actor {
   def terminate():Unit = {
     EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.Terminate, None)))
   }
-
-
   def showPluginList(plugins:Array[PluginInstance]):Unit
 
   override def receive = {

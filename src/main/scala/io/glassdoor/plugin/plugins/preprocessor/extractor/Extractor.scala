@@ -121,5 +121,4 @@ class Extractor extends Plugin{
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

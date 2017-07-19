@@ -72,5 +72,4 @@ override def result: Option[Map[String, String]] = {
   mResult
 }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

@@ -55,12 +55,11 @@ class JavaDecompiler extends Plugin {
       setErrorMessage("error: working directory not defined")
     }
 
-    ready
+    ready()
   }
 
   override def result: Option[Map[String, String]] = {
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

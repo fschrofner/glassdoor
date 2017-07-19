@@ -2,7 +2,7 @@ package io.glassdoor.interface
 
 import java.awt.Color
 
-import io.glassdoor.application.{CommandInterpreter, ParameterType}
+import io.glassdoor.application.{CommandInterpreter, Log, ParameterType}
 import org.jline.reader.{Highlighter, LineReader}
 import org.jline.utils.{AttributedString, AttributedStringBuilder, AttributedStyle}
 
@@ -15,6 +15,8 @@ class CommandLineHighlighter(pluginCommandList:Option[Array[String]], contextKey
 
   override def highlight(reader: LineReader, buffer: String): AttributedString = {
     val builder = new AttributedStringBuilder()
+
+    Log.debug("interpreting command for syntax highlighting..")
 
     val command = CommandInterpreter.interpret(buffer)
 

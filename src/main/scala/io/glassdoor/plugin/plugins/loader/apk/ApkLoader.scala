@@ -77,5 +77,4 @@ class ApkLoader extends Plugin{
     return file.getName
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

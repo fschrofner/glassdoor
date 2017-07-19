@@ -42,7 +42,7 @@ class CommandLineInterface extends UserInterface {
   var mPluginCommandList:Option[Array[String]] = None
   var mAliasCommandList:Option[Array[String]] = None
   var mContextKeys:Option[Array[String]] = None
-  val mSystemCommands:Array[String] = Array[String]("help", "list", "exit", "add", "remove")
+  val mSystemCommands:Array[String] = Array[String]("help", "list", "exit", "update", "add", "remove")
 
   var mCommandLineReader:Option[ActorRef] = None
   var mPluginsShowingProgress:Array[PluginProgress] = Array[PluginProgress]()
@@ -271,9 +271,7 @@ class CommandLineInterface extends UserInterface {
       val terminalWidth = console.getTerminal.getWidth
       val spacing = terminalWidth - infoString.length - stringBuilder.length
 
-      for(i <- 1 to spacing){
-        stringBuilder.insert(0, " ")
-      }
+      stringBuilder.insert(0, " " * spacing)
 
       val resultString = infoString + stringBuilder.toString()
       var resultInt = counter + 1

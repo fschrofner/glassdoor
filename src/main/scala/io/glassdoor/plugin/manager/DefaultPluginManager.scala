@@ -505,7 +505,7 @@ class DefaultPluginManager extends PluginManager{
     mPluginQueue.append(ScheduledPlugin(Some(id), pluginData, parameters))
     actor.get ! Message(PluginConstant.Action.ResolveDynamicValues, Some(parameters))
 
-    //TODO: the actor should probably saved in the scheduled plugin so that it does not instantiate a new one
+    //TODO: the actor should probably get saved in the scheduled plugin so that it does not instantiate a new one
   }
 
 
@@ -593,7 +593,6 @@ class DefaultPluginManager extends PluginManager{
   override def applyPlugins(pluginNames: Array[String], parameters: Array[Array[String]], context: Context): Unit = {
     //check if all plugins have parameters provided
     if(pluginNames.length == parameters.length){
-      //TODO: add all to scheduled plugins, but also check for dynamic dependencies
       //generate plugin data
       for(i <- pluginNames.indices){
         val pluginDataOpt = getPluginDataForName(pluginNames(i))

@@ -58,17 +58,19 @@ class GitInstaller extends Plugin {
       if(repoUrl.isDefined && path.isDefined){
         showEndlessProgress()
 
-        //TODO: if repository exists, just merge the newest commit from master
         val destinationDirectory = new File(path.get)
 
         if(destinationDirectory.exists && destinationDirectory.isDirectory && !isDirEmpty(destinationDirectory.toPath)){
-          //TODO: just update the repository
           Log.debug("directory already exists, starting update..")
+
+          val command = Seq("git","-C",path.get,"pull")
+
+          executor.executeSystemCommand(command)
         } else {
           Log.debug("directory does not exist, initialising download..")
           destinationDirectory.mkdirs()
 
-          val command = Seq("git","clone",repoUrl.get,path.get)
+          val command = Seq("git","clone",repoUrl.get, path.get)
 
           executor.executeSystemCommand(command)
         }
@@ -105,5 +107,4 @@ class GitInstaller extends Plugin {
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

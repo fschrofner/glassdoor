@@ -126,8 +126,6 @@ class Monkey extends Plugin {
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
-
 }
 
 object Monkey {

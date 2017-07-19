@@ -19,6 +19,7 @@ Git
 John The Ripper  
 the_silver_searcher [optional]  
 Android SDK (including adb & aapt)
+SQLite
 
 ## Build Instructions  
 Glassdoor uses the wonderful [Gradle](https://gradle.org/) build system to realise its builds.  

@@ -67,7 +67,6 @@ class DatabaseExtractor extends Plugin{
 
           if(mDatabaseExtractorOptions.subFile.isDefined) input += File.separator + mDatabaseExtractorOptions.subFile.get
 
-          //TODO: change dynamically based on outputdescriptor
           val workingDirectory = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
 
           if(workingDirectory.isDefined){
@@ -197,5 +196,4 @@ class DatabaseExtractor extends Plugin{
     mResult
   }
 
-  override def help(parameters: Array[String]): Unit = ???
 }

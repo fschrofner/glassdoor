@@ -41,6 +41,7 @@ class GitResourceManager extends ResourceManager{
         }
       } else {
         Log.debug("error: resource cannot be found")
+        sendErrorMessage(mAvailableResources.get(name), ResourceErrorCode.ResourceNotFound, None)
       }
     } else {
       Log.debug("error: resource already installed")
@@ -280,13 +281,33 @@ class GitResourceManager extends ResourceManager{
       val resourceRepositoryPath = resourceDir + "/" + GitResourceManagerConstant.Path.ResourceRepositoryDirectory
 
       for(repository <- repositories){
-        //TODO: download the repositories to the resource repository path, if they do not exist, pull otherwise
+        val parameterArray = Array(repository, resourceRepositoryPath + "/" + getRepositorySimpleName(repository))
+        val parameters = new Command(GitResourceManagerConstant.Repository.PluginCommand, parameterArray)
+        val message = new Message(ControllerConstant.Action.ApplyPlugin, Some(parameters))
+        EventBus.publish(new MessageEvent(ControllerConstant.Channel, message))
         //TODO: make sure that the command line does not think that it's ready again, although there is still a download ongoing
-        //EventBus.publish(MessageEvent(ControllerConstant.Channel, Message(ControllerConstant.Action.ApplyPlugin, Plugi))
+        //TODO: buildAvailableResourceIndex after update has finished!
       }
     }
   }
+
+  def getRepositorySimpleName(repository:String):String = {
+    val lastPartRegex = "[^/]+$".r
+    val gitRegex = "\\.git$".r
+    var simpleName = ""
+
+    //retrieve last part of url (after last slash)
+    val lastPart = lastPartRegex.findFirstIn(repository)
+
+    if(lastPart.isDefined){
+      //remove .git from the last part
+      simpleName = gitRegex.replaceAllIn(lastPart.get, "")
+    }
+
+    simpleName
+  }
 }
+
 
 object GitResourceManagerConstant {
   object Repository {

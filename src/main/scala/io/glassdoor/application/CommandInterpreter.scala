@@ -18,6 +18,8 @@ object CommandInterpreter {
     */
   def interpret(input:String, placeholderParameters:Option[String] = None):Option[Command] = {
     try {
+      Log.debug("input string to interpret: " + input)
+
       //split into groups, considering double and single quotes
       val commandRegex = "(\"[^\"]*\"|'[^']*'|[\\S]+)+".r
       var inputArray = commandRegex.findAllIn(input).toArray

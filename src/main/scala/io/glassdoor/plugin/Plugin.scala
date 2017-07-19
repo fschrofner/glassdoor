@@ -33,7 +33,6 @@ trait Plugin extends Actor {
     * @return a map containing all the changed values.
     */
   def result:Option[Map[String,String]]
-  def help(parameters:Array[String])
 
   /**
     * This method should only be overridden, when specifying either dynamic dependencies or dynamic changes in the manifest.
