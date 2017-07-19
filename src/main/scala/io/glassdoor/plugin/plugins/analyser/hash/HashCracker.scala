@@ -56,12 +56,27 @@ class HashCracker extends Plugin{
         Log.debug("dictionary: " + mHashCrackerOptions.dictionary.get)
         Log.debug("hash: " + mHashCrackerOptions.hash.get)
 
+        val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
         var dictPath = data.get(mHashCrackerOptions.dictionary.get)
         var hash : Option [String] = None
 
         if(mHashCrackerOptions.singleHash) {
           Log.debug("single hash")
-          hash = mHashCrackerOptions.hash
+
+          //move hash to file, as john can only work with files
+          if(workingDir.isDefined){
+            val destPath = workingDir.get + File.separator + ContextConstant.Key.HashCrack + File.separator + "single.hash"
+            val outputFile = new File(destPath)
+            outputFile.getParentFile.mkdirs()
+
+            //write the hash
+            val bw = new BufferedWriter(new FileWriter(outputFile, true))
+            bw.write(mHashCrackerOptions.hash.get)
+            bw.close()
+
+            hash = Some(destPath)
+          }
+
         } else {
           Log.debug("directory defined")
           hash = data.get(mHashCrackerOptions.hash.get)
@@ -93,12 +108,11 @@ class HashCracker extends Plugin{
             return
           }
 
-          //when using a hashfile and a directory is specified, which contains only one file, use that file
-          if(!mHashCrackerOptions.singleHash){
-            val hashFile = new File(hash.get)
-            if(hashFile.isDirectory && hashFile.list().length == 1){
-              hash = Some(hashFile.listFiles()(0).getAbsolutePath)
-            }
+          val hashFile = new File(hash.get)
+
+          //if hash directly specifies the path, no need to find the file
+          if(hashFile.isDirectory && hashFile.list().length == 1){
+            hash = Some(hashFile.listFiles()(0).getAbsolutePath)
           }
 
           Log.debug("building command with dict: " + dictPath.get +" and hash: " + hash.get)
@@ -108,8 +122,6 @@ class HashCracker extends Plugin{
           var resultString = executor.executeSystemCommand(command)
           val resultCode = executor.getResultCode
 
-          val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
-
           if(resultCode.isDefined && resultCode.get == 0 && workingDir.isDefined){
 
             Log.debug("command executed successfully, result will be saved..")
@@ -117,31 +129,20 @@ class HashCracker extends Plugin{
 
             //john does not provide all results in output, extract them from the pot file
             if(mHashCrackerOptions.hashCrackerBackend == HashCrackerBackend.John){
-              if(!mHashCrackerOptions.singleHash){
-                val stringBuilder = new StringBuilder
-                for (line <- Source.fromFile(hash.get).getLines()) {
-                  val filterCommand = ArrayBuffer[String]()
-                  filterCommand.append("grep")
-                  filterCommand.append("-E")
-                  filterCommand.append("-o")
-                  filterCommand.append(line + ":.+")
-                  filterCommand.append(workingDir.get + File.separator + ContextConstant.Key.HashCrack + File.separator + "result.pot")
-                  val filteredData = executor.executeSystemCommand(filterCommand)
-                  if(filteredData.isDefined){
-                    stringBuilder.append(filteredData.get + sys.props("line.separator"))
-                  }
-                }
-                resultString = Some(stringBuilder.toString())
-              } else {
+              val stringBuilder = new StringBuilder
+              for (line <- Source.fromFile(hash.get).getLines()) {
                 val filterCommand = ArrayBuffer[String]()
                 filterCommand.append("grep")
                 filterCommand.append("-E")
                 filterCommand.append("-o")
-                filterCommand.append(hash.get + ":.+")
+                filterCommand.append(line + ":.+")
                 filterCommand.append(workingDir.get + File.separator + ContextConstant.Key.HashCrack + File.separator + "result.pot")
                 val filteredData = executor.executeSystemCommand(filterCommand)
-                resultString = filteredData
+                if(filteredData.isDefined){
+                  stringBuilder.append(filteredData.get + sys.props("line.separator"))
+                }
               }
+              resultString = Some(stringBuilder.toString())
             }
 
             if(workingDir.isDefined && resultString.isDefined){
@@ -167,6 +168,7 @@ class HashCracker extends Plugin{
       //TODO: choose correct destination path in working directory
       //TODO: save to result-log.cracked-hashes
     }
+
     ready()
   }
 
@@ -260,11 +262,7 @@ class HashCracker extends Plugin{
       command.append(stringBuilder.toString())
     }
 
-    if(!mHashCrackerOptions.singleHash){
-      command.append(hash)
-    } else {
-      //TODO: implement single hash behaviour for john
-    }
+    command.append(hash)
 
     command
   }
