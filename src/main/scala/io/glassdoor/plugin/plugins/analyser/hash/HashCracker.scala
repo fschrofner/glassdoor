@@ -195,6 +195,8 @@ class HashCracker extends Plugin{
                 parameter.value.get match {
                   case "md5" =>
                     mHashCrackerOptions.hashAlgorithm = Some(HashAlgorithm.Md5)
+                  case "sha256" =>
+                    mHashCrackerOptions.hashAlgorithm = Some(HashAlgorithm.Sha256)
                 }
               }
             case "dictionary-file" | "d" =>

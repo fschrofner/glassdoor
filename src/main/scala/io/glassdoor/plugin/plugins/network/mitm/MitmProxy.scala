@@ -13,6 +13,11 @@ import scala.sys.process.Process
   * Created by Florian Schrofner on 1/24/17.
   */
 class MitmProxy extends Plugin {
+  val MITM_LOG_FILE = "network.dump"
+  val SSL_KEY_CONFIG = "sslkeyconfig.log"
+  val TCP_DUMP = "network.cap"
+
+  var mPluginPath = ""
   var mResult : Option[Map[String, String]] = None
 
   /**
@@ -26,23 +31,14 @@ class MitmProxy extends Plugin {
     var givenPort : Option[String] = None
 
     val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
-    val destPath = workingDir.get + "/" + ContextConstant.Key.Mitm + "/network.log"
+    mPluginPath =  workingDir.get + File.separator + ContextConstant.Key.Mitm
 
     if(parameterArray.isDefined){
       for(parameter <- parameterArray.get){
         parameter.paramType match {
           case ParameterType.Parameter =>
             if(parameter.name == "stop" && MitmProxy.mitmProcess.isDefined){
-              MitmProxy.mitmProcess.get.destroy()
-              MitmProxy.mitmProcess = None
-
-              //delete port from values
-              val result = HashMap[String,String](
-                ContextConstant.FullKey.DynamicAnalysisMitm -> "",
-                ContextConstant.FullKey.ResultLogMitm -> destPath
-              )
-              mResult = Some(result)
-              ready()
+              stopSniffing()
               return
             }
 
@@ -56,8 +52,14 @@ class MitmProxy extends Plugin {
       }
     }
 
+    startSniffing(givenPort)
+  }
+
+  def startSniffing(givenPort:Option[String]):Unit = {
     if(MitmProxy.mitmProcess.isEmpty){
-      createFolderStructure(destPath)
+
+      val mitmLogPath = mPluginPath + File.separator + MITM_LOG_FILE
+      createFolderStructure(mitmLogPath)
 
       var port = ""
 
@@ -68,14 +70,23 @@ class MitmProxy extends Plugin {
       }
 
       val command = ArrayBuffer[String]()
+
+      //setting the environment variable is required to capture TLS master secrets
+      command.append("env")
+      command.append("MITMPROXY_SSLKEYLOGFILE=" + mPluginPath + File.separator + SSL_KEY_CONFIG)
+
       command.append("mitmdump")
       command.append("-p " + port)
-      command.append("-w " + destPath)
+      command.append("-w " + mitmLogPath)
 
       val executor = new SystemCommandExecutor
       val process = executor.executeSystemCommandInBackground(command)
 
       MitmProxy.mitmProcess = process
+
+      //tcpdump allows to capture traffic on the device itself
+      val tcpCommand = new AdbCommand("tcpdump -w /sdcard/" + TCP_DUMP, _ => Unit)
+      tcpCommand.execute()
 
       //TODO: find out if process successfully started
       val result = HashMap[String,String](ContextConstant.FullKey.DynamicAnalysisMitm -> port)
@@ -84,6 +95,47 @@ class MitmProxy extends Plugin {
       Log.debug("error: mitm process already defined")
     }
 
+    ready()
+  }
+
+  def stopSniffing():Unit = {
+    //stop tcp dump, return result in callback
+    val killTcpCommand = new AdbCommand("killall -SIGINT tcpdump", killTcpDumpCallback)
+    killTcpCommand.execute()
+  }
+
+  def killTcpDumpCallback(output:String):Unit = {
+    //create log paths to save
+    val mitmLogPath = mPluginPath + File.separator + MITM_LOG_FILE
+    val tcpLogPath = mPluginPath + File.separator + TCP_DUMP
+    val sslKeyPath = mPluginPath + File.separator + SSL_KEY_CONFIG
+
+    //stop mitm proxy
+    MitmProxy.mitmProcess.get.destroy()
+    MitmProxy.mitmProcess = None
+
+    //pull tcp dump
+    val executor = new SystemCommandExecutor
+    val commandBuffer = ArrayBuffer[String]()
+    commandBuffer.append("adb")
+    commandBuffer.append("pull")
+    commandBuffer.append("/sdcard/" + TCP_DUMP)
+    commandBuffer.append(tcpLogPath)
+
+    executor.executeSystemCommand(commandBuffer)
+
+    //remove dump from emulator
+    new AdbCommand("rm /sdcard/" + TCP_DUMP, _ => Unit).execute()
+
+    //delete port from values and save results
+    val result = HashMap[String,String](
+      ContextConstant.FullKey.DynamicAnalysisMitm -> "",
+      ContextConstant.FullKey.ResultLogMitmDump -> mitmLogPath,
+      ContextConstant.FullKey.ResultLogMitmTcpDump -> tcpLogPath,
+      ContextConstant.FullKey.ResultLogMitmSslKeyConfig -> sslKeyPath
+    )
+
+    mResult = Some(result)
     ready()
   }
 

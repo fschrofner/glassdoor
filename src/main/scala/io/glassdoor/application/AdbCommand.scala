@@ -19,7 +19,6 @@ class AdbCommand(val command : String, val outputCallback : String => Unit){
   }
 
   private def adbOutput(in: InputStream) {
-    //do something
     Log.debug("adb output ready")
     val outputSource = Source.fromInputStream(in)
     val outputString = new StringBuilder()
@@ -42,7 +41,6 @@ class AdbCommand(val command : String, val outputCallback : String => Unit){
   }
 
   private def errorOutput(err: InputStream) {
-    //do something
     err.close()
   }
 }

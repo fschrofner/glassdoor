@@ -18,7 +18,7 @@ class Emulator extends Plugin {
   override def apply(data: Map[String, String], parameters: Array[String]): Unit = {
     val emulatorPath = data.get(ContextConstant.FullKey.ConfigEmulatorRepositoryPath)
 
-    if(emulatorPath.isDefined){
+    if(emulatorPath.isDefined && emulatorPath.get != "PLACEHOLDER"){
       Log.debug("emulator path defined")
       var systemImagePath = ""
 

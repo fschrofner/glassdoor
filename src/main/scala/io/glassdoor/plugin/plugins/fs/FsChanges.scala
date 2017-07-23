@@ -69,7 +69,7 @@ class FsChanges extends Plugin {
 
   def stopCallback(output: String) : Unit = {
     if(mWorkingDir.isDefined){
-      val destPath = mWorkingDir.get + "/" + ContextConstant.Key.Fs + "/result.log"
+      val destPath = mWorkingDir.get + File.separator + ContextConstant.Key.Fs + File.separator + "result.log"
       createFolderStructure(destPath)
 
       val executor = new SystemCommandExecutor

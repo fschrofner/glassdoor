@@ -205,6 +205,9 @@ object ContextConstant {
     val ExtractedDatabase = "extracted-database"
     val Emulator = "emulator"
     val Mitm = "mitm"
+    val MitmDump = "mitmdump"
+    val SslKeyConfig = "ssl-key-config"
+    val TcpDump = "tcpdump"
     val Tracer = "tracer"
     val Fs = "fs"
     val Ui = "ui"
@@ -220,7 +223,9 @@ object ContextConstant {
     val IntermediateSourceJava = Keymap.IntermediateSource + DescriptorSplit + Key.Java
     val ResultLogRegexLogin = Keymap.ResultLog + DescriptorSplit + Key.RegexLogin
     val ResultLogHashCrack = Keymap.ResultLog + DescriptorSplit + Key.HashCrack
-    val ResultLogMitm = Keymap.ResultLog + DescriptorSplit + Key.Mitm
+    val ResultLogMitmDump = Keymap.ResultLog + DescriptorSplit + Key.Mitm + DescriptorSplit + Key.MitmDump
+    val ResultLogMitmTcpDump = Keymap.ResultLog + DescriptorSplit + Key.Mitm + DescriptorSplit + Key.TcpDump
+    val ResultLogMitmSslKeyConfig = Keymap.ResultLog + DescriptorSplit + Key.Mitm + DescriptorSplit + Key.SslKeyConfig
     val ResultLogTracer = Keymap.ResultLog + DescriptorSplit + Key.Tracer
     val ResultLogFs = Keymap.ResultLog + DescriptorSplit + Key.Fs
     val ResultLogPackageName = Keymap.ResultLog + DescriptorSplit + Key.PackageName

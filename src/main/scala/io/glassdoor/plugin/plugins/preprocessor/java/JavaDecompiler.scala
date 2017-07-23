@@ -39,7 +39,7 @@ class JavaDecompiler extends Plugin {
 
         val decompiler = new JadxDecompiler(arguments)
         val file = new File(apkPath.get)
-        val outputDirPath = workingDir.get + "/" + ContextConstant.Key.Java
+        val outputDirPath = workingDir.get + File.separator + ContextConstant.Key.Java
         val outputDir = new File(outputDirPath)
 
         decompiler.setOutputDir(outputDir)

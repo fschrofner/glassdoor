@@ -103,9 +103,11 @@ class Tracer extends Plugin {
   }
 
   def stopTracer() : Unit = {
-    //TODO: cancel tracer
+    val command = new AdbCommand("killall strace", _ => Unit)
+    command.execute()
+
     if(mWorkingDir.isDefined){
-      val destPath = mWorkingDir.get + "/" + ContextConstant.Key.Tracer + "/result.log"
+      val destPath = mWorkingDir.get + File.separator + ContextConstant.Key.Tracer + File.separator + "result.log"
       createFolderStructure(destPath)
 
       val executor = new SystemCommandExecutor
