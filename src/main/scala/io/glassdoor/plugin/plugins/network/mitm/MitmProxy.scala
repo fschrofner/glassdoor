@@ -18,6 +18,8 @@ class MitmProxy extends Plugin {
   val TCP_DUMP = "network.cap"
 
   var mPluginPath = ""
+  var mEmulatorRepositoryPath = ""
+
   var mResult : Option[Map[String, String]] = None
 
   /**
@@ -31,6 +33,7 @@ class MitmProxy extends Plugin {
     var givenPort : Option[String] = None
 
     val workingDir = data.get(ContextConstant.FullKey.ConfigWorkingDirectory)
+    mEmulatorRepositoryPath = data.get(ContextConstant.FullKey.ConfigEmulatorRepositoryPath).get
     mPluginPath =  workingDir.get + File.separator + ContextConstant.Key.Mitm
 
     if(parameterArray.isDefined){
@@ -69,6 +72,8 @@ class MitmProxy extends Plugin {
         port = "8989"
       }
 
+      val certPath = mEmulatorRepositoryPath + File.separator + "certificates" + File.separator + "ca.pem"
+
       val command = ArrayBuffer[String]()
 
       //setting the environment variable is required to capture TLS master secrets
@@ -78,6 +83,7 @@ class MitmProxy extends Plugin {
       command.append("mitmdump")
       command.append("-p " + port)
       command.append("-w " + mitmLogPath)
+      command.append("--cert " + certPath)
 
       val executor = new SystemCommandExecutor
       val process = executor.executeSystemCommandInBackground(command)

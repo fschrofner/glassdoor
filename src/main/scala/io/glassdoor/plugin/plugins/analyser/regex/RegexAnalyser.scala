@@ -254,10 +254,17 @@ class RegexAnalyser extends Plugin{
     if(mRegexOptions.ignoreCase) command.append("-i")
 
 
-    command.append(if(mRegexOptions.showLineNumber) "--numbers" else "--nonumbers")
+    if(mRegexOptions.showLineNumber){
+      command.append("--numbers")
+    } else {
+      command.append("--nonumbers")
+    }
 
-    if(!mRegexOptions.noFileName)command.append("--nogroup")
-    command.append(if(mRegexOptions.noFileName)"--nofilename" else "--filename")
+    if(mRegexOptions.noFileName){
+      command.append("--nofilename")
+    } else {
+      command.append("--vimgrep")
+    }
 
     command.append(regex)
     command.append(srcPath)

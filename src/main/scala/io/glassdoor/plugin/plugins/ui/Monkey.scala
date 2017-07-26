@@ -94,7 +94,7 @@ class Monkey extends Plugin {
   def startMonkeyTest(): Unit = {
     Log.debug("monkey test started: " + Monkey.monkeyTestingStarted)
     if(mPackageName.isDefined && Monkey.monkeyTestingStarted){
-      val command = new AdbCommand("monkey -p " + mPackageName.get + " --throttle 100 -pct-touch 100 10", monkeyTestCallback)
+      val command = new AdbCommand("monkey -p " + mPackageName.get + " --throttle 100 --pct-touch 80 --pct-motion 20 10", monkeyTestCallback)
       command.execute()
     }
   }
