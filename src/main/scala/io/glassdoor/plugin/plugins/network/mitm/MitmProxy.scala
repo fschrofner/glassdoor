@@ -84,6 +84,7 @@ class MitmProxy extends Plugin {
       command.append("-p " + port)
       command.append("-w " + mitmLogPath)
       command.append("--cert " + certPath)
+      command.append("--no-http2")
 
       val executor = new SystemCommandExecutor
       val process = executor.executeSystemCommandInBackground(command)

@@ -14,7 +14,7 @@ class AdbCommand(val command : String, val outputCallback : String => Unit){
 
   def execute(): Unit = {
     val adbConnection = new ProcessIO(adbInput, adbOutput, errorOutput)
-    val adbCommand = Seq("adb", "shell")
+    val adbCommand = Seq("adb", "-e", "shell")
     adbCommand.run(adbConnection)
   }
 

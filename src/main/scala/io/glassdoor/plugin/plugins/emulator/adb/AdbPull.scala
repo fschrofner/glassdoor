@@ -163,7 +163,7 @@ class AdbPull extends Plugin {
     Log.debug("filename of file to pull: " + fileName)
 
     val executor = new SystemCommandExecutor()
-    val command = Seq("adb", "pull", filePath, destinationDir + File.separator + fileName)
+    val command = Seq("adb", "-e", "pull", filePath, destinationDir + File.separator + fileName)
     Log.debug("command to execute: " + command)
     executor.executeSystemCommand(command)
     Log.debug("file pulled")
